@@ -1,5 +1,5 @@
 /**
- * AI Artworks Gallery Page
+ * AI Artworks Gallery Page with Tailwind CSS
  * AI 작품 갤러리 (이미지, 영상, 음악, 문서)
  */
 
@@ -7,160 +7,11 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import styled from '@emotion/styled';
-import { tokens } from '@/lib/styles/tokens';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
 import Image from 'next/image';
-
-const GalleryContainer = styled.div`
-  max-width: 1600px;
-  margin: 0 auto;
-  padding: ${tokens.spacing[12]} ${tokens.spacing[6]};
-`;
-
-const Header = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: ${tokens.spacing[8]};
-`;
-
-const Title = styled.h1`
-  font-size: ${tokens.typography.fontSize['4xl']};
-  font-weight: ${tokens.typography.fontWeight.bold};
-  background: ${tokens.colors.gradients.kinetic};
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-`;
-
-const FilterTabs = styled.div`
-  display: flex;
-  gap: ${tokens.spacing[3]};
-  margin-bottom: ${tokens.spacing[8]};
-  flex-wrap: wrap;
-`;
-
-const TabButton = styled.button<{ $active?: boolean }>`
-  padding: ${tokens.spacing[2]} ${tokens.spacing[5]};
-  background: ${(props) =>
-    props.$active ? tokens.colors.gradients.kinetic : tokens.colors.glass.light};
-  color: ${tokens.colors.white};
-  border: none;
-  border-radius: ${tokens.borderRadius.full};
-  font-size: ${tokens.typography.fontSize.sm};
-  font-weight: ${tokens.typography.fontWeight.medium};
-  cursor: pointer;
-  transition: all ${tokens.transitions.base};
-
-  &:hover {
-    transform: translateY(-2px);
-  }
-`;
-
-const ArtworkGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: ${tokens.spacing[6]};
-  grid-auto-rows: masonry;
-`;
-
-const ArtworkCard = styled(Card)`
-  overflow: hidden;
-  cursor: pointer;
-  transition: all ${tokens.transitions.base};
-
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 32px rgba(240, 147, 251, 0.3);
-  }
-`;
-
-const ArtworkMedia = styled.div`
-  position: relative;
-  width: 100%;
-  height: 300px;
-  background: ${tokens.colors.gray[800]};
-  overflow: hidden;
-
-  img, video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-`;
-
-const MediaTypeBadge = styled.span<{ $type: string }>`
-  position: absolute;
-  top: ${tokens.spacing[3]};
-  right: ${tokens.spacing[3]};
-  padding: ${tokens.spacing[1]} ${tokens.spacing[3]};
-  background: ${(props) =>
-    props.$type === 'image'
-      ? tokens.colors.primary[500]
-      : props.$type === 'video'
-        ? tokens.colors.danger
-        : props.$type === 'audio'
-          ? tokens.colors.success
-          : tokens.colors.warning};
-  color: ${tokens.colors.white};
-  border-radius: ${tokens.borderRadius.full};
-  font-size: ${tokens.typography.fontSize.xs};
-  font-weight: ${tokens.typography.fontWeight.semibold};
-  text-transform: uppercase;
-`;
-
-const ArtworkInfo = styled.div`
-  padding: ${tokens.spacing[5]};
-`;
-
-const ArtworkTitle = styled.h3`
-  font-size: ${tokens.typography.fontSize.lg};
-  font-weight: ${tokens.typography.fontWeight.bold};
-  color: ${tokens.colors.white};
-  margin-bottom: ${tokens.spacing[2]};
-`;
-
-const ArtworkDescription = styled.p`
-  font-size: ${tokens.typography.fontSize.sm};
-  color: ${tokens.colors.gray[400]};
-  margin-bottom: ${tokens.spacing[3]};
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-`;
-
-const ArtworkMeta = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-size: ${tokens.typography.fontSize.xs};
-  color: ${tokens.colors.gray[500]};
-`;
-
-const Tags = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: ${tokens.spacing[2]};
-  margin-top: ${tokens.spacing[3]};
-`;
-
-const Tag = styled.span`
-  padding: ${tokens.spacing[1]} ${tokens.spacing[2]};
-  background: ${tokens.colors.glass.light};
-  border-radius: ${tokens.borderRadius.full};
-  font-size: ${tokens.typography.fontSize.xs};
-  color: ${tokens.colors.gray[300]};
-`;
-
-const EmptyState = styled.div`
-  text-align: center;
-  padding: ${tokens.spacing[12]};
-  color: ${tokens.colors.gray[400]};
-`;
+import { cn } from '@/lib/utils';
 
 export default function ArtworksPage() {
   const [user, setUser] = useState<any>(null);
@@ -193,80 +44,98 @@ export default function ArtworksPage() {
 
   if (loading) {
     return (
-      <GalleryContainer>
-        <EmptyState>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="text-center py-12 text-gray-600 dark:text-gray-400">
           <p>로딩 중...</p>
-        </EmptyState>
-      </GalleryContainer>
+        </div>
+      </div>
     );
   }
 
   return (
-    <GalleryContainer>
-      <Header>
-        <Title>AI 작품 갤러리</Title>
+    <div className="max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-4xl md:text-5xl font-display font-bold gradient-text">
+          AI 작품 갤러리
+        </h1>
         {user && (
           <Link href="/board/ai_artwork/new">
             <Button variant="primary">작품 업로드</Button>
           </Link>
         )}
-      </Header>
+      </div>
 
+      {/* Artwork Grid */}
       {artworks && artworks.length > 0 ? (
-        <ArtworkGrid>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {artworks.map((artwork) => (
-            <Link key={artwork.id} href={`/board/ai_artwork/${artwork.id}`} style={{ textDecoration: 'none' }}>
-              <ArtworkCard variant="glass">
-                <ArtworkMedia>
-                  {/* 썸네일 이미지가 있으면 표시, 없으면 기본 배경 */}
+            <Link
+              key={artwork.id}
+              href={`/board/ai_artwork/${artwork.id}`}
+              className="group"
+            >
+              <Card
+                hoverable
+                padding="none"
+                className="h-full flex flex-col overflow-hidden"
+              >
+                {/* Artwork Media */}
+                <div className="relative w-full h-[300px] bg-gray-800 dark:bg-gray-900 overflow-hidden">
                   {artwork.image_url ? (
-                    <img src={artwork.image_url} alt={artwork.title} />
+                    <Image
+                      src={artwork.image_url}
+                      alt={artwork.title}
+                      fill
+                      className="object-cover"
+                    />
                   ) : (
-                    <div
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        background: tokens.colors.gradients.dark,
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        color: tokens.colors.gray[500],
-                      }}
-                    >
+                    <div className="absolute inset-0 bg-gradient-to-br from-teal-500/20 to-indigo-500/20 flex items-center justify-center text-gray-500">
                       No Preview
                     </div>
                   )}
-                  <MediaTypeBadge $type="image">AI ART</MediaTypeBadge>
-                </ArtworkMedia>
 
-                <ArtworkInfo>
-                  <ArtworkTitle>{artwork.title}</ArtworkTitle>
-                  <ArtworkDescription>
+                  {/* Media Type Badge */}
+                  <span className="absolute top-3 right-3 px-3 py-1 bg-teal-500 text-white rounded-full text-xs font-semibold uppercase">
+                    AI ART
+                  </span>
+                </div>
+
+                {/* Artwork Info */}
+                <div className="p-5 flex-1 flex flex-col">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                    {artwork.title}
+                  </h3>
+
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2 flex-1">
                     {artwork.content.substring(0, 100)}...
-                  </ArtworkDescription>
+                  </p>
 
-                  <ArtworkMeta>
+                  {/* Meta */}
+                  <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-500">
                     <span>{new Date(artwork.created_at).toLocaleDateString('ko-KR')}</span>
                     <span>조회 {artwork.view_count || 0}</span>
-                  </ArtworkMeta>
-                </ArtworkInfo>
-              </ArtworkCard>
+                  </div>
+                </div>
+              </Card>
             </Link>
           ))}
-        </ArtworkGrid>
+        </div>
       ) : (
-        <EmptyState>
-          <h2>아직 작품이 없습니다</h2>
-          <p>첫 번째 AI 작품을 업로드해보세요!</p>
+        <div className="text-center py-12">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            아직 작품이 없습니다
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            첫 번째 AI 작품을 업로드해보세요!
+          </p>
           {user && (
             <Link href="/board/ai_artwork/new">
-              <Button variant="primary" style={{ marginTop: tokens.spacing[4] }}>
-                작품 업로드
-              </Button>
+              <Button variant="primary">작품 업로드</Button>
             </Link>
           )}
-        </EmptyState>
+        </div>
       )}
-    </GalleryContainer>
+    </div>
   );
 }

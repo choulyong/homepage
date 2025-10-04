@@ -1,5 +1,5 @@
 /**
- * YouTube Cover Page
+ * YouTube Cover Page with Tailwind CSS
  * YouTube 커버 영상 목록
  */
 
@@ -7,122 +7,9 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import styled from '@emotion/styled';
-import { tokens } from '@/lib/styles/tokens';
 import { Card } from '@/components/ui/Card';
 import Image from 'next/image';
-
-const YouTubeContainer = styled.div`
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: ${tokens.spacing[12]} ${tokens.spacing[6]};
-`;
-
-const Title = styled.h1`
-  font-size: ${tokens.typography.fontSize['4xl']};
-  font-weight: ${tokens.typography.fontWeight.bold};
-  background: ${tokens.colors.gradients.kinetic};
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin-bottom: ${tokens.spacing[2]};
-`;
-
-const Subtitle = styled.p`
-  font-size: ${tokens.typography.fontSize.lg};
-  color: ${tokens.colors.gray[400]};
-  margin-bottom: ${tokens.spacing[8]};
-`;
-
-const VideoGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: ${tokens.spacing[6]};
-`;
-
-const VideoCard = styled(Card)`
-  overflow: hidden;
-  cursor: pointer;
-  transition: all ${tokens.transitions.base};
-
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 32px rgba(240, 147, 251, 0.3);
-  }
-`;
-
-const VideoThumbnail = styled.div`
-  position: relative;
-  width: 100%;
-  padding-bottom: 56.25%; /* 16:9 aspect ratio */
-  background: ${tokens.colors.gray[800]};
-  overflow: hidden;
-
-  img {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-  }
-`;
-
-const PlayButton = styled.div`
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 68px;
-  height: 48px;
-  background: rgba(255, 0, 0, 0.8);
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  transition: all ${tokens.transitions.base};
-
-  &::before {
-    content: '';
-    width: 0;
-    height: 0;
-    border-left: 20px solid white;
-    border-top: 12px solid transparent;
-    border-bottom: 12px solid transparent;
-    margin-left: 4px;
-  }
-
-  ${VideoCard}:hover & {
-    background: rgb(255, 0, 0);
-    transform: translate(-50%, -50%) scale(1.1);
-  }
-`;
-
-const VideoInfo = styled.div`
-  padding: ${tokens.spacing[4]};
-`;
-
-const VideoTitle = styled.h3`
-  font-size: ${tokens.typography.fontSize.lg};
-  font-weight: ${tokens.typography.fontWeight.bold};
-  color: ${tokens.colors.white};
-  margin-bottom: ${tokens.spacing[2]};
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-`;
-
-const VideoMeta = styled.div`
-  font-size: ${tokens.typography.fontSize.sm};
-  color: ${tokens.colors.gray[400]};
-`;
-
-const EmptyState = styled.div`
-  text-align: center;
-  padding: ${tokens.spacing[12]};
-  color: ${tokens.colors.gray[400]};
-`;
+import { cn } from '@/lib/utils';
 
 export default function YouTubePage() {
   const [videos, setVideos] = useState<any[]>([]);
@@ -146,65 +33,88 @@ export default function YouTubePage() {
 
   if (loading) {
     return (
-      <YouTubeContainer>
-        <EmptyState>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="text-center py-12 text-gray-600 dark:text-gray-400">
           <p>로딩 중...</p>
-        </EmptyState>
-      </YouTubeContainer>
+        </div>
+      </div>
     );
   }
 
   return (
-    <YouTubeContainer>
-      <Title>YouTube 커버 영상</Title>
-      <Subtitle>노래 커버와 연주 영상을 공유합니다</Subtitle>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-4xl md:text-5xl font-display font-bold gradient-text mb-2">
+          YouTube 커버 영상
+        </h1>
+        <p className="text-lg text-gray-600 dark:text-gray-400">
+          노래 커버와 연주 영상을 공유합니다
+        </p>
+      </div>
 
+      {/* Video Grid */}
       {videos && videos.length > 0 ? (
-        <VideoGrid>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {videos.map((video) => (
             <a
               key={video.id}
               href={video.youtube_url}
               target="_blank"
               rel="noopener noreferrer"
-              style={{ textDecoration: 'none' }}
+              className="group"
             >
-              <VideoCard variant="glass">
-                <VideoThumbnail>
+              <Card
+                hoverable
+                padding="none"
+                className="overflow-hidden h-full flex flex-col"
+              >
+                {/* Video Thumbnail with 16:9 aspect ratio */}
+                <div className="relative w-full pb-[56.25%] bg-gray-800 dark:bg-gray-900 overflow-hidden">
                   {video.thumbnail_url ? (
-                    <img src={video.thumbnail_url} alt={video.title} />
-                  ) : (
-                    <div
-                      style={{
-                        position: 'absolute',
-                        top: 0,
-                        left: 0,
-                        width: '100%',
-                        height: '100%',
-                        background: tokens.colors.gradients.dark,
-                      }}
+                    <Image
+                      src={video.thumbnail_url}
+                      alt={video.title}
+                      fill
+                      className="object-cover"
                     />
+                  ) : (
+                    <div className="absolute inset-0 bg-gradient-to-br from-teal-500/20 to-indigo-500/20" />
                   )}
-                  <PlayButton />
-                </VideoThumbnail>
-                <VideoInfo>
-                  <VideoTitle>{video.title}</VideoTitle>
+
+                  {/* YouTube Play Button */}
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[68px] h-[48px] bg-red-600/80 rounded-xl flex items-center justify-center transition-all duration-200 group-hover:bg-red-600 group-hover:scale-110">
+                    {/* Play icon triangle */}
+                    <div className="w-0 h-0 border-l-[20px] border-l-white border-t-[12px] border-t-transparent border-b-[12px] border-b-transparent ml-1" />
+                  </div>
+                </div>
+
+                {/* Video Info */}
+                <div className="p-4 flex-1 flex flex-col">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 line-clamp-2 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                    {video.title}
+                  </h3>
+
                   {video.published_at && (
-                    <VideoMeta>
+                    <div className="text-sm text-gray-500 dark:text-gray-500 mt-auto">
                       {new Date(video.published_at).toLocaleDateString('ko-KR')}
-                    </VideoMeta>
+                    </div>
                   )}
-                </VideoInfo>
-              </VideoCard>
+                </div>
+              </Card>
             </a>
           ))}
-        </VideoGrid>
+        </div>
       ) : (
-        <EmptyState>
-          <h2>아직 영상이 없습니다</h2>
-          <p>곧 멋진 커버 영상을 업로드할 예정입니다!</p>
-        </EmptyState>
+        <div className="text-center py-12">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            아직 영상이 없습니다
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400">
+            곧 멋진 커버 영상을 업로드할 예정입니다!
+          </p>
+        </div>
       )}
-    </YouTubeContainer>
+    </div>
   );
 }

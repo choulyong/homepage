@@ -1,5 +1,5 @@
 /**
- * Schedule Page
+ * Schedule Page with Tailwind CSS
  * 일정 관리 캘린더
  */
 
@@ -9,11 +9,13 @@ import { useState, useEffect, useCallback } from 'react';
 import { Calendar, dateFnsLocalizer, View } from 'react-big-calendar';
 import { format, parse, startOfWeek, getDay } from 'date-fns';
 import { ko } from 'date-fns/locale';
-import styled from '@emotion/styled';
-import { tokens } from '@/lib/styles/tokens';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { Input } from '@/components/ui/Input';
+import { Textarea } from '@/components/ui/Textarea';
+import { Select } from '@/components/ui/Select';
 import { createClient } from '@/lib/supabase/client';
+import { cn } from '@/lib/utils';
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 
 const locales = {
@@ -27,203 +29,6 @@ const localizer = dateFnsLocalizer({
   getDay,
   locales,
 });
-
-const ScheduleContainer = styled.div`
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: ${tokens.spacing[12]} ${tokens.spacing[6]};
-`;
-
-const Header = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: ${tokens.spacing[8]};
-`;
-
-const Title = styled.h1`
-  font-size: ${tokens.typography.fontSize['4xl']};
-  font-weight: ${tokens.typography.fontWeight.bold};
-  background: ${tokens.colors.gradients.kinetic};
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-`;
-
-const CalendarCard = styled(Card)`
-  padding: ${tokens.spacing[6]};
-
-  .rbc-calendar {
-    color: ${tokens.colors.white};
-  }
-
-  .rbc-header {
-    padding: ${tokens.spacing[3]};
-    font-weight: ${tokens.typography.fontWeight.semibold};
-    color: ${tokens.colors.gray[300]};
-    border-bottom: 1px solid ${tokens.colors.glass.light};
-  }
-
-  .rbc-today {
-    background-color: ${tokens.colors.primary[900]}40;
-  }
-
-  .rbc-event {
-    background-color: ${tokens.colors.primary[500]};
-    border-radius: ${tokens.borderRadius.sm};
-    border: none;
-    padding: ${tokens.spacing[1]} ${tokens.spacing[2]};
-  }
-
-  .rbc-off-range-bg {
-    background-color: ${tokens.colors.gray[900]};
-  }
-
-  .rbc-month-view {
-    background: ${tokens.colors.gray[800]};
-    border: 1px solid ${tokens.colors.glass.light};
-    border-radius: ${tokens.borderRadius.md};
-  }
-
-  .rbc-day-bg {
-    border-color: ${tokens.colors.glass.light};
-  }
-
-  .rbc-time-slot {
-    border-top: 1px solid ${tokens.colors.glass.light};
-  }
-
-  .rbc-toolbar {
-    margin-bottom: ${tokens.spacing[6]};
-
-    button {
-      color: ${tokens.colors.white};
-      background: ${tokens.colors.glass.light};
-      border: none;
-      padding: ${tokens.spacing[2]} ${tokens.spacing[4]};
-      border-radius: ${tokens.borderRadius.md};
-
-      &:hover {
-        background: ${tokens.colors.glass.medium};
-      }
-
-      &.rbc-active {
-        background: ${tokens.colors.gradients.kinetic};
-      }
-    }
-
-    .rbc-toolbar-label {
-      font-size: ${tokens.typography.fontSize.xl};
-      font-weight: ${tokens.typography.fontWeight.bold};
-    }
-  }
-`;
-
-const Modal = styled.div<{ $show: boolean }>`
-  display: ${(props) => (props.$show ? 'block' : 'none')};
-  position: fixed;
-  z-index: ${tokens.zIndex.modal};
-  left: 0;
-  top: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.7);
-  backdrop-filter: blur(4px);
-`;
-
-const ModalContent = styled(Card)`
-  position: relative;
-  margin: 10% auto;
-  padding: ${tokens.spacing[8]};
-  width: 90%;
-  max-width: 600px;
-`;
-
-const CloseButton = styled.button`
-  position: absolute;
-  top: ${tokens.spacing[4]};
-  right: ${tokens.spacing[4]};
-  background: none;
-  border: none;
-  font-size: ${tokens.typography.fontSize['2xl']};
-  color: ${tokens.colors.gray[400]};
-  cursor: pointer;
-
-  &:hover {
-    color: ${tokens.colors.white};
-  }
-`;
-
-const FormGroup = styled.div`
-  margin-bottom: ${tokens.spacing[4]};
-`;
-
-const Label = styled.label`
-  display: block;
-  font-size: ${tokens.typography.fontSize.sm};
-  font-weight: ${tokens.typography.fontWeight.medium};
-  color: ${tokens.colors.gray[300]};
-  margin-bottom: ${tokens.spacing[2]};
-`;
-
-const Input = styled.input`
-  width: 100%;
-  padding: ${tokens.spacing[3]} ${tokens.spacing[4]};
-  background: ${tokens.colors.gray[800]};
-  border: 1px solid ${tokens.colors.gray[600]};
-  border-radius: ${tokens.borderRadius.md};
-  color: ${tokens.colors.white};
-  font-size: ${tokens.typography.fontSize.base};
-
-  &:focus {
-    outline: none;
-    border-color: ${tokens.colors.primary[500]};
-  }
-`;
-
-const TextArea = styled.textarea`
-  width: 100%;
-  padding: ${tokens.spacing[3]} ${tokens.spacing[4]};
-  background: ${tokens.colors.gray[800]};
-  border: 1px solid ${tokens.colors.gray[600]};
-  border-radius: ${tokens.borderRadius.md};
-  color: ${tokens.colors.white};
-  font-size: ${tokens.typography.fontSize.base};
-  min-height: 100px;
-  resize: vertical;
-  font-family: inherit;
-
-  &:focus {
-    outline: none;
-    border-color: ${tokens.colors.primary[500]};
-  }
-`;
-
-const Select = styled.select`
-  width: 100%;
-  padding: ${tokens.spacing[3]} ${tokens.spacing[4]};
-  background: ${tokens.colors.gray[800]};
-  border: 1px solid ${tokens.colors.gray[600]};
-  border-radius: ${tokens.borderRadius.md};
-  color: ${tokens.colors.white};
-  font-size: ${tokens.typography.fontSize.base};
-
-  &:focus {
-    outline: none;
-    border-color: ${tokens.colors.primary[500]};
-  }
-`;
-
-const Checkbox = styled.input`
-  margin-right: ${tokens.spacing[2]};
-`;
-
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: ${tokens.spacing[4]};
-  justify-content: flex-end;
-  margin-top: ${tokens.spacing[6]};
-`;
 
 interface Event {
   id: string;
@@ -247,7 +52,7 @@ export default function SchedulePage() {
     description: '',
     startTime: '',
     endTime: '',
-    color: '#667eea',
+    color: '#14b8a6',
     isPublic: false,
     isAllDay: false,
     repeatType: 'none',
@@ -288,7 +93,7 @@ export default function SchedulePage() {
       description: '',
       startTime: format(start, "yyyy-MM-dd'T'HH:mm"),
       endTime: format(end, "yyyy-MM-dd'T'HH:mm"),
-      color: '#667eea',
+      color: '#14b8a6',
       isPublic: false,
       isAllDay: false,
       repeatType: 'none',
@@ -303,7 +108,7 @@ export default function SchedulePage() {
       description: event.description || '',
       startTime: format(event.start, "yyyy-MM-dd'T'HH:mm"),
       endTime: format(event.end, "yyyy-MM-dd'T'HH:mm"),
-      color: event.color || '#667eea',
+      color: event.color || '#14b8a6',
       isPublic: event.isPublic,
       isAllDay: event.isAllDay,
       repeatType: event.repeatType || 'none',
@@ -337,10 +142,8 @@ export default function SchedulePage() {
     };
 
     if (selectedEvent) {
-      // 수정
       await supabase.from('schedules').update(scheduleData).eq('id', selectedEvent.id);
     } else {
-      // 생성
       await supabase.from('schedules').insert(scheduleData);
     }
 
@@ -360,15 +163,122 @@ export default function SchedulePage() {
   };
 
   return (
-    <ScheduleContainer>
-      <Header>
-        <Title>일정 관리</Title>
-        <Button variant="primary" onClick={() => handleSelectSlot({ start: new Date(), end: new Date() })}>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-4xl md:text-5xl font-display font-bold gradient-text">일정 관리</h1>
+        <Button
+          variant="primary"
+          onClick={() => handleSelectSlot({ start: new Date(), end: new Date() })}
+        >
           새 일정 추가
         </Button>
-      </Header>
+      </div>
 
-      <CalendarCard variant="glass">
+      {/* Calendar */}
+      <Card padding="lg" className="calendar-container">
+        <style jsx global>{`
+          .calendar-container .rbc-calendar {
+            color: rgb(var(--color-gray-900));
+          }
+
+          .dark .calendar-container .rbc-calendar {
+            color: rgb(var(--color-white));
+          }
+
+          .calendar-container .rbc-header {
+            padding: 0.75rem;
+            font-weight: 600;
+            color: rgb(var(--color-gray-600));
+            border-bottom: 1px solid rgb(var(--color-gray-200));
+          }
+
+          .dark .calendar-container .rbc-header {
+            color: rgb(var(--color-gray-400));
+            border-bottom-color: rgb(var(--color-gray-700));
+          }
+
+          .calendar-container .rbc-today {
+            background-color: rgba(20, 184, 166, 0.1);
+          }
+
+          .calendar-container .rbc-event {
+            background-color: #14b8a6;
+            border-radius: 0.25rem;
+            border: none;
+            padding: 0.25rem 0.5rem;
+          }
+
+          .calendar-container .rbc-off-range-bg {
+            background-color: rgb(var(--color-gray-50));
+          }
+
+          .dark .calendar-container .rbc-off-range-bg {
+            background-color: rgb(var(--color-gray-900));
+          }
+
+          .calendar-container .rbc-month-view {
+            background: transparent;
+            border: 1px solid rgb(var(--color-gray-200));
+            border-radius: 0.5rem;
+          }
+
+          .dark .calendar-container .rbc-month-view {
+            border-color: rgb(var(--color-gray-700));
+          }
+
+          .calendar-container .rbc-day-bg {
+            border-color: rgb(var(--color-gray-200));
+          }
+
+          .dark .calendar-container .rbc-day-bg {
+            border-color: rgb(var(--color-gray-700));
+          }
+
+          .calendar-container .rbc-time-slot {
+            border-top: 1px solid rgb(var(--color-gray-200));
+          }
+
+          .dark .calendar-container .rbc-time-slot {
+            border-top-color: rgb(var(--color-gray-700));
+          }
+
+          .calendar-container .rbc-toolbar {
+            margin-bottom: 1.5rem;
+          }
+
+          .calendar-container .rbc-toolbar button {
+            color: rgb(var(--color-gray-900));
+            background: rgb(var(--color-gray-100));
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+          }
+
+          .dark .calendar-container .rbc-toolbar button {
+            color: rgb(var(--color-white));
+            background: rgb(var(--color-gray-800));
+          }
+
+          .calendar-container .rbc-toolbar button:hover {
+            background: rgb(var(--color-gray-200));
+          }
+
+          .dark .calendar-container .rbc-toolbar button:hover {
+            background: rgb(var(--color-gray-700));
+          }
+
+          .calendar-container .rbc-toolbar button.rbc-active {
+            background: linear-gradient(135deg, #14b8a6 0%, #6366f1 100%);
+            color: white;
+          }
+
+          .calendar-container .rbc-toolbar .rbc-toolbar-label {
+            font-size: 1.25rem;
+            font-weight: 700;
+          }
+        `}</style>
+
         <Calendar
           localizer={localizer}
           events={events}
@@ -382,115 +292,132 @@ export default function SchedulePage() {
           onView={(newView) => setView(newView)}
           culture="ko"
         />
-      </CalendarCard>
+      </Card>
 
-      <Modal $show={showModal} onClick={() => setShowModal(false)}>
-        <ModalContent variant="glass" onClick={(e) => e.stopPropagation()}>
-          <CloseButton onClick={() => setShowModal(false)}>×</CloseButton>
+      {/* Modal */}
+      {showModal && (
+        <div
+          className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-start justify-center pt-20"
+          onClick={() => setShowModal(false)}
+        >
+          <Card
+            padding="lg"
+            className="relative w-[90%] max-w-2xl"
+            onClick={(e: React.MouseEvent) => e.stopPropagation()}
+          >
+            {/* Close Button */}
+            <button
+              onClick={() => setShowModal(false)}
+              className="absolute top-4 right-4 text-3xl text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors"
+            >
+              ×
+            </button>
 
-          <h2 style={{ fontSize: tokens.typography.fontSize['2xl'], marginBottom: tokens.spacing[6], color: tokens.colors.white }}>
-            {selectedEvent ? '일정 수정' : '새 일정 추가'}
-          </h2>
+            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
+              {selectedEvent ? '일정 수정' : '새 일정 추가'}
+            </h2>
 
-          <form onSubmit={handleSubmit}>
-            <FormGroup>
-              <Label>제목 *</Label>
+            <form onSubmit={handleSubmit} className="space-y-4">
               <Input
+                id="title"
+                label="제목"
                 type="text"
                 value={formData.title}
                 onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                 required
+                fullWidth
               />
-            </FormGroup>
 
-            <FormGroup>
-              <Label>설명</Label>
-              <TextArea
+              <Textarea
+                id="description"
+                label="설명"
                 value={formData.description}
                 onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                rows={3}
+                fullWidth
               />
-            </FormGroup>
 
-            <FormGroup>
-              <Label>시작 시간 *</Label>
               <Input
+                id="startTime"
+                label="시작 시간"
                 type="datetime-local"
                 value={formData.startTime}
                 onChange={(e) => setFormData({ ...formData, startTime: e.target.value })}
                 required
+                fullWidth
               />
-            </FormGroup>
 
-            <FormGroup>
-              <Label>종료 시간 *</Label>
               <Input
+                id="endTime"
+                label="종료 시간"
                 type="datetime-local"
                 value={formData.endTime}
                 onChange={(e) => setFormData({ ...formData, endTime: e.target.value })}
                 required
+                fullWidth
               />
-            </FormGroup>
 
-            <FormGroup>
-              <Label>색상</Label>
               <Input
+                id="color"
+                label="색상"
                 type="color"
                 value={formData.color}
                 onChange={(e) => setFormData({ ...formData, color: e.target.value })}
+                fullWidth
               />
-            </FormGroup>
 
-            <FormGroup>
-              <Label>반복</Label>
               <Select
+                id="repeatType"
+                label="반복"
                 value={formData.repeatType}
                 onChange={(e) => setFormData({ ...formData, repeatType: e.target.value })}
+                fullWidth
               >
                 <option value="none">없음</option>
                 <option value="daily">매일</option>
                 <option value="weekly">매주</option>
                 <option value="monthly">매월</option>
               </Select>
-            </FormGroup>
 
-            <FormGroup>
-              <label style={{ color: tokens.colors.gray[300], display: 'flex', alignItems: 'center' }}>
-                <Checkbox
+              <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                <input
                   type="checkbox"
+                  id="isAllDay"
                   checked={formData.isAllDay}
                   onChange={(e) => setFormData({ ...formData, isAllDay: e.target.checked })}
+                  className="w-4 h-4 text-teal-500 border-gray-300 dark:border-gray-600 rounded focus:ring-teal-500"
                 />
-                종일 일정
-              </label>
-            </FormGroup>
+                <label htmlFor="isAllDay">종일 일정</label>
+              </div>
 
-            <FormGroup>
-              <label style={{ color: tokens.colors.gray[300], display: 'flex', alignItems: 'center' }}>
-                <Checkbox
+              <div className="flex items-center gap-2 text-gray-700 dark:text-gray-300">
+                <input
                   type="checkbox"
+                  id="isPublic"
                   checked={formData.isPublic}
                   onChange={(e) => setFormData({ ...formData, isPublic: e.target.checked })}
+                  className="w-4 h-4 text-teal-500 border-gray-300 dark:border-gray-600 rounded focus:ring-teal-500"
                 />
-                공개 일정
-              </label>
-            </FormGroup>
+                <label htmlFor="isPublic">공개 일정</label>
+              </div>
 
-            <ButtonGroup>
-              {selectedEvent && (
-                <Button type="button" variant="outline" onClick={handleDelete}>
-                  삭제
+              <div className="flex gap-4 justify-end pt-6">
+                {selectedEvent && (
+                  <Button type="button" variant="outline" onClick={handleDelete}>
+                    삭제
+                  </Button>
+                )}
+                <Button type="button" variant="outline" onClick={() => setShowModal(false)}>
+                  취소
                 </Button>
-              )}
-              <Button type="button" variant="outline" onClick={() => setShowModal(false)}>
-                취소
-              </Button>
-              <Button type="submit" variant="primary">
-                {selectedEvent ? '수정' : '추가'}
-              </Button>
-            </ButtonGroup>
-          </form>
-        </ModalContent>
-      </Modal>
-    </ScheduleContainer>
+                <Button type="submit" variant="primary">
+                  {selectedEvent ? '수정' : '추가'}
+                </Button>
+              </div>
+            </form>
+          </Card>
+        </div>
+      )}
+    </div>
   );
 }

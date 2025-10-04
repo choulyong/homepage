@@ -1,5 +1,5 @@
 /**
- * IT News Page
+ * IT News Page with Tailwind CSS
  * AI, 암호화폐 관련 IT 뉴스
  */
 
@@ -7,150 +7,9 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import styled from '@emotion/styled';
-import { tokens } from '@/lib/styles/tokens';
 import { Card } from '@/components/ui/Card';
 import Image from 'next/image';
-import Link from 'next/link';
-
-const NewsContainer = styled.div`
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: ${tokens.spacing[12]} ${tokens.spacing[6]};
-`;
-
-const Header = styled.div`
-  margin-bottom: ${tokens.spacing[8]};
-`;
-
-const Title = styled.h1`
-  font-size: ${tokens.typography.fontSize['4xl']};
-  font-weight: ${tokens.typography.fontWeight.bold};
-  background: ${tokens.colors.gradients.kinetic};
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin-bottom: ${tokens.spacing[2]};
-`;
-
-const Subtitle = styled.p`
-  font-size: ${tokens.typography.fontSize.lg};
-  color: ${tokens.colors.gray[400]};
-`;
-
-const CategoryTabs = styled.div`
-  display: flex;
-  gap: ${tokens.spacing[4]};
-  margin-bottom: ${tokens.spacing[8]};
-  flex-wrap: wrap;
-`;
-
-const TabButton = styled.button<{ $active?: boolean }>`
-  padding: ${tokens.spacing[3]} ${tokens.spacing[6]};
-  background: ${(props) =>
-    props.$active ? tokens.colors.gradients.kinetic : tokens.colors.glass.light};
-  color: ${tokens.colors.white};
-  border: none;
-  border-radius: ${tokens.borderRadius.full};
-  font-size: ${tokens.typography.fontSize.sm};
-  font-weight: ${tokens.typography.fontWeight.medium};
-  cursor: pointer;
-  transition: all ${tokens.transitions.base};
-
-  &:hover {
-    transform: translateY(-2px);
-    background: ${(props) =>
-      props.$active ? tokens.colors.gradients.kinetic : tokens.colors.glass.medium};
-  }
-`;
-
-const NewsGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
-  gap: ${tokens.spacing[6]};
-`;
-
-const NewsCard = styled(Card)`
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  cursor: pointer;
-  transition: all ${tokens.transitions.base};
-
-  &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 32px rgba(240, 147, 251, 0.3);
-  }
-`;
-
-const NewsImage = styled.div`
-  position: relative;
-  width: 100%;
-  height: 200px;
-  background: ${tokens.colors.gray[800]};
-  overflow: hidden;
-
-  img {
-    object-fit: cover;
-  }
-`;
-
-const NewsContent = styled.div`
-  padding: ${tokens.spacing[6]};
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-`;
-
-const NewsTitle = styled.h3`
-  font-size: ${tokens.typography.fontSize.lg};
-  font-weight: ${tokens.typography.fontWeight.bold};
-  color: ${tokens.colors.white};
-  margin-bottom: ${tokens.spacing[2]};
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-`;
-
-const NewsDescription = styled.p`
-  font-size: ${tokens.typography.fontSize.sm};
-  color: ${tokens.colors.gray[400]};
-  line-height: 1.6;
-  margin-bottom: ${tokens.spacing[4]};
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
-  flex: 1;
-`;
-
-const NewsMeta = styled.div`
-  display: flex;
-  justify-content: space-between;
-  font-size: ${tokens.typography.fontSize.xs};
-  color: ${tokens.colors.gray[500]};
-`;
-
-const CategoryBadge = styled.span<{ $category: string }>`
-  padding: ${tokens.spacing[1]} ${tokens.spacing[3]};
-  background: ${(props) =>
-    props.$category === 'ai'
-      ? tokens.colors.primary[500]
-      : props.$category === 'crypto'
-        ? tokens.colors.warning
-        : tokens.colors.info};
-  color: ${tokens.colors.white};
-  border-radius: ${tokens.borderRadius.full};
-  font-size: ${tokens.typography.fontSize.xs};
-  font-weight: ${tokens.typography.fontWeight.medium};
-`;
-
-const EmptyState = styled.div`
-  text-align: center;
-  padding: ${tokens.spacing[12]};
-  color: ${tokens.colors.gray[400]};
-`;
+import { cn } from '@/lib/utils';
 
 export default function NewsPage() {
   const [news, setNews] = useState<any[]>([]);
@@ -160,7 +19,6 @@ export default function NewsPage() {
     const loadNews = async () => {
       const supabase = createClient();
 
-      // 뉴스 가져오기
       const { data: newsData } = await supabase
         .from('news')
         .select('*')
@@ -174,64 +32,108 @@ export default function NewsPage() {
     loadNews();
   }, []);
 
+  const getCategoryColor = (category: string) => {
+    switch (category?.toLowerCase()) {
+      case 'ai':
+        return 'bg-teal-500 text-white';
+      case 'crypto':
+        return 'bg-yellow-500 text-white';
+      default:
+        return 'bg-indigo-500 text-white';
+    }
+  };
+
   if (loading) {
     return (
-      <NewsContainer>
-        <EmptyState>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="text-center py-12 text-gray-600 dark:text-gray-400">
           <p>로딩 중...</p>
-        </EmptyState>
-      </NewsContainer>
+        </div>
+      </div>
     );
   }
 
   return (
-    <NewsContainer>
-      <Header>
-        <Title>IT 뉴스</Title>
-        <Subtitle>AI, 암호화폐, 기술 트렌드 최신 뉴스</Subtitle>
-      </Header>
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* Header */}
+      <div className="mb-8">
+        <h1 className="text-4xl md:text-5xl font-display font-bold gradient-text mb-2">
+          IT 뉴스
+        </h1>
+        <p className="text-lg text-gray-600 dark:text-gray-400">
+          AI, 암호화폐, 기술 트렌드 최신 뉴스
+        </p>
+      </div>
 
-      {/* 카테고리 탭은 추후 클라이언트 컴포넌트로 분리하여 필터링 기능 추가 */}
-
+      {/* News Grid */}
       {news && news.length > 0 ? (
-        <NewsGrid>
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {news.map((item) => (
             <a
               key={item.id}
               href={item.url}
               target="_blank"
               rel="noopener noreferrer"
-              style={{ textDecoration: 'none' }}
+              className="group"
             >
-              <NewsCard variant="glass">
+              <Card
+                hoverable
+                padding="none"
+                className="h-full flex flex-col overflow-hidden"
+              >
+                {/* News Image */}
                 {item.image_url && (
-                  <NewsImage>
-                    <Image src={item.image_url} alt={item.title} fill />
-                  </NewsImage>
+                  <div className="relative w-full h-48 bg-gray-200 dark:bg-gray-800 overflow-hidden">
+                    <Image
+                      src={item.image_url}
+                      alt={item.title}
+                      fill
+                      className="object-cover"
+                    />
+                  </div>
                 )}
-                <NewsContent>
-                  <NewsTitle>{item.title}</NewsTitle>
-                  {item.description && <NewsDescription>{item.description}</NewsDescription>}
-                  <NewsMeta>
-                    <div style={{ display: 'flex', gap: tokens.spacing[2], alignItems: 'center' }}>
-                      {item.category && <CategoryBadge $category={item.category}>{item.category.toUpperCase()}</CategoryBadge>}
+
+                {/* News Content */}
+                <div className="p-6 flex-1 flex flex-col">
+                  <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 line-clamp-2 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                    {item.title}
+                  </h3>
+
+                  {item.description && (
+                    <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-3 mb-4 flex-1">
+                      {item.description}
+                    </p>
+                  )}
+
+                  {/* Meta */}
+                  <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-500">
+                    <div className="flex gap-2 items-center">
+                      {item.category && (
+                        <span className={cn('px-3 py-1 rounded-full font-medium', getCategoryColor(item.category))}>
+                          {item.category.toUpperCase()}
+                        </span>
+                      )}
                       {item.source && <span>{item.source}</span>}
                     </div>
                     {item.published_at && (
                       <span>{new Date(item.published_at).toLocaleDateString('ko-KR')}</span>
                     )}
-                  </NewsMeta>
-                </NewsContent>
-              </NewsCard>
+                  </div>
+                </div>
+              </Card>
             </a>
           ))}
-        </NewsGrid>
+        </div>
       ) : (
-        <EmptyState>
-          <h2>아직 뉴스가 없습니다</h2>
-          <p>관리자가 뉴스를 추가하면 여기에 표시됩니다.</p>
-        </EmptyState>
+        <div className="text-center py-12">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            아직 뉴스가 없습니다
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400">
+            관리자가 뉴스를 추가하면 여기에 표시됩니다.
+          </p>
+        </div>
       )}
-    </NewsContainer>
+    </div>
   );
 }
