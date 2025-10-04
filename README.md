@@ -1,344 +1,226 @@
-# Metaldragon Personal Portal
+# 🐉 metaldragon.co.kr
 
-**metaldragon.co.kr** - AI/빅데이터 학습 커뮤니티와 개인 포트폴리오를 결합한 종합 웹 포털
+> 현대적인 개인 포털 - AI 학습, 재무 관리, 창작물 공유를 하나의 플랫폼에서
 
-## 🎯 프로젝트 개요
+[![Next.js](https://img.shields.io/badge/Next.js-15.5.4-black)](https://nextjs.org/)
+[![Tailwind CSS](https://img.shields.io/badge/Tailwind-4.0-38bdf8)](https://tailwindcss.com/)
+[![Supabase](https://img.shields.io/badge/Supabase-Postgres-3ecf8e)](https://supabase.com/)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://www.typescriptlang.org/)
 
-Metaldragon은 AI와 빅데이터 학습 자료 공유, 개인 포트폴리오 전시, 일정 관리, IT 뉴스 큐레이션을 하나의 플랫폼에서 제공하는 개인 포털 사이트입니다.
+## ✨ 주요 기능
 
-### 주요 기능
+### 📚 학습 & 커뮤니티
+- **AI 스터디 게시판**: AI/ML 학습 내용 공유 및 토론
+- **빅데이터 자격증 스터디**: 빅데이터처리기사 자격증 준비
+- **자유게시판**: 일상 및 자유 주제 소통
+- **실시간 댓글**: Supabase Realtime 기반 실시간 댓글 시스템
 
-- **게시판 시스템**: AI 스터디, 빅데이터 스터디, 자유게시판, AI 작품 갤러리
-- **일정 관리**: 공개/비공개 일정, 반복 일정, 월/주/일 뷰
-- **IT 뉴스**: AI, 암호화폐 관련 뉴스 큐레이션
-- **YouTube 갤러리**: 커버 영상 임베드 재생
-- **문의하기**: 이메일 기반 문의 접수 시스템
-- **관리자 CMS**: 모든 콘텐츠를 코딩 없이 웹에서 관리
-- **SEO 최적화**: sitemap, robots.txt, 메타태그
-- **법적 문서**: 개인정보 처리방침, 이용약관
+### 🎨 창작 & 포트폴리오
+- **AI 작품 갤러리**: AI 생성 이미지, 영상, 음악, 문서 전시
+- **YouTube 커버 영상**: 노래 커버 영상 링크 관리
+- **포트폴리오**: 프로젝트 소개 및 기술 스택 전시
 
-## 🛠️ 기술 스택
+### 📰 정보 & 유틸리티
+- **IT 뉴스 피드**: AI, 암호화폐 관련 뉴스 자동 수집
+- **일정 관리**: 캘린더 기반 개인/공개 일정 관리 (반복 일정 지원)
+- **가계부**: 수입/지출 기록 및 월별 통계 차트
+- **문의하기**: 방문자 문의 및 피드백 수집
+
+### 🛠️ 관리자 기능
+- **통합 대시보드**: 모든 콘텐츠 통계 및 관리
+- **CMS 시스템**: 웹에서 직접 모든 콘텐츠 편집 가능
+- **사용자 관리**: 회원 관리 및 권한 설정
+
+---
+
+## 🏗️ 기술 스택
 
 ### Frontend
-- **Next.js 15** - App Router, React Server Components, Server Actions
-- **React 19** - 최신 React 기능 활용
-- **TypeScript** - 타입 안정성
-- **Emotion** - CSS-in-JS 스타일링
-- **React Big Calendar** - 일정 관리 UI
-- **date-fns** - 날짜 처리
-- **Lucide React** - 아이콘
+- **Framework**: Next.js 15.5.4 (App Router, Turbopack)
+- **Language**: TypeScript 5
+- **Styling**: Tailwind CSS 4.0
+- **UI Components**: Custom component library (Button, Card, Input, etc.)
+- **State Management**: React Query (@tanstack/react-query)
+- **Animation**: Framer Motion, AOS
 
 ### Backend & Database
-- **Supabase** - PostgreSQL 데이터베이스, 인증, 스토리지
-- **Row Level Security (RLS)** - 데이터 보안
-- **Real-time Subscriptions** - 실시간 데이터 동기화
+- **Database**: Supabase (PostgreSQL)
+- **ORM**: Drizzle ORM
+- **Authentication**: Supabase Auth (Email/Password, OAuth)
+- **Storage**: Supabase Storage (이미지, 파일)
+- **Realtime**: Supabase Realtime (댓글, 알림)
 
-### DevOps
-- **Git & GitHub** - 버전 관리
-- **Vercel** (권장) - 배포 플랫폼
+### DevOps & Monitoring
+- **Caching**: Upstash Redis
+- **Logging**: Loki + Grafana
+- **Deployment**: Docker + Nginx
+- **DNS/CDN**: Cloudflare
 
-### Design System
-- **Glassmorphism 2.0** - 반투명 카드 디자인
-- **Kinetic Gradients** - 핑크-오렌지 애니메이션 그라디언트
-- **Design Tokens** - 일관된 디자인 시스템
+---
 
-## 📁 프로젝트 구조
+## 🚀 로컬 개발 환경 세팅
 
-```
-metaldragon/
-├── src/
-│   ├── app/                      # Next.js App Router
-│   │   ├── (auth)/              # 인증 관련 페이지 (로그인, 회원가입)
-│   │   ├── about/               # 프로필 페이지
-│   │   ├── admin/               # 관리자 CMS
-│   │   │   ├── about/           # 프로필 편집
-│   │   │   ├── posts/           # 게시글 관리
-│   │   │   ├── ai-artwork/      # AI 작품 관리
-│   │   │   ├── news/            # 뉴스 관리
-│   │   │   ├── youtube/         # YouTube 링크 관리
-│   │   │   ├── contacts/        # 문의 내역 관리
-│   │   │   └── components/      # 관리자 전용 컴포넌트
-│   │   ├── artworks/            # AI 작품 갤러리
-│   │   ├── board/               # 게시판 (ai_study, bigdata_study, free_board, ai_artwork)
-│   │   ├── contact/             # 문의하기
-│   │   ├── news/                # IT 뉴스
-│   │   ├── privacy/             # 개인정보 처리방침
-│   │   ├── schedule/            # 일정 관리
-│   │   ├── terms/               # 이용약관
-│   │   ├── youtube/             # YouTube 갤러리
-│   │   ├── layout.tsx           # 루트 레이아웃
-│   │   ├── page.tsx             # 홈페이지
-│   │   ├── sitemap.ts           # SEO 사이트맵
-│   │   └── robots.ts            # 검색 엔진 크롤러 설정
-│   ├── components/              # 재사용 가능한 컴포넌트
-│   │   ├── layout/              # 레이아웃 컴포넌트 (Header, Footer)
-│   │   └── ui/                  # UI 컴포넌트 (Card, Button 등)
-│   ├── lib/                     # 유틸리티 및 설정
-│   │   ├── supabase/            # Supabase 클라이언트 설정
-│   │   └── styles/              # 디자인 토큰, 글로벌 스타일
-│   └── types/                   # TypeScript 타입 정의
-├── public/                      # 정적 파일
-├── .env.local                   # 환경 변수 (Git 제외)
-├── next.config.ts               # Next.js 설정
-├── tsconfig.json                # TypeScript 설정
-├── package.json                 # 의존성 관리
-├── PLAN.md                      # 프로젝트 로드맵
-├── PRD.md                       # 제품 요구사항 명세서
-└── LLD.md                       # 저수준 설계 문서
-```
+### 1. 필수 요구사항
+- Node.js 20.x 이상
+- npm 또는 yarn
+- Git
 
-## 🚀 시작하기
-
-### 1. 저장소 클론
-
+### 2. 프로젝트 클론
 ```bash
-git clone <repository-url>
+git clone https://github.com/YOUR_USERNAME/metaldragon.git
 cd metaldragon
 ```
 
-### 2. 의존성 설치
-
+### 3. 패키지 설치
 ```bash
 npm install
 ```
 
-### 3. 환경 변수 설정
-
+### 4. 환경변수 설정
 `.env.local` 파일을 생성하고 다음 내용을 입력하세요:
 
 ```env
-# Supabase 설정
-NEXT_PUBLIC_SUPABASE_URL=https://xhzqhvjkkfpeavdphoit.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key_here
+# Supabase
+NEXT_PUBLIC_SUPABASE_URL=your_supabase_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_supabase_anon_key
+SUPABASE_SERVICE_ROLE_KEY=your_service_role_key
+
+# Upstash Redis (선택사항)
+UPSTASH_REDIS_REST_URL=your_redis_url
+UPSTASH_REDIS_REST_TOKEN=your_redis_token
+
+# YouTube API (선택사항)
+YOUTUBE_API_KEY=your_youtube_api_key
+
+# Email (선택사항)
+RESEND_API_KEY=your_resend_api_key
 ```
 
-Supabase 프로젝트 정보:
-- **Project ID**: xhzqhvjkkfpeavdphoit
-- **Region**: ap-northeast-2 (Seoul)
-- **Database**: PostgreSQL 17.6.1
-
-### 4. Supabase 데이터베이스 설정
-
-#### 필수 테이블 생성
-
-Supabase Dashboard > SQL Editor에서 다음 SQL을 실행하세요:
-
-```sql
--- users 테이블
-CREATE TABLE IF NOT EXISTS users (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  email TEXT UNIQUE NOT NULL,
-  name TEXT,
-  avatar_url TEXT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
--- profile 테이블
-CREATE TABLE IF NOT EXISTS profile (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  display_name TEXT NOT NULL,
-  job_title TEXT,
-  bio TEXT,
-  profile_image_url TEXT,
-  skills TEXT[],
-  social_links JSONB,
-  portfolio_items JSONB,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
--- posts 테이블
-CREATE TABLE IF NOT EXISTS posts (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  title TEXT NOT NULL,
-  content TEXT NOT NULL,
-  category TEXT NOT NULL CHECK (category IN ('ai_study', 'bigdata_study', 'free_board', 'ai_artwork')),
-  author_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  view_count INTEGER DEFAULT 0,
-  image_url TEXT,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
--- schedules 테이블
-CREATE TABLE IF NOT EXISTS schedules (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
-  title TEXT NOT NULL,
-  description TEXT,
-  start_time TIMESTAMPTZ NOT NULL,
-  end_time TIMESTAMPTZ NOT NULL,
-  color TEXT DEFAULT '#667eea',
-  is_public BOOLEAN DEFAULT false,
-  is_all_day BOOLEAN DEFAULT false,
-  repeat_type TEXT CHECK (repeat_type IN ('none', 'daily', 'weekly', 'monthly')),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
--- news 테이블
-CREATE TABLE IF NOT EXISTS news (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  title TEXT NOT NULL,
-  description TEXT,
-  url TEXT NOT NULL,
-  category TEXT NOT NULL CHECK (category IN ('ai', 'crypto')),
-  source TEXT,
-  image_url TEXT,
-  published_at TIMESTAMPTZ,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
--- youtube_videos 테이블
-CREATE TABLE IF NOT EXISTS youtube_videos (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  title TEXT NOT NULL,
-  video_id TEXT NOT NULL,
-  youtube_url TEXT NOT NULL,
-  thumbnail_url TEXT NOT NULL,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
-
--- contact_messages 테이블
-CREATE TABLE IF NOT EXISTS contact_messages (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name TEXT NOT NULL,
-  email TEXT NOT NULL,
-  subject TEXT NOT NULL,
-  message TEXT NOT NULL,
-  status TEXT DEFAULT 'unread' CHECK (status IN ('unread', 'read', 'replied')),
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
-);
+### 5. 데이터베이스 마이그레이션
+```bash
+npm run db:push
 ```
 
-#### Row Level Security (RLS) 설정
-
-```sql
--- RLS 활성화
-ALTER TABLE posts ENABLE ROW LEVEL SECURITY;
-ALTER TABLE schedules ENABLE ROW LEVEL SECURITY;
-ALTER TABLE news ENABLE ROW LEVEL SECURITY;
-ALTER TABLE youtube_videos ENABLE ROW LEVEL SECURITY;
-ALTER TABLE contact_messages ENABLE ROW LEVEL SECURITY;
-
--- posts 정책
-CREATE POLICY "게시글 누구나 조회 가능" ON posts FOR SELECT USING (true);
-CREATE POLICY "로그인한 사용자만 작성 가능" ON posts FOR INSERT WITH CHECK (auth.role() = 'authenticated');
-CREATE POLICY "본인 게시글만 수정 가능" ON posts FOR UPDATE USING (auth.uid() = author_id);
-CREATE POLICY "본인 게시글만 삭제 가능" ON posts FOR DELETE USING (auth.uid() = author_id);
-
--- schedules 정책
-CREATE POLICY "공개 일정 누구나 조회 가능" ON schedules FOR SELECT USING (is_public = true OR auth.uid() = user_id);
-CREATE POLICY "로그인한 사용자만 일정 작성 가능" ON schedules FOR INSERT WITH CHECK (auth.uid() = user_id);
-CREATE POLICY "본인 일정만 수정 가능" ON schedules FOR UPDATE USING (auth.uid() = user_id);
-CREATE POLICY "본인 일정만 삭제 가능" ON schedules FOR DELETE USING (auth.uid() = user_id);
-
--- news 정책
-CREATE POLICY "뉴스 누구나 조회 가능" ON news FOR SELECT USING (true);
-
--- youtube_videos 정책
-CREATE POLICY "YouTube 영상 누구나 조회 가능" ON youtube_videos FOR SELECT USING (true);
-
--- contact_messages 정책
-CREATE POLICY "문의 메시지 누구나 작성 가능" ON contact_messages FOR INSERT WITH CHECK (true);
-```
-
-### 5. 개발 서버 실행
-
+### 6. 개발 서버 실행
 ```bash
 npm run dev
 ```
 
-브라우저에서 [http://localhost:3000](http://localhost:3000)을 열어 확인하세요.
-
-## 🔐 인증 설정
-
-### Supabase Auth 설정
-
-1. Supabase Dashboard > Authentication > Providers
-2. Email 활성화
-3. (선택) Google, GitHub OAuth 활성화
-4. Site URL 설정: `http://localhost:3000` (개발), `https://metaldragon.co.kr` (프로덕션)
-5. Redirect URLs 설정:
-   - `http://localhost:3000/auth/callback`
-   - `https://metaldragon.co.kr/auth/callback`
-
-## 📦 빌드 및 배포
-
-### 프로덕션 빌드
-
-```bash
-npm run build
-```
-
-### Vercel 배포 (권장)
-
-1. Vercel에 GitHub 저장소 연결
-2. 환경 변수 설정:
-   - `NEXT_PUBLIC_SUPABASE_URL`
-   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
-3. 도메인 설정: `metaldragon.co.kr`
-4. 자동 배포 활성화
-
-### 수동 배포
-
-```bash
-npm run build
-npm run start
-```
-
-## 🎨 디자인 시스템
-
-### Design Tokens
-
-`src/lib/styles/tokens.ts`에서 관리:
-- **Colors**: Primary(핑크), Secondary(오렌지), Gray 스케일
-- **Typography**: 폰트 크기, 굵기
-- **Spacing**: 4px 단위 간격 시스템
-- **Border Radius**: 라운드 처리
-- **Shadows**: 그림자 효과
-- **Gradients**: Kinetic 그라디언트
-
-### Glassmorphism 스타일
-
-```typescript
-background: rgba(30, 30, 46, 0.6);
-backdrop-filter: blur(20px);
-border: 1px solid rgba(255, 255, 255, 0.1);
-```
-
-## 📊 관리자 기능
-
-관리자 대시보드: `/admin`
-
-### 주요 기능
-- **통계 대시보드**: 게시글, 사용자, 뉴스, 영상, 일정, 문의 통계
-- **게시글 관리**: CRUD 및 카테고리별 필터링
-- **AI 작품 관리**: 이미지 업로드 및 갤러리
-- **뉴스 관리**: IT 뉴스 추가/편집
-- **YouTube 관리**: 영상 링크 관리
-- **문의 관리**: 상태별 필터링 및 이메일 답변
-
-## 📝 라이선스
-
-이 프로젝트는 개인 포트폴리오 목적으로 제작되었습니다.
-
-## 👤 작성자
-
-**Metaldragon**
-- Website: [https://metaldragon.co.kr](https://metaldragon.co.kr)
-- Email: admin@metaldragon.co.kr
-
-## 📚 참고 문서
-
-- [PLAN.md](./PLAN.md) - 프로젝트 로드맵 및 진행 상황
-- [PRD.md](./PRD.md) - 제품 요구사항 명세서
-- [LLD.md](./LLD.md) - 저수준 설계 문서
-- [Next.js Documentation](https://nextjs.org/docs)
-- [Supabase Documentation](https://supabase.com/docs)
-- [Emotion Documentation](https://emotion.sh/docs/introduction)
+서버가 시작되면 http://localhost:3000 에서 확인할 수 있습니다.
 
 ---
 
-**Built with ❤️ using Next.js 15 and Supabase**
+## 📦 주요 스크립트
+
+```bash
+npm run dev          # 개발 서버 실행 (Turbopack)
+npm run build        # 프로덕션 빌드
+npm run start        # 프로덕션 서버 실행
+npm run lint         # ESLint 실행
+
+npm run db:generate  # Drizzle 마이그레이션 생성
+npm run db:migrate   # 마이그레이션 실행
+npm run db:push      # 스키마를 DB에 직접 푸시
+npm run db:studio    # Drizzle Studio 실행
+```
+
+---
+
+## 🎨 디자인 시스템
+
+### 컬러 팔레트
+- **Primary**: Teal (#14b8a6)
+- **Secondary**: Indigo (#6366f1)
+- **Gradient**: Teal to Indigo (135deg)
+
+### 타이포그래피
+- **Display Font**: Red Hat Display (제목, 로고)
+- **Body Font**: Inter (본문, UI)
+
+### 주요 컴포넌트
+- `Button`: 4 variants (primary, secondary, outline, ghost), 3 sizes
+- `Card`: 3 variants (default, bordered, featured)
+- `Input`, `Textarea`, `Select`: 통일된 폼 컴포넌트
+- `DarkModeToggle`: 다크 모드 전환 (localStorage 저장)
+
+---
+
+## 📂 프로젝트 구조
+
+```
+metaldragon/
+├── src/
+│   ├── app/                    # Next.js App Router 페이지
+│   │   ├── (auth)/            # 인증 관련 페이지
+│   │   ├── admin/             # 관리자 페이지
+│   │   ├── board/             # 게시판 페이지
+│   │   ├── about/             # 자기소개 페이지
+│   │   ├── contact/           # 문의 페이지
+│   │   ├── news/              # 뉴스 페이지
+│   │   ├── youtube/           # YouTube 링크 페이지
+│   │   ├── artworks/          # AI 작품 갤러리
+│   │   ├── schedule/          # 일정 관리
+│   │   ├── sitemap.ts         # SEO 사이트맵
+│   │   ├── robots.ts          # SEO robots.txt
+│   │   └── layout.tsx         # 루트 레이아웃
+│   ├── components/            # React 컴포넌트
+│   │   ├── ui/               # 재사용 가능한 UI 컴포넌트
+│   │   └── layout/           # 레이아웃 컴포넌트
+│   ├── lib/                   # 유틸리티 및 설정
+│   │   ├── supabase/         # Supabase 클라이언트
+│   │   ├── db/               # Drizzle ORM 스키마
+│   │   └── utils.ts          # 공통 유틸리티
+│   └── contexts/              # React Context
+├── public/                    # 정적 파일
+├── drizzle/                   # DB 마이그레이션
+├── docker-compose.yml         # Docker 설정
+└── package.json
+```
+
+---
+
+## 🔐 보안
+
+- **인증**: Supabase Auth (JWT 토큰 기반)
+- **권한 관리**: Row Level Security (RLS)
+- **환경변수**: `.env.local`에서 관리 (절대 Git에 포함 금지)
+- **HTTPS**: Cloudflare SSL/TLS (Full Strict)
+
+---
+
+## 📈 성능 최적화
+
+- ✅ Next.js Image 컴포넌트로 이미지 최적화
+- ✅ Tailwind CSS JIT 모드로 번들 크기 최소화
+- ✅ Turbopack으로 빠른 빌드
+- ✅ Redis 캐싱으로 API 응답 속도 향상
+- ✅ 코드 스플리팅 (동적 임포트)
+
+---
+
+## 🌐 배포
+
+### Docker 배포
+```bash
+docker-compose up -d --build
+```
+
+### 환경변수 설정
+프로덕션 환경에서는 `.env.production` 파일을 사용하거나 Docker secrets를 활용하세요.
+
+---
+
+## 📝 라이선스
+
+이 프로젝트는 개인 포트폴리오 프로젝트입니다.
+
+---
+
+## 📞 문의
+
+- **Website**: https://metaldragon.co.kr
+- **Email**: choulyong@metaldragon.co.kr
+
+---
+
+**Built with ❤️ by metaldragon**

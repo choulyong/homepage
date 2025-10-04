@@ -1,8 +1,3 @@
-/**
- * Robots.txt Generation
- * 검색 엔진 크롤러 설정
- */
-
 import { MetadataRoute } from 'next';
 
 export default function robots(): MetadataRoute.Robots {
@@ -11,7 +6,7 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: '*',
         allow: '/',
-        disallow: ['/admin/', '/api/'],
+        disallow: ['/admin/', '/api/', '/auth/'],
       },
     ],
     sitemap: 'https://metaldragon.co.kr/sitemap.xml',
