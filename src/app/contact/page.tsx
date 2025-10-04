@@ -1,115 +1,17 @@
 /**
- * Contact Page
+ * Contact Page with Tailwind CSS
  * 문의하기 페이지
  */
 
 'use client';
 
 import { useState } from 'react';
-import styled from '@emotion/styled';
-import { tokens } from '@/lib/styles/tokens';
 import { Button } from '@/components/ui/Button';
+import { Input } from '@/components/ui/Input';
+import { Textarea } from '@/components/ui/Textarea';
 import { Card } from '@/components/ui/Card';
 import { createClient } from '@/lib/supabase/client';
-
-const ContactContainer = styled.div`
-  max-width: 800px;
-  margin: 0 auto;
-  padding: ${tokens.spacing[12]} ${tokens.spacing[6]};
-`;
-
-const Title = styled.h1`
-  font-size: ${tokens.typography.fontSize['4xl']};
-  font-weight: ${tokens.typography.fontWeight.bold};
-  background: ${tokens.colors.gradients.kinetic};
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-align: center;
-  margin-bottom: ${tokens.spacing[2]};
-`;
-
-const Subtitle = styled.p`
-  font-size: ${tokens.typography.fontSize.lg};
-  color: ${tokens.colors.gray[400]};
-  text-align: center;
-  margin-bottom: ${tokens.spacing[8]};
-`;
-
-const Form = styled.form``;
-
-const FormCard = styled(Card)`
-  padding: ${tokens.spacing[8]};
-`;
-
-const FormGroup = styled.div`
-  margin-bottom: ${tokens.spacing[6]};
-`;
-
-const Label = styled.label`
-  display: block;
-  font-size: ${tokens.typography.fontSize.sm};
-  font-weight: ${tokens.typography.fontWeight.medium};
-  color: ${tokens.colors.gray[300]};
-  margin-bottom: ${tokens.spacing[2]};
-`;
-
-const Input = styled.input`
-  width: 100%;
-  padding: ${tokens.spacing[3]} ${tokens.spacing[4]};
-  background: ${tokens.colors.gray[800]};
-  border: 1px solid ${tokens.colors.gray[600]};
-  border-radius: ${tokens.borderRadius.md};
-  color: ${tokens.colors.white};
-  font-size: ${tokens.typography.fontSize.base};
-  transition: all ${tokens.transitions.base};
-
-  &:focus {
-    outline: none;
-    border-color: ${tokens.colors.primary[500]};
-    box-shadow: 0 0 0 3px ${tokens.colors.primary[100]}20;
-  }
-
-  &::placeholder {
-    color: ${tokens.colors.gray[500]};
-  }
-`;
-
-const TextArea = styled.textarea`
-  width: 100%;
-  padding: ${tokens.spacing[3]} ${tokens.spacing[4]};
-  background: ${tokens.colors.gray[800]};
-  border: 1px solid ${tokens.colors.gray[600]};
-  border-radius: ${tokens.borderRadius.md};
-  color: ${tokens.colors.white};
-  font-size: ${tokens.typography.fontSize.base};
-  min-height: 200px;
-  resize: vertical;
-  font-family: inherit;
-  transition: all ${tokens.transitions.base};
-
-  &:focus {
-    outline: none;
-    border-color: ${tokens.colors.primary[500]};
-    box-shadow: 0 0 0 3px ${tokens.colors.primary[100]}20;
-  }
-
-  &::placeholder {
-    color: ${tokens.colors.gray[500]};
-  }
-`;
-
-const Message = styled.div<{ $type: 'success' | 'error' }>`
-  padding: ${tokens.spacing[4]};
-  border-radius: ${tokens.borderRadius.md};
-  margin-bottom: ${tokens.spacing[6]};
-  background: ${(props) =>
-    props.$type === 'success' ? `${tokens.colors.success}15` : `${tokens.colors.danger}15`};
-  border: 1px solid
-    ${(props) => (props.$type === 'success' ? tokens.colors.success : tokens.colors.danger)};
-  color: ${(props) => (props.$type === 'success' ? tokens.colors.success : tokens.colors.danger)};
-  text-align: center;
-`;
+import { cn } from '@/lib/utils';
 
 export default function ContactPage() {
   const [loading, setLoading] = useState(false);
@@ -161,66 +63,107 @@ export default function ContactPage() {
   };
 
   return (
-    <ContactContainer>
-      <Title>문의하기</Title>
-      <Subtitle>궁금한 점이 있으시면 언제든 연락주세요</Subtitle>
+    <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* Header */}
+      <h1 className="text-4xl md:text-5xl font-display font-bold gradient-text text-center mb-2">
+        문의하기
+      </h1>
+      <p className="text-lg text-gray-600 dark:text-gray-400 text-center mb-8">
+        궁금한 점이 있으시면 언제든 연락주세요
+      </p>
 
-      {message && <Message $type={message.type}>{message.text}</Message>}
+      {/* Success/Error Message */}
+      {message && (
+        <div
+          className={cn(
+            'p-4 rounded-lg mb-6 text-center',
+            message.type === 'success'
+              ? 'bg-green-100 dark:bg-green-900/20 border border-green-500 text-green-700 dark:text-green-400'
+              : 'bg-red-100 dark:bg-red-900/20 border border-red-500 text-red-700 dark:text-red-400'
+          )}
+        >
+          {message.text}
+        </div>
+      )}
 
-      <Form onSubmit={handleSubmit}>
-        <FormCard variant="glass">
-          <FormGroup>
-            <Label htmlFor="name">이름 *</Label>
+      {/* Contact Form */}
+      <form onSubmit={handleSubmit}>
+        <Card padding="lg">
+          <div className="space-y-6">
+            {/* Name Field */}
             <Input
               id="name"
+              label="이름"
               type="text"
               value={formData.name}
               onChange={(e) => setFormData({ ...formData, name: e.target.value })}
               required
               placeholder="홍길동"
+              fullWidth
             />
-          </FormGroup>
 
-          <FormGroup>
-            <Label htmlFor="email">이메일 *</Label>
+            {/* Email Field */}
             <Input
               id="email"
+              label="이메일"
               type="email"
               value={formData.email}
               onChange={(e) => setFormData({ ...formData, email: e.target.value })}
               required
               placeholder="your@email.com"
+              fullWidth
             />
-          </FormGroup>
 
-          <FormGroup>
-            <Label htmlFor="subject">제목 *</Label>
+            {/* Subject Field */}
             <Input
               id="subject"
+              label="제목"
               type="text"
               value={formData.subject}
               onChange={(e) => setFormData({ ...formData, subject: e.target.value })}
               required
               placeholder="문의 제목을 입력하세요"
+              fullWidth
             />
-          </FormGroup>
 
-          <FormGroup>
-            <Label htmlFor="message">메시지 *</Label>
-            <TextArea
+            {/* Message Field */}
+            <Textarea
               id="message"
+              label="메시지"
               value={formData.message}
               onChange={(e) => setFormData({ ...formData, message: e.target.value })}
               required
               placeholder="문의 내용을 자세히 적어주세요"
+              rows={8}
+              fullWidth
             />
-          </FormGroup>
 
-          <Button type="submit" variant="primary" fullWidth disabled={loading}>
-            {loading ? '전송 중...' : '문의 보내기'}
-          </Button>
-        </FormCard>
-      </Form>
-    </ContactContainer>
+            {/* Submit Button */}
+            <Button type="submit" variant="primary" fullWidth disabled={loading}>
+              {loading ? '전송 중...' : '문의 보내기'}
+            </Button>
+          </div>
+        </Card>
+      </form>
+
+      {/* Contact Info */}
+      <div className="mt-12 grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Card padding="md" className="text-center">
+          <div className="text-3xl mb-3">📧</div>
+          <h3 className="font-semibold text-gray-900 dark:text-white mb-1">이메일</h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400">choulyong@metaldragon.co.kr</p>
+        </Card>
+        <Card padding="md" className="text-center">
+          <div className="text-3xl mb-3">💬</div>
+          <h3 className="font-semibold text-gray-900 dark:text-white mb-1">응답 시간</h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400">영업일 기준 1-2일 이내</p>
+        </Card>
+        <Card padding="md" className="text-center">
+          <div className="text-3xl mb-3">🌐</div>
+          <h3 className="font-semibold text-gray-900 dark:text-white mb-1">SNS</h3>
+          <p className="text-sm text-gray-600 dark:text-gray-400">GitHub, LinkedIn</p>
+        </Card>
+      </div>
+    </div>
   );
 }
