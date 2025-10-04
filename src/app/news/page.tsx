@@ -3,7 +3,10 @@
  * AI, 암호화폐 관련 IT 뉴스
  */
 
-import { createClient } from '@/lib/supabase/server';
+'use client';
+
+import { useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import styled from '@emotion/styled';
 import { tokens } from '@/lib/styles/tokens';
 import { Card } from '@/components/ui/Card';
@@ -149,15 +152,37 @@ const EmptyState = styled.div`
   color: ${tokens.colors.gray[400]};
 `;
 
-export default async function NewsPage() {
-  const supabase = await createClient();
+export default function NewsPage() {
+  const [news, setNews] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // 뉴스 가져오기
-  const { data: news } = await supabase
-    .from('news')
-    .select('*')
-    .order('published_at', { ascending: false })
-    .limit(50);
+  useEffect(() => {
+    const loadNews = async () => {
+      const supabase = createClient();
+
+      // 뉴스 가져오기
+      const { data: newsData } = await supabase
+        .from('news')
+        .select('*')
+        .order('published_at', { ascending: false })
+        .limit(50);
+
+      setNews(newsData || []);
+      setLoading(false);
+    };
+
+    loadNews();
+  }, []);
+
+  if (loading) {
+    return (
+      <NewsContainer>
+        <EmptyState>
+          <p>로딩 중...</p>
+        </EmptyState>
+      </NewsContainer>
+    );
+  }
 
   return (
     <NewsContainer>

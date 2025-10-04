@@ -3,13 +3,16 @@
  * 카테고리별 게시판 페이지
  */
 
-import { createClient } from '@/lib/supabase/server';
+'use client';
+
+import { useState, useEffect } from 'react';
+import { useParams } from 'next/navigation';
+import { createClient } from '@/lib/supabase/client';
 import styled from '@emotion/styled';
 import { tokens } from '@/lib/styles/tokens';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
-import { notFound } from 'next/navigation';
 
 const BoardContainer = styled.div`
   max-width: 1200px;
@@ -77,37 +80,61 @@ const CATEGORY_LABELS: Record<string, string> = {
   ai_artwork: 'AI 작품 갤러리',
 };
 
-interface PageProps {
-  params: Promise<{ category: string }>;
-}
+export default function BoardPage() {
+  const params = useParams();
+  const category = params?.category as string;
+  const [user, setUser] = useState<any>(null);
+  const [posts, setPosts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-export default async function BoardPage({ params }: PageProps) {
-  const { category } = await params;
+  useEffect(() => {
+    const loadData = async () => {
+      if (!category || !CATEGORY_LABELS[category]) {
+        setLoading(false);
+        return;
+      }
 
-  // 유효한 카테고리 체크
-  if (!CATEGORY_LABELS[category]) {
-    notFound();
+      const supabase = createClient();
+
+      // 현재 사용자 확인
+      const {
+        data: { user: currentUser },
+      } = await supabase.auth.getUser();
+      setUser(currentUser);
+
+      // 게시글 가져오기
+      const { data: postsData } = await supabase
+        .from('posts')
+        .select('*')
+        .eq('category', category)
+        .order('created_at', { ascending: false });
+
+      setPosts(postsData || []);
+      setLoading(false);
+    };
+
+    loadData();
+  }, [category]);
+
+  if (loading) {
+    return (
+      <BoardContainer>
+        <EmptyState>
+          <p>로딩 중...</p>
+        </EmptyState>
+      </BoardContainer>
+    );
   }
 
-  const supabase = await createClient();
-
-  // 현재 사용자 확인
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  // 게시글 가져오기
-  const { data: posts } = await supabase
-    .from('posts')
-    .select(
-      `
-      *,
-      users(username, avatar_url),
-      categories(name)
-    `
-    )
-    .eq('category_id', category)
-    .order('created_at', { ascending: false });
+  if (!category || !CATEGORY_LABELS[category]) {
+    return (
+      <BoardContainer>
+        <EmptyState>
+          <h2>존재하지 않는 카테고리입니다</h2>
+        </EmptyState>
+      </BoardContainer>
+    );
+  }
 
   return (
     <BoardContainer>
@@ -127,7 +154,7 @@ export default async function BoardPage({ params }: PageProps) {
               <PostCard variant="glass">
                 <PostTitle>{post.title}</PostTitle>
                 <PostMeta>
-                  <span>작성자: {post.users?.username || '익명'}</span>
+                  <span>작성자: {post.author_id}</span>
                   <span>•</span>
                   <span>{new Date(post.created_at).toLocaleDateString('ko-KR')}</span>
                   {post.view_count > 0 && (

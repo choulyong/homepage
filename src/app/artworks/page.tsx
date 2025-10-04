@@ -3,7 +3,10 @@
  * AI 작품 갤러리 (이미지, 영상, 음악, 문서)
  */
 
-import { createClient } from '@/lib/supabase/server';
+'use client';
+
+import { useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import styled from '@emotion/styled';
 import { tokens } from '@/lib/styles/tokens';
 import { Card } from '@/components/ui/Card';
@@ -159,20 +162,44 @@ const EmptyState = styled.div`
   color: ${tokens.colors.gray[400]};
 `;
 
-export default async function ArtworksPage() {
-  const supabase = await createClient();
+export default function ArtworksPage() {
+  const [user, setUser] = useState<any>(null);
+  const [artworks, setArtworks] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // 현재 사용자 확인
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  useEffect(() => {
+    const loadData = async () => {
+      const supabase = createClient();
 
-  // AI 작품 게시판의 게시글 가져오기 (ai_artwork 카테고리)
-  const { data: artworks } = await supabase
-    .from('posts')
-    .select('*')
-    .eq('category_id', 'ai_artwork')
-    .order('created_at', { ascending: false });
+      // 현재 사용자 확인
+      const {
+        data: { user: currentUser },
+      } = await supabase.auth.getUser();
+      setUser(currentUser);
+
+      // AI 작품 게시판의 게시글 가져오기 (ai_artwork 카테고리)
+      const { data: artworksData } = await supabase
+        .from('posts')
+        .select('*')
+        .eq('category', 'ai_artwork')
+        .order('created_at', { ascending: false });
+
+      setArtworks(artworksData || []);
+      setLoading(false);
+    };
+
+    loadData();
+  }, []);
+
+  if (loading) {
+    return (
+      <GalleryContainer>
+        <EmptyState>
+          <p>로딩 중...</p>
+        </EmptyState>
+      </GalleryContainer>
+    );
+  }
 
   return (
     <GalleryContainer>

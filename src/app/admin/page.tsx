@@ -110,7 +110,7 @@ export default async function AdminDashboard() {
     data: { user },
   } = await supabase.auth.getUser();
 
-  // 통계 데이터 가져오기 (예시)
+  // 통계 데이터 가져오기
   const { count: postsCount } = await supabase
     .from('posts')
     .select('*', { count: 'exact', head: true });
@@ -118,6 +118,37 @@ export default async function AdminDashboard() {
   const { count: usersCount } = await supabase
     .from('users')
     .select('*', { count: 'exact', head: true });
+
+  const { count: newsCount } = await supabase
+    .from('news')
+    .select('*', { count: 'exact', head: true });
+
+  const { count: videosCount } = await supabase
+    .from('youtube_videos')
+    .select('*', { count: 'exact', head: true });
+
+  const { count: contactsCount } = await supabase
+    .from('contact_messages')
+    .select('*', { count: 'exact', head: true })
+    .eq('status', 'unread');
+
+  const { count: schedulesCount } = await supabase
+    .from('schedules')
+    .select('*', { count: 'exact', head: true });
+
+  // 최근 게시글
+  const { data: recentPosts } = await supabase
+    .from('posts')
+    .select('id, title, created_at, view_count')
+    .order('created_at', { ascending: false })
+    .limit(5);
+
+  // 인기 게시글
+  const { data: popularPosts } = await supabase
+    .from('posts')
+    .select('id, title, view_count')
+    .order('view_count', { ascending: false })
+    .limit(5);
 
   return (
     <DashboardContainer>
@@ -136,15 +167,76 @@ export default async function AdminDashboard() {
         </StatsCard>
 
         <StatsCard variant="glass">
-          <StatValue>0</StatValue>
-          <StatLabel>AI 작품</StatLabel>
+          <StatValue>{newsCount || 0}</StatValue>
+          <StatLabel>IT 뉴스</StatLabel>
         </StatsCard>
 
         <StatsCard variant="glass">
-          <StatValue>실시간</StatValue>
-          <StatLabel>시스템 상태</StatLabel>
+          <StatValue>{videosCount || 0}</StatValue>
+          <StatLabel>YouTube 영상</StatLabel>
+        </StatsCard>
+
+        <StatsCard variant="glass">
+          <StatValue>{schedulesCount || 0}</StatValue>
+          <StatLabel>일정</StatLabel>
+        </StatsCard>
+
+        <StatsCard variant="glass">
+          <StatValue>{contactsCount || 0}</StatValue>
+          <StatLabel>읽지 않은 문의</StatLabel>
         </StatsCard>
       </Grid>
+
+      <QuickActionsSection style={{ marginTop: tokens.spacing[12] }}>
+        <SectionTitle>최근 활동</SectionTitle>
+        <ActionGrid>
+          <Card variant="glass" style={{ padding: tokens.spacing[6], gridColumn: 'span 2' }}>
+            <h3 style={{ fontSize: tokens.typography.fontSize.lg, marginBottom: tokens.spacing[4], color: tokens.colors.white }}>
+              최근 게시글
+            </h3>
+            {recentPosts && recentPosts.map((post) => (
+              <div key={post.id} style={{
+                padding: tokens.spacing[3],
+                borderBottom: `1px solid ${tokens.colors.glass.light}`,
+                display: 'flex',
+                justifyContent: 'space-between',
+                color: tokens.colors.gray[300]
+              }}>
+                <span>{post.title}</span>
+                <span style={{ fontSize: tokens.typography.fontSize.xs, color: tokens.colors.gray[500] }}>
+                  {new Date(post.created_at).toLocaleDateString('ko-KR')}
+                </span>
+              </div>
+            ))}
+          </Card>
+
+          <Card variant="glass" style={{ padding: tokens.spacing[6] }}>
+            <h3 style={{ fontSize: tokens.typography.fontSize.lg, marginBottom: tokens.spacing[4], color: tokens.colors.white }}>
+              인기 게시글 TOP 5
+            </h3>
+            {popularPosts && popularPosts.map((post, index) => (
+              <div key={post.id} style={{
+                padding: tokens.spacing[2],
+                marginBottom: tokens.spacing[2],
+                color: tokens.colors.gray[300],
+                fontSize: tokens.typography.fontSize.sm
+              }}>
+                <span style={{ color: tokens.colors.primary[400], marginRight: tokens.spacing[2] }}>
+                  #{index + 1}
+                </span>
+                {post.title}
+                <span style={{
+                  float: 'right',
+                  color: tokens.colors.gray[500],
+                  fontSize: tokens.typography.fontSize.xs
+                }}>
+                  조회 {post.view_count}
+                </span>
+              </div>
+            ))}
+          </Card>
+        </ActionGrid>
+      </QuickActionsSection>
 
       <QuickActionsSection>
         <SectionTitle>빠른 작업</SectionTitle>

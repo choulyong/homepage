@@ -3,7 +3,10 @@
  * YouTube 커버 영상 목록
  */
 
-import { createClient } from '@/lib/supabase/server';
+'use client';
+
+import { useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import styled from '@emotion/styled';
 import { tokens } from '@/lib/styles/tokens';
 import { Card } from '@/components/ui/Card';
@@ -121,13 +124,35 @@ const EmptyState = styled.div`
   color: ${tokens.colors.gray[400]};
 `;
 
-export default async function YouTubePage() {
-  const supabase = await createClient();
+export default function YouTubePage() {
+  const [videos, setVideos] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const { data: videos } = await supabase
-    .from('youtube_videos')
-    .select('*')
-    .order('published_at', { ascending: false });
+  useEffect(() => {
+    const loadVideos = async () => {
+      const supabase = createClient();
+
+      const { data: videosData } = await supabase
+        .from('youtube_videos')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      setVideos(videosData || []);
+      setLoading(false);
+    };
+
+    loadVideos();
+  }, []);
+
+  if (loading) {
+    return (
+      <YouTubeContainer>
+        <EmptyState>
+          <p>로딩 중...</p>
+        </EmptyState>
+      </YouTubeContainer>
+    );
+  }
 
   return (
     <YouTubeContainer>

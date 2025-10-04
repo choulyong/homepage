@@ -3,7 +3,10 @@
  * 프로필 정보를 보여주는 공개 페이지
  */
 
-import { createClient } from '@/lib/supabase/server';
+'use client';
+
+import { useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import styled from '@emotion/styled';
 import { tokens } from '@/lib/styles/tokens';
 import { Card } from '@/components/ui/Card';
@@ -189,16 +192,39 @@ const EmptyState = styled.div`
   color: ${tokens.colors.gray[400]};
 `;
 
-export default async function AboutPage() {
-  const supabase = await createClient();
+export default function AboutPage() {
+  const [user, setUser] = useState<any>(null);
+  const [profile, setProfile] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
 
-  // 현재 사용자 확인
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  useEffect(() => {
+    const loadData = async () => {
+      const supabase = createClient();
 
-  // 프로필 데이터 가져오기 (첫 번째 프로필 사용)
-  const { data: profile } = await supabase.from('profile').select('*').limit(1).single();
+      // 현재 사용자 확인
+      const {
+        data: { user: currentUser },
+      } = await supabase.auth.getUser();
+      setUser(currentUser);
+
+      // 프로필 데이터 가져오기 (첫 번째 프로필 사용)
+      const { data: profileData } = await supabase.from('profile').select('*').limit(1).single();
+      setProfile(profileData);
+      setLoading(false);
+    };
+
+    loadData();
+  }, []);
+
+  if (loading) {
+    return (
+      <AboutContainer>
+        <EmptyState>
+          <p>로딩 중...</p>
+        </EmptyState>
+      </AboutContainer>
+    );
+  }
 
   if (!profile) {
     return (
