@@ -1,5 +1,5 @@
 /**
- * About Page (Public)
+ * About Page (Public) with Tailwind CSS
  * 프로필 정보를 보여주는 공개 페이지
  */
 
@@ -7,190 +7,11 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import styled from '@emotion/styled';
-import { tokens } from '@/lib/styles/tokens';
-import { Card } from '@/components/ui/Card';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
+import { Button } from '@/components/ui/Button';
 import Image from 'next/image';
 import Link from 'next/link';
-
-const AboutContainer = styled.div`
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: ${tokens.spacing[12]} ${tokens.spacing[6]};
-`;
-
-const Hero = styled.section`
-  display: flex;
-  align-items: center;
-  gap: ${tokens.spacing[8]};
-  margin-bottom: ${tokens.spacing[12]};
-  padding: ${tokens.spacing[8]};
-  background: ${tokens.colors.glass.medium};
-  backdrop-filter: blur(20px);
-  border-radius: ${tokens.borderRadius.xl};
-  border: 1px solid ${tokens.colors.glass.light};
-
-  @media (max-width: 768px) {
-    flex-direction: column;
-    text-align: center;
-  }
-`;
-
-const ProfileImage = styled.div`
-  position: relative;
-  width: 200px;
-  height: 200px;
-  border-radius: 50%;
-  overflow: hidden;
-  border: 4px solid transparent;
-  background: ${tokens.colors.gradients.kinetic};
-  padding: 4px;
-
-  img {
-    border-radius: 50%;
-    object-fit: cover;
-  }
-`;
-
-const HeroContent = styled.div`
-  flex: 1;
-`;
-
-const Name = styled.h1`
-  font-size: ${tokens.typography.fontSize['4xl']};
-  font-weight: ${tokens.typography.fontWeight.bold};
-  background: ${tokens.colors.gradients.kinetic};
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin-bottom: ${tokens.spacing[2]};
-`;
-
-const JobTitle = styled.h2`
-  font-size: ${tokens.typography.fontSize.xl};
-  color: ${tokens.colors.gray[300]};
-  margin-bottom: ${tokens.spacing[4]};
-`;
-
-const Bio = styled.p`
-  font-size: ${tokens.typography.fontSize.base};
-  color: ${tokens.colors.gray[400]};
-  line-height: 1.8;
-`;
-
-const SocialLinks = styled.div`
-  display: flex;
-  gap: ${tokens.spacing[4]};
-  margin-top: ${tokens.spacing[4]};
-
-  @media (max-width: 768px) {
-    justify-content: center;
-  }
-`;
-
-const SocialLink = styled.a`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  background: ${tokens.colors.glass.light};
-  color: ${tokens.colors.white};
-  transition: all ${tokens.transitions.base};
-
-  &:hover {
-    background: ${tokens.colors.gradients.kinetic};
-    transform: translateY(-2px);
-  }
-`;
-
-const Section = styled.section`
-  margin-bottom: ${tokens.spacing[12]};
-`;
-
-const SectionTitle = styled.h3`
-  font-size: ${tokens.typography.fontSize['2xl']};
-  font-weight: ${tokens.typography.fontWeight.bold};
-  color: ${tokens.colors.white};
-  margin-bottom: ${tokens.spacing[6]};
-`;
-
-const SkillsGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
-  gap: ${tokens.spacing[4]};
-`;
-
-const SkillCard = styled(Card)`
-  padding: ${tokens.spacing[4]};
-  text-align: center;
-  font-weight: ${tokens.typography.fontWeight.medium};
-  color: ${tokens.colors.white};
-`;
-
-const PortfolioGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-  gap: ${tokens.spacing[6]};
-`;
-
-const PortfolioCard = styled(Card)`
-  padding: ${tokens.spacing[6]};
-  display: flex;
-  flex-direction: column;
-  gap: ${tokens.spacing[4]};
-`;
-
-const PortfolioTitle = styled.h4`
-  font-size: ${tokens.typography.fontSize.xl};
-  font-weight: ${tokens.typography.fontWeight.bold};
-  color: ${tokens.colors.white};
-`;
-
-const PortfolioDescription = styled.p`
-  font-size: ${tokens.typography.fontSize.sm};
-  color: ${tokens.colors.gray[400]};
-  line-height: 1.6;
-`;
-
-const PortfolioTags = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: ${tokens.spacing[2]};
-`;
-
-const Tag = styled.span`
-  padding: ${tokens.spacing[1]} ${tokens.spacing[3]};
-  background: ${tokens.colors.glass.light};
-  border-radius: ${tokens.borderRadius.full};
-  font-size: ${tokens.typography.fontSize.xs};
-  color: ${tokens.colors.gray[300]};
-`;
-
-const EditButton = styled(Link)`
-  display: inline-flex;
-  align-items: center;
-  gap: ${tokens.spacing[2]};
-  padding: ${tokens.spacing[3]} ${tokens.spacing[6]};
-  background: ${tokens.colors.gradients.kinetic};
-  color: ${tokens.colors.white};
-  font-weight: ${tokens.typography.fontWeight.medium};
-  border-radius: ${tokens.borderRadius.md};
-  transition: all ${tokens.transitions.base};
-  margin-bottom: ${tokens.spacing[8]};
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(240, 147, 251, 0.3);
-  }
-`;
-
-const EmptyState = styled.div`
-  text-align: center;
-  padding: ${tokens.spacing[12]};
-  color: ${tokens.colors.gray[400]};
-`;
+import { cn } from '@/lib/utils';
 
 export default function AboutPage() {
   const [user, setUser] = useState<any>(null);
@@ -218,141 +39,212 @@ export default function AboutPage() {
 
   if (loading) {
     return (
-      <AboutContainer>
-        <EmptyState>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="text-center py-12 text-gray-600 dark:text-gray-400">
           <p>로딩 중...</p>
-        </EmptyState>
-      </AboutContainer>
+        </div>
+      </div>
     );
   }
 
   if (!profile) {
     return (
-      <AboutContainer>
-        <EmptyState>
-          <h2>프로필 정보가 없습니다</h2>
-          <p>관리자 페이지에서 프로필을 생성하세요</p>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="text-center py-12">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            프로필 정보가 없습니다
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            관리자 페이지에서 프로필을 생성하세요
+          </p>
           {user && (
-            <EditButton href="/admin/about">프로필 생성하기</EditButton>
+            <Link href="/admin/about">
+              <Button>프로필 생성하기</Button>
+            </Link>
           )}
-        </EmptyState>
-      </AboutContainer>
+        </div>
+      </div>
     );
   }
 
   return (
-    <AboutContainer>
-      {user && <EditButton href="/admin/about">✏️ 프로필 편집</EditButton>}
+    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* Edit Button */}
+      {user && (
+        <div className="mb-8">
+          <Link href="/admin/about">
+            <Button variant="secondary">✏️ 프로필 편집</Button>
+          </Link>
+        </div>
+      )}
 
-      <Hero>
-        <ProfileImage>
-          <Image
-            src={profile.profileImageUrl || '/placeholder-avatar.png'}
-            alt={profile.displayName}
-            width={200}
-            height={200}
-          />
-        </ProfileImage>
-        <HeroContent>
-          <Name>{profile.displayName}</Name>
-          {profile.jobTitle && <JobTitle>{profile.jobTitle}</JobTitle>}
-          {profile.bio && <Bio>{profile.bio}</Bio>}
+      {/* Hero Section */}
+      <div className="flex flex-col md:flex-row items-center gap-8 mb-12 p-8 bg-white/80 dark:bg-gray-800/80 backdrop-blur-md rounded-2xl border border-gray-200 dark:border-gray-700 shadow-lg">
+        {/* Profile Image */}
+        <div className="relative w-48 h-48 rounded-full overflow-hidden p-1 bg-gradient-to-r from-teal-500 to-indigo-500">
+          <div className="relative w-full h-full rounded-full overflow-hidden bg-white dark:bg-gray-900">
+            <Image
+              src={profile.profileImageUrl || '/placeholder-avatar.png'}
+              alt={profile.displayName}
+              width={200}
+              height={200}
+              className="object-cover w-full h-full"
+            />
+          </div>
+        </div>
 
+        {/* Profile Content */}
+        <div className="flex-1 text-center md:text-left">
+          <h1 className="text-4xl md:text-5xl font-display font-bold gradient-text mb-2">
+            {profile.displayName}
+          </h1>
+          {profile.jobTitle && (
+            <h2 className="text-xl text-gray-700 dark:text-gray-300 mb-4">
+              {profile.jobTitle}
+            </h2>
+          )}
+          {profile.bio && (
+            <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+              {profile.bio}
+            </p>
+          )}
+
+          {/* Social Links */}
           {profile.socialLinks && Object.keys(profile.socialLinks).length > 0 && (
-            <SocialLinks>
+            <div className="flex gap-4 mt-4 justify-center md:justify-start">
               {profile.socialLinks.github && (
-                <SocialLink
+                <a
                   href={profile.socialLinks.github}
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-teal-500 hover:to-indigo-500 hover:text-white transition-all duration-200 hover:-translate-y-1"
                 >
-                  GitHub
-                </SocialLink>
+                  <span className="sr-only">GitHub</span>
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 0c-6.626 0-12 5.373-12 12 0 5.302 3.438 9.8 8.207 11.387.599.111.793-.261.793-.577v-2.234c-3.338.726-4.033-1.416-4.033-1.416-.546-1.387-1.333-1.756-1.333-1.756-1.089-.745.083-.729.083-.729 1.205.084 1.839 1.237 1.839 1.237 1.07 1.834 2.807 1.304 3.492.997.107-.775.418-1.305.762-1.604-2.665-.305-5.467-1.334-5.467-5.931 0-1.311.469-2.381 1.236-3.221-.124-.303-.535-1.524.117-3.176 0 0 1.008-.322 3.301 1.23.957-.266 1.983-.399 3.003-.404 1.02.005 2.047.138 3.006.404 2.291-1.552 3.297-1.23 3.297-1.23.653 1.653.242 2.874.118 3.176.77.840 1.235 1.911 1.235 3.221 0 4.609-2.807 5.624-5.479 5.921.43.372.823 1.102.823 2.222v3.293c0 .319.192.694.801.576 4.765-1.589 8.199-6.086 8.199-11.386 0-6.627-5.373-12-12-12z"/>
+                  </svg>
+                </a>
               )}
               {profile.socialLinks.linkedin && (
-                <SocialLink
+                <a
                   href={profile.socialLinks.linkedin}
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-teal-500 hover:to-indigo-500 hover:text-white transition-all duration-200 hover:-translate-y-1"
                 >
-                  LinkedIn
-                </SocialLink>
+                  <span className="sr-only">LinkedIn</span>
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/>
+                  </svg>
+                </a>
               )}
               {profile.socialLinks.twitter && (
-                <SocialLink
+                <a
                   href={profile.socialLinks.twitter}
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-teal-500 hover:to-indigo-500 hover:text-white transition-all duration-200 hover:-translate-y-1"
                 >
-                  Twitter
-                </SocialLink>
+                  <span className="sr-only">Twitter</span>
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z"/>
+                  </svg>
+                </a>
               )}
               {profile.socialLinks.youtube && (
-                <SocialLink
+                <a
                   href={profile.socialLinks.youtube}
                   target="_blank"
                   rel="noopener noreferrer"
+                  className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-teal-500 hover:to-indigo-500 hover:text-white transition-all duration-200 hover:-translate-y-1"
                 >
-                  YouTube
-                </SocialLink>
+                  <span className="sr-only">YouTube</span>
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                  </svg>
+                </a>
               )}
-            </SocialLinks>
+            </div>
           )}
-        </HeroContent>
-      </Hero>
+        </div>
+      </div>
 
+      {/* Skills Section */}
       {profile.skills && profile.skills.length > 0 && (
-        <Section>
-          <SectionTitle>보유 스킬</SectionTitle>
-          <SkillsGrid>
-            {profile.skills.map((skill, index) => (
-              <SkillCard key={index} variant="glass">
-                {skill}
-              </SkillCard>
+        <section className="mb-12">
+          <h3 className="text-2xl font-display font-bold text-gray-900 dark:text-white mb-6">
+            보유 스킬
+          </h3>
+          <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+            {profile.skills.map((skill: string, index: number) => (
+              <Card
+                key={index}
+                variant="featured"
+                padding="sm"
+                className="text-center"
+              >
+                <span className="font-medium text-gray-900 dark:text-white">
+                  {skill}
+                </span>
+              </Card>
             ))}
-          </SkillsGrid>
-        </Section>
+          </div>
+        </section>
       )}
 
+      {/* Portfolio Section */}
       {profile.portfolioItems && profile.portfolioItems.length > 0 && (
-        <Section>
-          <SectionTitle>포트폴리오</SectionTitle>
-          <PortfolioGrid>
-            {profile.portfolioItems.map((item, index) => (
-              <PortfolioCard key={index} variant="glass">
+        <section>
+          <h3 className="text-2xl font-display font-bold text-gray-900 dark:text-white mb-6">
+            포트폴리오
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {profile.portfolioItems.map((item: any, index: number) => (
+              <Card key={index} padding="lg" className="flex flex-col gap-4">
                 {item.imageUrl && (
-                  <Image
-                    src={item.imageUrl}
-                    alt={item.title}
-                    width={300}
-                    height={200}
-                    style={{ borderRadius: tokens.borderRadius.md }}
-                  />
+                  <div className="relative w-full h-48 rounded-lg overflow-hidden">
+                    <Image
+                      src={item.imageUrl}
+                      alt={item.title}
+                      width={300}
+                      height={200}
+                      className="object-cover w-full h-full"
+                    />
+                  </div>
                 )}
-                <PortfolioTitle>{item.title}</PortfolioTitle>
-                <PortfolioDescription>{item.description}</PortfolioDescription>
+                <h4 className="text-xl font-display font-bold text-gray-900 dark:text-white">
+                  {item.title}
+                </h4>
+                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                  {item.description}
+                </p>
                 {item.tags && item.tags.length > 0 && (
-                  <PortfolioTags>
-                    {item.tags.map((tag, tagIndex) => (
-                      <Tag key={tagIndex}>{tag}</Tag>
+                  <div className="flex flex-wrap gap-2">
+                    {item.tags.map((tag: string, tagIndex: number) => (
+                      <span
+                        key={tagIndex}
+                        className="px-3 py-1 bg-teal-100 dark:bg-teal-900 text-teal-700 dark:text-teal-300 text-xs rounded-full"
+                      >
+                        {tag}
+                      </span>
                     ))}
-                  </PortfolioTags>
+                  </div>
                 )}
                 {item.link && (
                   <a
                     href={item.link}
                     target="_blank"
                     rel="noopener noreferrer"
-                    style={{ color: tokens.colors.primary[400] }}
+                    className="text-teal-600 dark:text-teal-400 hover:underline"
                   >
                     프로젝트 보기 →
                   </a>
                 )}
-              </PortfolioCard>
+              </Card>
             ))}
-          </PortfolioGrid>
-        </Section>
+          </div>
+        </section>
       )}
-    </AboutContainer>
+    </div>
   );
 }
