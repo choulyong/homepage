@@ -1,5 +1,5 @@
 /**
- * New Post Page
+ * New Post Page with Tailwind CSS
  * 새 게시글 작성 페이지
  */
 
@@ -7,98 +7,12 @@
 
 import { useState, use } from 'react';
 import { useRouter } from 'next/navigation';
-import styled from '@emotion/styled';
-import { tokens } from '@/lib/styles/tokens';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
+import { Input } from '@/components/ui/Input';
+import { Textarea } from '@/components/ui/Textarea';
 import { createClient } from '@/lib/supabase/client';
-
-const NewPostContainer = styled.div`
-  max-width: 1000px;
-  margin: 0 auto;
-  padding: ${tokens.spacing[12]} ${tokens.spacing[6]};
-`;
-
-const Title = styled.h1`
-  font-size: ${tokens.typography.fontSize['3xl']};
-  font-weight: ${tokens.typography.fontWeight.bold};
-  background: ${tokens.colors.gradients.kinetic};
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin-bottom: ${tokens.spacing[8]};
-`;
-
-const Form = styled.form`
-  display: flex;
-  flex-direction: column;
-  gap: ${tokens.spacing[6]};
-`;
-
-const FormCard = styled(Card)`
-  padding: ${tokens.spacing[6]};
-`;
-
-const FormGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: ${tokens.spacing[2]};
-`;
-
-const Label = styled.label`
-  font-size: ${tokens.typography.fontSize.sm};
-  font-weight: ${tokens.typography.fontWeight.medium};
-  color: ${tokens.colors.gray[300]};
-`;
-
-const Input = styled.input`
-  padding: ${tokens.spacing[3]} ${tokens.spacing[4]};
-  background: ${tokens.colors.gray[800]};
-  border: 1px solid ${tokens.colors.gray[600]};
-  border-radius: ${tokens.borderRadius.md};
-  color: ${tokens.colors.white};
-  font-size: ${tokens.typography.fontSize.base};
-  transition: all ${tokens.transitions.base};
-
-  &:focus {
-    outline: none;
-    border-color: ${tokens.colors.primary[500]};
-    box-shadow: 0 0 0 3px ${tokens.colors.primary[100]}20;
-  }
-`;
-
-const TextArea = styled.textarea`
-  padding: ${tokens.spacing[3]} ${tokens.spacing[4]};
-  background: ${tokens.colors.gray[800]};
-  border: 1px solid ${tokens.colors.gray[600]};
-  border-radius: ${tokens.borderRadius.md};
-  color: ${tokens.colors.white};
-  font-size: ${tokens.typography.fontSize.base};
-  min-height: 400px;
-  resize: vertical;
-  font-family: inherit;
-  transition: all ${tokens.transitions.base};
-
-  &:focus {
-    outline: none;
-    border-color: ${tokens.colors.primary[500]};
-    box-shadow: 0 0 0 3px ${tokens.colors.primary[100]}20;
-  }
-`;
-
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: ${tokens.spacing[4]};
-  justify-content: flex-end;
-`;
-
-const ErrorMessage = styled.div`
-  padding: ${tokens.spacing[4]};
-  background: ${tokens.colors.danger}15;
-  border: 1px solid ${tokens.colors.danger};
-  border-radius: ${tokens.borderRadius.md};
-  color: ${tokens.colors.danger};
-`;
+import { cn } from '@/lib/utils';
 
 const CATEGORY_LABELS: Record<string, string> = {
   ai_study: 'AI 스터디',
@@ -157,38 +71,45 @@ export default function NewPostPage({ params }: PageProps) {
   };
 
   return (
-    <NewPostContainer>
-      <Title>{CATEGORY_LABELS[category]} - 글쓰기</Title>
+    <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      <h1 className="text-3xl font-display font-bold gradient-text mb-8">
+        {CATEGORY_LABELS[category]} - 글쓰기
+      </h1>
 
-      {error && <ErrorMessage>{error}</ErrorMessage>}
+      {error && (
+        <div className="mb-6 p-4 bg-red-100 dark:bg-red-900/20 border border-red-500 rounded-lg text-red-700 dark:text-red-400">
+          {error}
+        </div>
+      )}
 
-      <Form onSubmit={handleSubmit}>
-        <FormCard variant="glass">
-          <FormGroup>
-            <Label htmlFor="title">제목 *</Label>
+      <form onSubmit={handleSubmit} className="space-y-6">
+        <Card padding="lg">
+          <div className="space-y-6">
             <Input
               id="title"
+              label="제목"
               type="text"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
               required
               placeholder="제목을 입력하세요"
+              fullWidth
             />
-          </FormGroup>
 
-          <FormGroup>
-            <Label htmlFor="content">내용 *</Label>
-            <TextArea
+            <Textarea
               id="content"
+              label="내용"
               value={content}
               onChange={(e) => setContent(e.target.value)}
               required
               placeholder="내용을 입력하세요"
+              rows={16}
+              fullWidth
             />
-          </FormGroup>
-        </FormCard>
+          </div>
+        </Card>
 
-        <ButtonGroup>
+        <div className="flex gap-4 justify-end">
           <Button
             type="button"
             variant="outline"
@@ -199,8 +120,8 @@ export default function NewPostPage({ params }: PageProps) {
           <Button type="submit" variant="primary" disabled={loading}>
             {loading ? '작성 중...' : '작성 완료'}
           </Button>
-        </ButtonGroup>
-      </Form>
-    </NewPostContainer>
+        </div>
+      </form>
+    </div>
   );
 }

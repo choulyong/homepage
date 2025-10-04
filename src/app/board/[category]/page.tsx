@@ -1,5 +1,5 @@
 /**
- * Board Page (Dynamic Route)
+ * Board Page (Dynamic Route) with Tailwind CSS
  * 카테고리별 게시판 페이지
  */
 
@@ -8,70 +8,10 @@
 import { useState, useEffect } from 'react';
 import { useParams } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
-import styled from '@emotion/styled';
-import { tokens } from '@/lib/styles/tokens';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import Link from 'next/link';
-
-const BoardContainer = styled.div`
-  max-width: 1200px;
-  margin: 0 auto;
-  padding: ${tokens.spacing[12]} ${tokens.spacing[6]};
-`;
-
-const Header = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: ${tokens.spacing[8]};
-`;
-
-const Title = styled.h1`
-  font-size: ${tokens.typography.fontSize['4xl']};
-  font-weight: ${tokens.typography.fontWeight.bold};
-  background: ${tokens.colors.gradients.kinetic};
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-`;
-
-const PostList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: ${tokens.spacing[4]};
-`;
-
-const PostCard = styled(Card)`
-  padding: ${tokens.spacing[6]};
-  cursor: pointer;
-  transition: all ${tokens.transitions.base};
-
-  &:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 8px 24px rgba(240, 147, 251, 0.2);
-  }
-`;
-
-const PostTitle = styled.h2`
-  font-size: ${tokens.typography.fontSize.xl};
-  font-weight: ${tokens.typography.fontWeight.bold};
-  color: ${tokens.colors.white};
-  margin-bottom: ${tokens.spacing[2]};
-`;
-
-const PostMeta = styled.div`
-  display: flex;
-  gap: ${tokens.spacing[4]};
-  font-size: ${tokens.typography.fontSize.sm};
-  color: ${tokens.colors.gray[400]};
-`;
-
-const EmptyState = styled.div`
-  text-align: center;
-  padding: ${tokens.spacing[12]};
-  color: ${tokens.colors.gray[400]};
-`;
+import { cn } from '@/lib/utils';
 
 const CATEGORY_LABELS: Record<string, string> = {
   ai_study: 'AI 스터디',
@@ -118,42 +58,55 @@ export default function BoardPage() {
 
   if (loading) {
     return (
-      <BoardContainer>
-        <EmptyState>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="text-center py-12 text-gray-600 dark:text-gray-400">
           <p>로딩 중...</p>
-        </EmptyState>
-      </BoardContainer>
+        </div>
+      </div>
     );
   }
 
   if (!category || !CATEGORY_LABELS[category]) {
     return (
-      <BoardContainer>
-        <EmptyState>
-          <h2>존재하지 않는 카테고리입니다</h2>
-        </EmptyState>
-      </BoardContainer>
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+        <div className="text-center py-12">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white">
+            존재하지 않는 카테고리입니다
+          </h2>
+        </div>
+      </div>
     );
   }
 
   return (
-    <BoardContainer>
-      <Header>
-        <Title>{CATEGORY_LABELS[category]}</Title>
+    <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-4xl md:text-5xl font-display font-bold gradient-text">
+          {CATEGORY_LABELS[category]}
+        </h1>
         {user && (
           <Link href={`/board/${category}/new`}>
             <Button variant="primary">글쓰기</Button>
           </Link>
         )}
-      </Header>
+      </div>
 
+      {/* Post List */}
       {posts && posts.length > 0 ? (
-        <PostList>
+        <div className="flex flex-col gap-4">
           {posts.map((post) => (
-            <Link key={post.id} href={`/board/${category}/${post.id}`}>
-              <PostCard variant="glass">
-                <PostTitle>{post.title}</PostTitle>
-                <PostMeta>
+            <Link key={post.id} href={`/board/${category}/${post.id}`} className="group">
+              <Card
+                hoverable
+                padding="lg"
+                className="transition-all duration-200"
+              >
+                <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-2 group-hover:text-teal-600 dark:group-hover:text-teal-400 transition-colors">
+                  {post.title}
+                </h2>
+
+                <div className="flex gap-4 text-sm text-gray-500 dark:text-gray-500">
                   <span>작성자: {post.author_id}</span>
                   <span>•</span>
                   <span>{new Date(post.created_at).toLocaleDateString('ko-KR')}</span>
@@ -163,24 +116,26 @@ export default function BoardPage() {
                       <span>조회 {post.view_count}</span>
                     </>
                   )}
-                </PostMeta>
-              </PostCard>
+                </div>
+              </Card>
             </Link>
           ))}
-        </PostList>
+        </div>
       ) : (
-        <EmptyState>
-          <h2>아직 게시글이 없습니다</h2>
-          <p>첫 게시글을 작성해보세요!</p>
+        <div className="text-center py-12">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+            아직 게시글이 없습니다
+          </h2>
+          <p className="text-gray-600 dark:text-gray-400 mb-6">
+            첫 게시글을 작성해보세요!
+          </p>
           {user && (
             <Link href={`/board/${category}/new`}>
-              <Button variant="primary" style={{ marginTop: tokens.spacing[4] }}>
-                글쓰기
-              </Button>
+              <Button variant="primary">글쓰기</Button>
             </Link>
           )}
-        </EmptyState>
+        </div>
       )}
-    </BoardContainer>
+    </div>
   );
 }
