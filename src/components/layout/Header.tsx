@@ -92,10 +92,11 @@ export function Header() {
 
         <NavLinks>
           <NavLink href="/about">About</NavLink>
+          <NavLink href="/schedule">일정</NavLink>
           <NavLink href="/board/ai_study">AI 스터디</NavLink>
           <NavLink href="/board/bigdata_study">빅데이터</NavLink>
           <NavLink href="/news">IT News</NavLink>
-          <NavLink href="/board/ai_artwork">AI 작품</NavLink>
+          <NavLink href="/artworks">AI 작품</NavLink>
           <NavLink href="/youtube">YouTube</NavLink>
           <NavLink href="/contact">Contact</NavLink>
         </NavLinks>

@@ -168,6 +168,9 @@ export function AdminSidebar() {
         <NavItem href="/admin/finance" $isActive={pathname === '/admin/finance'}>
           가계부 관리
         </NavItem>
+        <NavItem href="/admin/contacts" $isActive={pathname === '/admin/contacts'}>
+          문의 내역
+        </NavItem>
       </NavSection>
 
       <LogoutButton onClick={handleLogout} disabled={isLoggingOut}>
