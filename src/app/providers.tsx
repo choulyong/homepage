@@ -1,14 +1,15 @@
 /**
  * Providers Component
- * Wraps app with Emotion ThemeProvider and React Query
+ * Wraps app with Emotion ThemeProvider, Dark Mode Theme Provider, and React Query
  */
 
 'use client';
 
-import { ThemeProvider } from '@emotion/react';
+import { ThemeProvider as EmotionThemeProvider } from '@emotion/react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactNode, useState } from 'react';
 import { theme } from '@/lib/styles/theme';
+import { ThemeProvider } from '@/contexts/ThemeContext';
 
 export function Providers({ children }: { children: ReactNode }) {
   const [queryClient] = useState(
@@ -24,7 +25,9 @@ export function Providers({ children }: { children: ReactNode }) {
 
   return (
     <QueryClientProvider client={queryClient}>
-      <ThemeProvider theme={theme}>{children}</ThemeProvider>
+      <ThemeProvider>
+        <EmotionThemeProvider theme={theme}>{children}</EmotionThemeProvider>
+      </ThemeProvider>
     </QueryClientProvider>
   );
 }

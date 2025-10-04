@@ -4,7 +4,7 @@
  */
 
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import { Inter, Red_Hat_Display } from 'next/font/google';
 import './globals.css';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
@@ -13,6 +13,15 @@ import { Providers } from './providers';
 const inter = Inter({
   subsets: ['latin'],
   variable: '--font-inter',
+  weight: ['400', '500', '700'],
+  display: 'swap',
+});
+
+const redHatDisplay = Red_Hat_Display({
+  subsets: ['latin'],
+  variable: '--font-display',
+  weight: ['500', '700', '900'],
+  display: 'swap',
 });
 
 export const metadata: Metadata = {
@@ -37,7 +46,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ko">
-      <body className={inter.variable}>
+      <body className={`${inter.variable} ${redHatDisplay.variable}`}>
         <Providers>
           <div
             style={{

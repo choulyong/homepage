@@ -3,8 +3,8 @@
  * 관리자 대시보드 레이아웃 (Protected)
  */
 
-import { createClient } from '@/lib/supabase/server';
-import { redirect } from 'next/navigation';
+'use client';
+
 import { AdminSidebar } from './components/AdminSidebar';
 import styled from '@emotion/styled';
 import { tokens } from '@/lib/styles/tokens';
@@ -26,22 +26,12 @@ const MainContent = styled.main`
   }
 `;
 
-export default async function AdminLayout({
+export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const supabase = await createClient();
-
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-
-  // 로그인하지 않은 경우 로그인 페이지로 리다이렉트
-  if (!user) {
-    redirect('/login');
-  }
-
+  // Middleware에서 이미 관리자 인증을 처리하므로 여기서는 레이아웃만 제공
   return (
     <AdminContainer>
       <AdminSidebar />

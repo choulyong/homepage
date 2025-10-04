@@ -3,7 +3,10 @@
  * 관리자 대시보드 메인 페이지
  */
 
-import { createClient } from '@/lib/supabase/server';
+'use client';
+
+import { useState, useEffect } from 'react';
+import { createClient } from '@/lib/supabase/client';
 import styled from '@emotion/styled';
 import { tokens } from '@/lib/styles/tokens';
 import { Card } from '@/components/ui/Card';
@@ -102,53 +105,91 @@ const ActionDescription = styled.p`
   color: ${tokens.colors.gray[300]};
 `;
 
-export default async function AdminDashboard() {
-  const supabase = await createClient();
+export default function AdminDashboard() {
+  const [user, setUser] = useState<any>(null);
+  const [postsCount, setPostsCount] = useState(0);
+  const [usersCount, setUsersCount] = useState(0);
+  const [newsCount, setNewsCount] = useState(0);
+  const [videosCount, setVideosCount] = useState(0);
+  const [contactsCount, setContactsCount] = useState(0);
+  const [schedulesCount, setSchedulesCount] = useState(0);
+  const [recentPosts, setRecentPosts] = useState<any[]>([]);
+  const [popularPosts, setPopularPosts] = useState<any[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  // 사용자 정보 가져오기
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  useEffect(() => {
+    const loadData = async () => {
+      const supabase = createClient();
 
-  // 통계 데이터 가져오기
-  const { count: postsCount } = await supabase
-    .from('posts')
-    .select('*', { count: 'exact', head: true });
+      // 사용자 정보 가져오기
+      const {
+        data: { user: currentUser },
+      } = await supabase.auth.getUser();
+      setUser(currentUser);
 
-  const { count: usersCount } = await supabase
-    .from('users')
-    .select('*', { count: 'exact', head: true });
+      // 통계 데이터 가져오기
+      const { count: posts } = await supabase
+        .from('posts')
+        .select('*', { count: 'exact', head: true });
+      setPostsCount(posts || 0);
 
-  const { count: newsCount } = await supabase
-    .from('news')
-    .select('*', { count: 'exact', head: true });
+      const { count: users } = await supabase
+        .from('users')
+        .select('*', { count: 'exact', head: true });
+      setUsersCount(users || 0);
 
-  const { count: videosCount } = await supabase
-    .from('youtube_videos')
-    .select('*', { count: 'exact', head: true });
+      const { count: news } = await supabase
+        .from('news')
+        .select('*', { count: 'exact', head: true });
+      setNewsCount(news || 0);
 
-  const { count: contactsCount } = await supabase
-    .from('contact_messages')
-    .select('*', { count: 'exact', head: true })
-    .eq('status', 'unread');
+      const { count: videos } = await supabase
+        .from('youtube_videos')
+        .select('*', { count: 'exact', head: true });
+      setVideosCount(videos || 0);
 
-  const { count: schedulesCount } = await supabase
-    .from('schedules')
-    .select('*', { count: 'exact', head: true });
+      const { count: contacts } = await supabase
+        .from('contact_messages')
+        .select('*', { count: 'exact', head: true })
+        .eq('status', 'unread');
+      setContactsCount(contacts || 0);
 
-  // 최근 게시글
-  const { data: recentPosts } = await supabase
-    .from('posts')
-    .select('id, title, created_at, view_count')
-    .order('created_at', { ascending: false })
-    .limit(5);
+      const { count: schedules } = await supabase
+        .from('schedules')
+        .select('*', { count: 'exact', head: true });
+      setSchedulesCount(schedules || 0);
 
-  // 인기 게시글
-  const { data: popularPosts } = await supabase
-    .from('posts')
-    .select('id, title, view_count')
-    .order('view_count', { ascending: false })
-    .limit(5);
+      // 최근 게시글
+      const { data: recent } = await supabase
+        .from('posts')
+        .select('id, title, created_at, view_count')
+        .order('created_at', { ascending: false })
+        .limit(5);
+      setRecentPosts(recent || []);
+
+      // 인기 게시글
+      const { data: popular } = await supabase
+        .from('posts')
+        .select('id, title, view_count')
+        .order('view_count', { ascending: false })
+        .limit(5);
+      setPopularPosts(popular || []);
+
+      setLoading(false);
+    };
+
+    loadData();
+  }, []);
+
+  if (loading) {
+    return (
+      <DashboardContainer>
+        <div style={{ textAlign: 'center', padding: '60px', color: tokens.colors.gray[400] }}>
+          로딩 중...
+        </div>
+      </DashboardContainer>
+    );
+  }
 
   return (
     <DashboardContainer>
@@ -157,32 +198,32 @@ export default async function AdminDashboard() {
 
       <Grid>
         <StatsCard variant="glass">
-          <StatValue>{postsCount || 0}</StatValue>
+          <StatValue>{postsCount}</StatValue>
           <StatLabel>총 게시글</StatLabel>
         </StatsCard>
 
         <StatsCard variant="glass">
-          <StatValue>{usersCount || 0}</StatValue>
+          <StatValue>{usersCount}</StatValue>
           <StatLabel>등록된 사용자</StatLabel>
         </StatsCard>
 
         <StatsCard variant="glass">
-          <StatValue>{newsCount || 0}</StatValue>
+          <StatValue>{newsCount}</StatValue>
           <StatLabel>IT 뉴스</StatLabel>
         </StatsCard>
 
         <StatsCard variant="glass">
-          <StatValue>{videosCount || 0}</StatValue>
+          <StatValue>{videosCount}</StatValue>
           <StatLabel>YouTube 영상</StatLabel>
         </StatsCard>
 
         <StatsCard variant="glass">
-          <StatValue>{schedulesCount || 0}</StatValue>
+          <StatValue>{schedulesCount}</StatValue>
           <StatLabel>일정</StatLabel>
         </StatsCard>
 
         <StatsCard variant="glass">
-          <StatValue>{contactsCount || 0}</StatValue>
+          <StatValue>{contactsCount}</StatValue>
           <StatLabel>읽지 않은 문의</StatLabel>
         </StatsCard>
       </Grid>

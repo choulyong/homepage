@@ -11,6 +11,7 @@ import { tokens } from '@/lib/styles/tokens';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { createClient } from '@/lib/supabase/client';
+import { crawlYouTubeVideos } from '@/app/actions/crawl';
 
 const YouTubeContainer = styled.div`
   max-width: 1200px;
@@ -137,6 +138,7 @@ const Message = styled.div<{ $type: 'success' | 'error' }>`
 
 export default function AdminYouTubePage() {
   const [loading, setLoading] = useState(false);
+  const [crawling, setCrawling] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [videos, setVideos] = useState<any[]>([]);
 
@@ -231,10 +233,35 @@ export default function AdminYouTubePage() {
     }
   };
 
+  const handleCrawl = async () => {
+    setCrawling(true);
+    setMessage(null);
+
+    try {
+      const result = await crawlYouTubeVideos();
+
+      if (result.success) {
+        setMessage({ type: 'success', text: result.message });
+        loadVideos();
+      } else {
+        setMessage({ type: 'error', text: result.message });
+      }
+    } catch (error: any) {
+      setMessage({ type: 'error', text: error.message || '크롤링에 실패했습니다.' });
+    } finally {
+      setCrawling(false);
+    }
+  };
+
   return (
     <YouTubeContainer>
       <Header>
-        <Title>YouTube 커버 영상 관리</Title>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <Title>YouTube 커버 영상 관리</Title>
+          <Button variant="primary" onClick={handleCrawl} disabled={crawling}>
+            {crawling ? '크롤링 중...' : '🔄 채널에서 자동 가져오기'}
+          </Button>
+        </div>
       </Header>
 
       {message && <Message $type={message.type}>{message.text}</Message>}

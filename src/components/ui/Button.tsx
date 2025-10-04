@@ -1,184 +1,69 @@
 /**
- * Button Component with metaldragon theme
- * Supports kinetic gradient and glassmorphism styles
+ * Button Component with Tailwind CSS
+ * Supports teal-indigo gradient and modern design
  */
 
-'use client';
+import { ButtonHTMLAttributes, forwardRef } from 'react';
+import { cn } from '@/lib/utils';
 
-import styled from '@emotion/styled';
-import { ButtonHTMLAttributes, ReactNode } from 'react';
-import { tokens } from '@/lib/styles/tokens';
-
-interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
-  variant?: 'primary' | 'secondary' | 'outline' | 'ghost' | 'glass';
+export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
+  variant?: 'primary' | 'secondary' | 'outline' | 'ghost';
   size?: 'sm' | 'md' | 'lg';
   fullWidth?: boolean;
-  children: ReactNode;
 }
 
-const StyledButton = styled.button<ButtonProps>`
-  /* Base styles */
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  font-family: ${tokens.typography.fontFamily.sans};
-  font-weight: ${tokens.typography.fontWeight.medium};
-  border-radius: ${tokens.borderRadius.md};
-  cursor: pointer;
-  transition: all ${tokens.transitions.base};
-  border: none;
-  outline: none;
-  position: relative;
-  overflow: hidden;
+export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
+  (
+    {
+      className,
+      variant = 'primary',
+      size = 'md',
+      fullWidth = false,
+      disabled,
+      children,
+      ...props
+    },
+    ref
+  ) => {
+    const baseStyles =
+      'inline-flex items-center justify-center font-medium transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed';
 
-  /* Disable state */
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
+    const variants = {
+      primary:
+        'bg-gradient-to-r from-teal-500 to-indigo-500 hover:from-teal-600 hover:to-indigo-600 text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 focus:ring-teal-500',
+      secondary:
+        'bg-indigo-500 hover:bg-indigo-600 text-white shadow-md hover:shadow-lg hover:-translate-y-0.5 focus:ring-indigo-500',
+      outline:
+        'border-2 border-teal-500 text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-950 focus:ring-teal-500',
+      ghost:
+        'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 focus:ring-gray-500',
+    };
+
+    const sizes = {
+      sm: 'px-3 py-1.5 text-sm rounded-md',
+      md: 'px-4 py-2 text-base rounded-lg',
+      lg: 'px-6 py-3 text-lg rounded-xl',
+    };
+
+    const widthStyle = fullWidth ? 'w-full' : '';
+
+    return (
+      <button
+        ref={ref}
+        className={cn(
+          baseStyles,
+          variants[variant],
+          sizes[size],
+          widthStyle,
+          className
+        )}
+        disabled={disabled}
+        {...props}
+      >
+        {children}
+      </button>
+    );
   }
+);
 
-  /* Size variants */
-  ${(props) => {
-    if (props.size === 'sm') {
-      return `
-        padding: ${tokens.spacing[2]} ${tokens.spacing[4]};
-        font-size: ${tokens.typography.fontSize.sm};
-      `;
-    }
-    if (props.size === 'lg') {
-      return `
-        padding: ${tokens.spacing[4]} ${tokens.spacing[8]};
-        font-size: ${tokens.typography.fontSize.lg};
-      `;
-    }
-    // default: md
-    return `
-      padding: ${tokens.spacing[3]} ${tokens.spacing[6]};
-      font-size: ${tokens.typography.fontSize.base};
-    `;
-  }}
-
-  /* Full width */
-  ${(props) => props.fullWidth && `width: 100%;`}
-
-  /* Variant styles */
-  ${(props) => {
-    if (props.variant === 'primary') {
-      return `
-        background: ${tokens.colors.gradients.kinetic};
-        color: white;
-        box-shadow: ${tokens.shadows.md};
-
-        &:hover:not(:disabled) {
-          box-shadow: ${tokens.shadows.lg};
-          transform: translateY(-2px);
-        }
-
-        &:active:not(:disabled) {
-          transform: translateY(0);
-        }
-      `;
-    }
-
-    if (props.variant === 'secondary') {
-      return `
-        background: ${tokens.colors.secondary[500]};
-        color: white;
-        box-shadow: ${tokens.shadows.md};
-
-        &:hover:not(:disabled) {
-          background: ${tokens.colors.secondary[600]};
-          box-shadow: ${tokens.shadows.lg};
-          transform: translateY(-2px);
-        }
-
-        &:active:not(:disabled) {
-          transform: translateY(0);
-        }
-      `;
-    }
-
-    if (props.variant === 'outline') {
-      return `
-        background: transparent;
-        border: 2px solid ${tokens.colors.primary[500]};
-        color: ${tokens.colors.primary[500]};
-
-        &:hover:not(:disabled) {
-          background: ${tokens.colors.primary[50]};
-          transform: translateY(-2px);
-        }
-
-        &:active:not(:disabled) {
-          transform: translateY(0);
-        }
-      `;
-    }
-
-    if (props.variant === 'ghost') {
-      return `
-        background: transparent;
-        color: ${tokens.colors.gray[700]};
-
-        &:hover:not(:disabled) {
-          background: ${tokens.colors.gray[100]};
-        }
-
-        &:active:not(:disabled) {
-          background: ${tokens.colors.gray[200]};
-        }
-      `;
-    }
-
-    if (props.variant === 'glass') {
-      return `
-        background: ${tokens.colors.glass.medium};
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.18);
-        color: white;
-        box-shadow: ${tokens.shadows.glass};
-
-        &:hover:not(:disabled) {
-          background: ${tokens.colors.glass.heavy};
-          box-shadow: ${tokens.shadows.glow};
-          transform: translateY(-2px);
-        }
-
-        &:active:not(:disabled) {
-          transform: translateY(0);
-        }
-      `;
-    }
-
-    // default: primary
-    return `
-      background: ${tokens.colors.gradients.kinetic};
-      color: white;
-      box-shadow: ${tokens.shadows.md};
-
-      &:hover:not(:disabled) {
-        box-shadow: ${tokens.shadows.lg};
-        transform: translateY(-2px);
-      }
-
-      &:active:not(:disabled) {
-        transform: translateY(0);
-      }
-    `;
-  }}
-
-  /* Focus ring */
-  &:focus-visible {
-    outline: 2px solid ${tokens.colors.primary[500]};
-    outline-offset: 2px;
-  }
-`;
-
-export function Button({ variant = 'primary', size = 'md', children, ...props }: ButtonProps) {
-  return (
-    <StyledButton variant={variant} size={size} {...props}>
-      {children}
-    </StyledButton>
-  );
-}
+Button.displayName = 'Button';

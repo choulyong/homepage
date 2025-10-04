@@ -1,5 +1,5 @@
 /**
- * Admin Sidebar
+ * Admin Sidebar with Tailwind CSS
  * 관리자 대시보드 사이드바 네비게이션
  */
 
@@ -7,96 +7,9 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import styled from '@emotion/styled';
-import { tokens } from '@/lib/styles/tokens';
 import { createClient } from '@/lib/supabase/client';
 import { useState } from 'react';
-
-const SidebarContainer = styled.aside`
-  position: fixed;
-  left: 0;
-  top: 0;
-  width: 280px;
-  height: 100vh;
-  background: ${tokens.colors.glass.medium};
-  backdrop-filter: blur(20px);
-  border-right: 1px solid ${tokens.colors.glass.light};
-  padding: ${tokens.spacing[6]};
-  display: flex;
-  flex-direction: column;
-  gap: ${tokens.spacing[6]};
-
-  @media (max-width: 768px) {
-    width: 100%;
-    position: relative;
-  }
-`;
-
-const Logo = styled.div`
-  font-size: ${tokens.typography.fontSize['2xl']};
-  font-weight: ${tokens.typography.fontWeight.bold};
-  background: ${tokens.colors.gradients.kinetic};
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  text-align: center;
-  padding-bottom: ${tokens.spacing[4]};
-  border-bottom: 1px solid ${tokens.colors.glass.light};
-`;
-
-const NavSection = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: ${tokens.spacing[2]};
-`;
-
-const SectionTitle = styled.h3`
-  font-size: ${tokens.typography.fontSize.xs};
-  font-weight: ${tokens.typography.fontWeight.semibold};
-  color: ${tokens.colors.gray[400]};
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  margin-bottom: ${tokens.spacing[2]};
-`;
-
-const NavItem = styled(Link)<{ $isActive?: boolean }>`
-  padding: ${tokens.spacing[3]} ${tokens.spacing[4]};
-  border-radius: ${tokens.borderRadius.md};
-  font-size: ${tokens.typography.fontSize.sm};
-  font-weight: ${tokens.typography.fontWeight.medium};
-  color: ${(props) => (props.$isActive ? tokens.colors.white : tokens.colors.gray[300])};
-  background: ${(props) => (props.$isActive ? tokens.colors.glass.medium : 'transparent')};
-  transition: all ${tokens.transitions.base};
-  cursor: pointer;
-
-  &:hover {
-    background: ${tokens.colors.glass.light};
-    color: ${tokens.colors.white};
-  }
-`;
-
-const LogoutButton = styled.button`
-  padding: ${tokens.spacing[3]} ${tokens.spacing[4]};
-  border-radius: ${tokens.borderRadius.md};
-  font-size: ${tokens.typography.fontSize.sm};
-  font-weight: ${tokens.typography.fontWeight.medium};
-  color: ${tokens.colors.danger};
-  background: transparent;
-  border: 1px solid ${tokens.colors.danger};
-  transition: all ${tokens.transitions.base};
-  cursor: pointer;
-  margin-top: auto;
-
-  &:hover {
-    background: ${tokens.colors.danger};
-    color: ${tokens.colors.white};
-  }
-
-  &:disabled {
-    opacity: 0.5;
-    cursor: not-allowed;
-  }
-`;
+import { cn } from '@/lib/utils';
 
 export function AdminSidebar() {
   const pathname = usePathname();
@@ -117,65 +30,76 @@ export function AdminSidebar() {
     }
   };
 
+  const NavItem = ({ href, children }: { href: string; children: React.ReactNode }) => {
+    const isActive = pathname === href;
+    return (
+      <Link
+        href={href}
+        className={cn(
+          'px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
+          isActive
+            ? 'bg-teal-500 text-white shadow-md'
+            : 'text-gray-700 dark:text-gray-300 hover:bg-teal-50 dark:hover:bg-teal-950 hover:text-teal-600 dark:hover:text-teal-400'
+        )}
+      >
+        {children}
+      </Link>
+    );
+  };
+
+  const SectionTitle = ({ children }: { children: React.ReactNode }) => (
+    <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+      {children}
+    </h3>
+  );
+
   return (
-    <SidebarContainer>
-      <Logo>Metaldragon Admin</Logo>
+    <aside className="fixed left-0 top-0 w-72 h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 p-6 flex flex-col gap-6 overflow-y-auto md:relative md:w-auto">
+      {/* Logo */}
+      <div className="text-2xl font-display font-bold gradient-text text-center pb-4 border-b border-gray-200 dark:border-gray-800">
+        Metaldragon Admin
+      </div>
 
-      <NavSection>
+      {/* Dashboard */}
+      <div className="flex flex-col gap-2">
         <SectionTitle>대시보드</SectionTitle>
-        <NavItem href="/admin" $isActive={pathname === '/admin'}>
-          홈
-        </NavItem>
-      </NavSection>
+        <NavItem href="/admin">홈</NavItem>
+      </div>
 
-      <NavSection>
+      {/* Content Management */}
+      <div className="flex flex-col gap-2">
         <SectionTitle>콘텐츠 관리</SectionTitle>
-        <NavItem href="/admin/about" $isActive={pathname === '/admin/about'}>
-          About 편집
-        </NavItem>
-        <NavItem href="/admin/portfolio" $isActive={pathname === '/admin/portfolio'}>
-          포트폴리오 관리
-        </NavItem>
-        <NavItem href="/admin/skills" $isActive={pathname === '/admin/skills'}>
-          스킬 관리
-        </NavItem>
-      </NavSection>
+        <NavItem href="/admin/about">About 편집</NavItem>
+        <NavItem href="/admin/portfolio">포트폴리오 관리</NavItem>
+        <NavItem href="/admin/skills">스킬 관리</NavItem>
+      </div>
 
-      <NavSection>
+      {/* Board Management */}
+      <div className="flex flex-col gap-2">
         <SectionTitle>게시판 관리</SectionTitle>
-        <NavItem href="/admin/posts" $isActive={pathname === '/admin/posts'}>
-          게시글 관리
-        </NavItem>
-        <NavItem href="/admin/ai-study" $isActive={pathname === '/admin/ai-study'}>
-          AI 스터디
-        </NavItem>
-        <NavItem href="/admin/bigdata-study" $isActive={pathname === '/admin/bigdata-study'}>
-          빅데이터 스터디
-        </NavItem>
-        <NavItem href="/admin/ai-artwork" $isActive={pathname === '/admin/ai-artwork'}>
-          AI 작품 갤러리
-        </NavItem>
-      </NavSection>
+        <NavItem href="/admin/posts">게시글 관리</NavItem>
+        <NavItem href="/admin/ai-study">AI 스터디</NavItem>
+        <NavItem href="/admin/bigdata-study">빅데이터 스터디</NavItem>
+        <NavItem href="/admin/ai-artwork">AI 작품 갤러리</NavItem>
+      </div>
 
-      <NavSection>
+      {/* Other */}
+      <div className="flex flex-col gap-2">
         <SectionTitle>기타</SectionTitle>
-        <NavItem href="/admin/news" $isActive={pathname === '/admin/news'}>
-          IT 뉴스 관리
-        </NavItem>
-        <NavItem href="/admin/youtube" $isActive={pathname === '/admin/youtube'}>
-          YouTube 링크
-        </NavItem>
-        <NavItem href="/admin/finance" $isActive={pathname === '/admin/finance'}>
-          가계부 관리
-        </NavItem>
-        <NavItem href="/admin/contacts" $isActive={pathname === '/admin/contacts'}>
-          문의 내역
-        </NavItem>
-      </NavSection>
+        <NavItem href="/admin/news">IT 뉴스 관리</NavItem>
+        <NavItem href="/admin/youtube">YouTube 링크</NavItem>
+        <NavItem href="/admin/finance">가계부 관리</NavItem>
+        <NavItem href="/admin/contacts">문의 내역</NavItem>
+      </div>
 
-      <LogoutButton onClick={handleLogout} disabled={isLoggingOut}>
+      {/* Logout Button */}
+      <button
+        onClick={handleLogout}
+        disabled={isLoggingOut}
+        className="mt-auto px-4 py-2.5 rounded-lg text-sm font-medium text-red-600 dark:text-red-400 border-2 border-red-600 dark:border-red-400 hover:bg-red-600 hover:text-white dark:hover:bg-red-500 dark:hover:border-red-500 transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
+      >
         {isLoggingOut ? '로그아웃 중...' : '로그아웃'}
-      </LogoutButton>
-    </SidebarContainer>
+      </button>
+    </aside>
   );
 }

@@ -12,6 +12,7 @@ import { tokens } from '@/lib/styles/tokens';
 import { Button } from '@/components/ui/Button';
 import { Card } from '@/components/ui/Card';
 import { createClient } from '@/lib/supabase/client';
+import { crawlITNews } from '@/app/actions/crawl';
 
 const NewsContainer = styled.div`
   max-width: 1200px;
@@ -148,6 +149,7 @@ const Message = styled.div<{ $type: 'success' | 'error' }>`
 export default function AdminNewsPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(false);
+  const [crawling, setCrawling] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [news, setNews] = useState<any[]>([]);
 
@@ -232,10 +234,38 @@ export default function AdminNewsPage() {
     }
   };
 
+  const handleCrawl = async (category: 'ai' | 'crypto') => {
+    setCrawling(true);
+    setMessage(null);
+
+    try {
+      const result = await crawlITNews(category);
+
+      if (result.success) {
+        setMessage({ type: 'success', text: result.message });
+        loadNews();
+      } else {
+        setMessage({ type: 'error', text: result.message });
+      }
+    } catch (error: any) {
+      setMessage({ type: 'error', text: error.message || '크롤링에 실패했습니다.' });
+    } finally {
+      setCrawling(false);
+    }
+  };
+
   return (
     <NewsContainer>
       <Header>
         <Title>IT 뉴스 관리</Title>
+        <div style={{ display: 'flex', gap: tokens.spacing[3] }}>
+          <Button variant="primary" onClick={() => handleCrawl('ai')} disabled={crawling}>
+            {crawling ? '크롤링 중...' : '🔄 AI 뉴스 크롤링'}
+          </Button>
+          <Button variant="primary" onClick={() => handleCrawl('crypto')} disabled={crawling}>
+            {crawling ? '크롤링 중...' : '🔄 암호화폐 뉴스 크롤링'}
+          </Button>
+        </div>
       </Header>
 
       {message && <Message $type={message.type}>{message.text}</Message>}
