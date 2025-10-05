@@ -1,5 +1,5 @@
 /**
- * Admin Posts Management
+ * Admin Posts Management - Tailwind CSS
  * 게시글 관리 페이지 (목록, 수정, 삭제)
  */
 
@@ -7,132 +7,9 @@
 
 import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import styled from '@emotion/styled';
-import { tokens } from '@/lib/styles/tokens';
-import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { cn } from '@/lib/utils';
 import Link from 'next/link';
-
-const Container = styled.div`
-  max-width: 1400px;
-  margin: 0 auto;
-`;
-
-const Header = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: ${tokens.spacing[8]};
-`;
-
-const Title = styled.h1`
-  font-size: ${tokens.typography.fontSize['3xl']};
-  font-weight: ${tokens.typography.fontWeight.bold};
-  background: ${tokens.colors.gradients.kinetic};
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-`;
-
-const FilterTabs = styled.div`
-  display: flex;
-  gap: ${tokens.spacing[3]};
-  margin-bottom: ${tokens.spacing[6]};
-  flex-wrap: wrap;
-`;
-
-const TabButton = styled.button<{ $active?: boolean }>`
-  padding: ${tokens.spacing[2]} ${tokens.spacing[5]};
-  background: ${(props) =>
-    props.$active ? tokens.colors.gradients.kinetic : tokens.colors.glass.light};
-  color: ${tokens.colors.white};
-  border: none;
-  border-radius: ${tokens.borderRadius.full};
-  font-size: ${tokens.typography.fontSize.sm};
-  font-weight: ${tokens.typography.fontWeight.medium};
-  cursor: pointer;
-  transition: all ${tokens.transitions.base};
-
-  &:hover {
-    transform: translateY(-2px);
-  }
-`;
-
-const Table = styled.table`
-  width: 100%;
-  border-collapse: collapse;
-`;
-
-const Thead = styled.thead`
-  background: ${tokens.colors.glass.medium};
-  border-bottom: 2px solid ${tokens.colors.glass.light};
-`;
-
-const Th = styled.th`
-  padding: ${tokens.spacing[4]};
-  text-align: left;
-  font-size: ${tokens.typography.fontSize.sm};
-  font-weight: ${tokens.typography.fontWeight.semibold};
-  color: ${tokens.colors.gray[300]};
-`;
-
-const Tbody = styled.tbody``;
-
-const Tr = styled.tr`
-  border-bottom: 1px solid ${tokens.colors.glass.light};
-  transition: all ${tokens.transitions.base};
-
-  &:hover {
-    background: ${tokens.colors.glass.light};
-  }
-`;
-
-const Td = styled.td`
-  padding: ${tokens.spacing[4]};
-  font-size: ${tokens.typography.fontSize.sm};
-  color: ${tokens.colors.gray[300]};
-`;
-
-const CategoryBadge = styled.span<{ $category: string }>`
-  padding: ${tokens.spacing[1]} ${tokens.spacing[3]};
-  border-radius: ${tokens.borderRadius.full};
-  font-size: ${tokens.typography.fontSize.xs};
-  font-weight: ${tokens.typography.fontWeight.medium};
-  background: ${(props) =>
-    props.$category === 'ai_study'
-      ? tokens.colors.primary[500]
-      : props.$category === 'bigdata_study'
-        ? tokens.colors.secondary[500]
-        : props.$category === 'free_board'
-          ? tokens.colors.success
-          : tokens.colors.warning};
-  color: ${tokens.colors.white};
-`;
-
-const ActionButtons = styled.div`
-  display: flex;
-  gap: ${tokens.spacing[2]};
-`;
-
-const EmptyState = styled.div`
-  text-align: center;
-  padding: ${tokens.spacing[12]};
-  color: ${tokens.colors.gray[400]};
-`;
-
-const Message = styled.div<{ $type: 'success' | 'error' }>`
-  padding: ${tokens.spacing[4]};
-  border-radius: ${tokens.borderRadius.md};
-  margin-bottom: ${tokens.spacing[4]};
-  background: ${(props) =>
-    props.$type === 'success'
-      ? `${tokens.colors.success}15`
-      : `${tokens.colors.danger}15`};
-  border: 1px solid
-    ${(props) => (props.$type === 'success' ? tokens.colors.success : tokens.colors.danger)};
-  color: ${(props) =>
-    props.$type === 'success' ? tokens.colors.success : tokens.colors.danger};
-`;
 
 const CATEGORIES = [
   { value: 'all', label: '전체' },
@@ -200,67 +77,116 @@ export default function AdminPostsPage() {
     return found ? found.label : category;
   };
 
+  const getCategoryBadgeColor = (category: string) => {
+    switch (category) {
+      case 'ai_study':
+        return 'bg-teal-500';
+      case 'bigdata_study':
+        return 'bg-indigo-500';
+      case 'free_board':
+        return 'bg-green-500';
+      case 'ai_artwork':
+        return 'bg-yellow-500';
+      default:
+        return 'bg-gray-500';
+    }
+  };
+
   if (loading) {
     return (
-      <Container>
-        <EmptyState>
+      <div className="max-w-[1400px] mx-auto">
+        <div className="text-center p-12 text-gray-400">
           <p>로딩 중...</p>
-        </EmptyState>
-      </Container>
+        </div>
+      </div>
     );
   }
 
   return (
-    <Container>
-      <Header>
-        <Title>게시글 관리</Title>
+    <div className="max-w-[1400px] mx-auto">
+      <div className="flex justify-between items-center mb-8">
+        <h1 className="text-3xl font-bold bg-gradient-to-r from-teal-500 to-indigo-400 bg-clip-text text-transparent">
+          게시글 관리
+        </h1>
         <Link href="/board/ai_study/new">
           <Button variant="primary">+ 새 게시글 작성</Button>
         </Link>
-      </Header>
+      </div>
 
-      {message && <Message $type={message.type}>{message.text}</Message>}
+      {message && (
+        <div
+          className={cn(
+            'p-4 rounded-md mb-4 border',
+            message.type === 'success'
+              ? 'bg-green-500/10 border-green-500 text-green-500'
+              : 'bg-red-500/10 border-red-500 text-red-500'
+          )}
+        >
+          {message.text}
+        </div>
+      )}
 
-      <FilterTabs>
+      <div className="flex gap-3 mb-6 flex-wrap">
         {CATEGORIES.map((category) => (
-          <TabButton
+          <button
             key={category.value}
-            $active={selectedCategory === category.value}
+            className={cn(
+              'px-5 py-2 rounded-full text-sm font-medium text-white transition-all duration-200',
+              selectedCategory === category.value
+                ? 'bg-gradient-to-r from-teal-500 to-indigo-400'
+                : 'bg-white/10 hover:bg-white/15 hover:-translate-y-0.5'
+            )}
             onClick={() => setSelectedCategory(category.value)}
           >
             {category.label}
             {category.value === 'all'
               ? ` (${posts.length})`
               : ` (${posts.filter((p) => p.category === category.value).length})`}
-          </TabButton>
+          </button>
         ))}
-      </FilterTabs>
+      </div>
 
-      <Card variant="glass" style={{ overflow: 'hidden' }}>
+      <div className="bg-white/10 dark:bg-white/5 backdrop-blur-md border border-white/18 rounded-lg overflow-hidden">
         {filteredPosts && filteredPosts.length > 0 ? (
-          <Table>
-            <Thead>
+          <table className="w-full border-collapse">
+            <thead className="bg-white/15 border-b-2 border-white/10">
               <tr>
-                <Th style={{ width: '10%' }}>카테고리</Th>
-                <Th style={{ width: '40%' }}>제목</Th>
-                <Th style={{ width: '10%' }}>조회수</Th>
-                <Th style={{ width: '15%' }}>작성일</Th>
-                <Th style={{ width: '25%' }}>관리</Th>
+                <th className="w-[10%] p-4 text-left text-sm font-semibold text-gray-300">
+                  카테고리
+                </th>
+                <th className="w-[40%] p-4 text-left text-sm font-semibold text-gray-300">제목</th>
+                <th className="w-[10%] p-4 text-left text-sm font-semibold text-gray-300">
+                  조회수
+                </th>
+                <th className="w-[15%] p-4 text-left text-sm font-semibold text-gray-300">
+                  작성일
+                </th>
+                <th className="w-[25%] p-4 text-left text-sm font-semibold text-gray-300">관리</th>
               </tr>
-            </Thead>
-            <Tbody>
+            </thead>
+            <tbody>
               {filteredPosts.map((post) => (
-                <Tr key={post.id}>
-                  <Td>
-                    <CategoryBadge $category={post.category}>
+                <tr
+                  key={post.id}
+                  className="border-b border-white/10 transition-all duration-200 hover:bg-white/10"
+                >
+                  <td className="p-4 text-sm text-gray-300">
+                    <span
+                      className={cn(
+                        'px-3 py-1 rounded-full text-xs font-medium text-white',
+                        getCategoryBadgeColor(post.category)
+                      )}
+                    >
                       {getCategoryLabel(post.category)}
-                    </CategoryBadge>
-                  </Td>
-                  <Td>{post.title}</Td>
-                  <Td>{post.view_count || 0}</Td>
-                  <Td>{new Date(post.created_at).toLocaleDateString('ko-KR')}</Td>
-                  <Td>
-                    <ActionButtons>
+                    </span>
+                  </td>
+                  <td className="p-4 text-sm text-gray-300">{post.title}</td>
+                  <td className="p-4 text-sm text-gray-300">{post.view_count || 0}</td>
+                  <td className="p-4 text-sm text-gray-300">
+                    {new Date(post.created_at).toLocaleDateString('ko-KR')}
+                  </td>
+                  <td className="p-4 text-sm text-gray-300">
+                    <div className="flex gap-2">
                       <Link href={`/board/${post.category}/${post.id}`}>
                         <Button variant="outline" size="sm">
                           보기
@@ -271,26 +197,22 @@ export default function AdminPostsPage() {
                           수정
                         </Button>
                       </Link>
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleDelete(post.id)}
-                      >
+                      <Button variant="outline" size="sm" onClick={() => handleDelete(post.id)}>
                         삭제
                       </Button>
-                    </ActionButtons>
-                  </Td>
-                </Tr>
+                    </div>
+                  </td>
+                </tr>
               ))}
-            </Tbody>
-          </Table>
+            </tbody>
+          </table>
         ) : (
-          <EmptyState>
-            <h2>게시글이 없습니다</h2>
+          <div className="text-center p-12 text-gray-400">
+            <h2 className="text-xl font-semibold mb-2">게시글이 없습니다</h2>
             <p>새 게시글을 작성해보세요!</p>
-          </EmptyState>
+          </div>
         )}
-      </Card>
-    </Container>
+      </div>
+    </div>
   );
 }

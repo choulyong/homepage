@@ -1,141 +1,14 @@
 /**
- * Admin Contacts Page
+ * Admin Contacts Page - Tailwind CSS
  * 문의 내역 관리 페이지
  */
 
 'use client';
 
 import { useState, useEffect } from 'react';
-import styled from '@emotion/styled';
-import { tokens } from '@/lib/styles/tokens';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
 import { createClient } from '@/lib/supabase/client';
-
-const ContactsContainer = styled.div`
-  max-width: 1200px;
-  margin: 0 auto;
-`;
-
-const Title = styled.h1`
-  font-size: ${tokens.typography.fontSize['3xl']};
-  font-weight: ${tokens.typography.fontWeight.bold};
-  background: ${tokens.colors.gradients.kinetic};
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin-bottom: ${tokens.spacing[8]};
-`;
-
-const FilterTabs = styled.div`
-  display: flex;
-  gap: ${tokens.spacing[3]};
-  margin-bottom: ${tokens.spacing[6]};
-`;
-
-const TabButton = styled.button<{ $active?: boolean }>`
-  padding: ${tokens.spacing[2]} ${tokens.spacing[5]};
-  background: ${(props) =>
-    props.$active ? tokens.colors.gradients.kinetic : tokens.colors.glass.light};
-  color: ${tokens.colors.white};
-  border: none;
-  border-radius: ${tokens.borderRadius.full};
-  font-size: ${tokens.typography.fontSize.sm};
-  font-weight: ${tokens.typography.fontWeight.medium};
-  cursor: pointer;
-  transition: all ${tokens.transitions.base};
-
-  &:hover {
-    background: ${(props) =>
-      props.$active ? tokens.colors.gradients.kinetic : tokens.colors.glass.medium};
-  }
-`;
-
-const ContactList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: ${tokens.spacing[4]};
-`;
-
-const ContactCard = styled(Card)<{ $status: string }>`
-  padding: ${tokens.spacing[6]};
-  border-left: 4px solid
-    ${(props) =>
-      props.$status === 'unread'
-        ? tokens.colors.danger
-        : props.$status === 'read'
-          ? tokens.colors.warning
-          : tokens.colors.success};
-`;
-
-const ContactHeader = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-start;
-  margin-bottom: ${tokens.spacing[4]};
-`;
-
-const ContactInfo = styled.div`
-  flex: 1;
-`;
-
-const ContactName = styled.h3`
-  font-size: ${tokens.typography.fontSize.lg};
-  font-weight: ${tokens.typography.fontWeight.semibold};
-  color: ${tokens.colors.white};
-  margin-bottom: ${tokens.spacing[1]};
-`;
-
-const ContactEmail = styled.a`
-  font-size: ${tokens.typography.fontSize.sm};
-  color: ${tokens.colors.primary[400]};
-  text-decoration: none;
-
-  &:hover {
-    text-decoration: underline;
-  }
-`;
-
-const ContactMeta = styled.div`
-  font-size: ${tokens.typography.fontSize.xs};
-  color: ${tokens.colors.gray[500]};
-  margin-top: ${tokens.spacing[2]};
-`;
-
-const StatusBadge = styled.span<{ $status: string }>`
-  padding: ${tokens.spacing[1]} ${tokens.spacing[3]};
-  background: ${(props) =>
-    props.$status === 'unread'
-      ? tokens.colors.danger
-      : props.$status === 'read'
-        ? tokens.colors.warning
-        : tokens.colors.success};
-  color: ${tokens.colors.white};
-  border-radius: ${tokens.borderRadius.full};
-  font-size: ${tokens.typography.fontSize.xs};
-  font-weight: ${tokens.typography.fontWeight.semibold};
-  text-transform: uppercase;
-`;
-
-const ContactSubject = styled.h4`
-  font-size: ${tokens.typography.fontSize.base};
-  font-weight: ${tokens.typography.fontWeight.medium};
-  color: ${tokens.colors.gray[200]};
-  margin-bottom: ${tokens.spacing[3]};
-`;
-
-const ContactMessage = styled.p`
-  font-size: ${tokens.typography.fontSize.sm};
-  color: ${tokens.colors.gray[400]};
-  line-height: 1.6;
-  white-space: pre-wrap;
-  margin-bottom: ${tokens.spacing[4]};
-`;
-
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: ${tokens.spacing[3]};
-`;
+import { cn } from '@/lib/utils';
 
 export default function AdminContactsPage() {
   const [contacts, setContacts] = useState<any[]>([]);
@@ -194,45 +67,127 @@ export default function AdminContactsPage() {
     }
   };
 
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'unread':
+        return 'border-red-500';
+      case 'read':
+        return 'border-yellow-500';
+      case 'replied':
+        return 'border-green-500';
+      default:
+        return 'border-gray-500';
+    }
+  };
+
+  const getStatusBadgeColor = (status: string) => {
+    switch (status) {
+      case 'unread':
+        return 'bg-red-500';
+      case 'read':
+        return 'bg-yellow-500';
+      case 'replied':
+        return 'bg-green-500';
+      default:
+        return 'bg-gray-500';
+    }
+  };
+
   return (
-    <ContactsContainer>
-      <Title>문의 내역</Title>
+    <div className="max-w-7xl mx-auto">
+      <h1 className="text-3xl font-bold bg-gradient-to-r from-teal-500 to-indigo-400 bg-clip-text text-transparent mb-8">
+        문의 내역
+      </h1>
 
-      <FilterTabs>
-        <TabButton $active={filter === 'all'} onClick={() => setFilter('all')}>
+      <div className="flex gap-3 mb-6">
+        <button
+          className={cn(
+            'px-5 py-2 rounded-full text-sm font-medium text-white transition-all duration-200',
+            filter === 'all'
+              ? 'bg-gradient-to-r from-teal-500 to-indigo-400'
+              : 'bg-white/10 hover:bg-white/15'
+          )}
+          onClick={() => setFilter('all')}
+        >
           전체 ({contacts.length})
-        </TabButton>
-        <TabButton $active={filter === 'unread'} onClick={() => setFilter('unread')}>
+        </button>
+        <button
+          className={cn(
+            'px-5 py-2 rounded-full text-sm font-medium text-white transition-all duration-200',
+            filter === 'unread'
+              ? 'bg-gradient-to-r from-teal-500 to-indigo-400'
+              : 'bg-white/10 hover:bg-white/15'
+          )}
+          onClick={() => setFilter('unread')}
+        >
           읽지 않음
-        </TabButton>
-        <TabButton $active={filter === 'read'} onClick={() => setFilter('read')}>
+        </button>
+        <button
+          className={cn(
+            'px-5 py-2 rounded-full text-sm font-medium text-white transition-all duration-200',
+            filter === 'read'
+              ? 'bg-gradient-to-r from-teal-500 to-indigo-400'
+              : 'bg-white/10 hover:bg-white/15'
+          )}
+          onClick={() => setFilter('read')}
+        >
           읽음
-        </TabButton>
-        <TabButton $active={filter === 'replied'} onClick={() => setFilter('replied')}>
+        </button>
+        <button
+          className={cn(
+            'px-5 py-2 rounded-full text-sm font-medium text-white transition-all duration-200',
+            filter === 'replied'
+              ? 'bg-gradient-to-r from-teal-500 to-indigo-400'
+              : 'bg-white/10 hover:bg-white/15'
+          )}
+          onClick={() => setFilter('replied')}
+        >
           답변 완료
-        </TabButton>
-      </FilterTabs>
+        </button>
+      </div>
 
-      <ContactList>
+      <div className="flex flex-col gap-4">
         {contacts.map((contact) => (
-          <ContactCard key={contact.id} variant="glass" $status={contact.status}>
-            <ContactHeader>
-              <ContactInfo>
-                <ContactName>{contact.name}</ContactName>
-                <ContactEmail href={`mailto:${contact.email}`}>{contact.email}</ContactEmail>
-                <ContactMeta>
+          <div
+            key={contact.id}
+            className={cn(
+              'bg-white/10 dark:bg-white/5 backdrop-blur-md border-l-4 rounded-lg p-6',
+              getStatusColor(contact.status)
+            )}
+          >
+            <div className="flex justify-between items-start mb-4">
+              <div className="flex-1">
+                <h3 className="text-lg font-semibold text-white mb-1">
+                  {contact.name}
+                </h3>
+                <a
+                  href={`mailto:${contact.email}`}
+                  className="text-sm text-teal-400 hover:underline"
+                >
+                  {contact.email}
+                </a>
+                <div className="text-xs text-gray-500 mt-2">
                   {new Date(contact.created_at).toLocaleString('ko-KR')}
-                </ContactMeta>
-              </ContactInfo>
-              <StatusBadge $status={contact.status}>
+                </div>
+              </div>
+              <span
+                className={cn(
+                  'px-3 py-1 rounded-full text-xs font-semibold text-white uppercase',
+                  getStatusBadgeColor(contact.status)
+                )}
+              >
                 {getStatusLabel(contact.status)}
-              </StatusBadge>
-            </ContactHeader>
+              </span>
+            </div>
 
-            <ContactSubject>{contact.subject}</ContactSubject>
-            <ContactMessage>{contact.message}</ContactMessage>
+            <h4 className="text-base font-medium text-gray-200 mb-3">
+              {contact.subject}
+            </h4>
+            <p className="text-sm text-gray-400 leading-relaxed whitespace-pre-wrap mb-4">
+              {contact.message}
+            </p>
 
-            <ButtonGroup>
+            <div className="flex gap-3">
               {contact.status === 'unread' && (
                 <Button
                   variant="outline"
@@ -266,17 +221,17 @@ export default function AdminContactsPage() {
               <Button variant="outline" size="sm" onClick={() => deleteContact(contact.id)}>
                 삭제
               </Button>
-            </ButtonGroup>
-          </ContactCard>
+            </div>
+          </div>
         ))}
 
         {contacts.length === 0 && (
-          <div style={{ textAlign: 'center', padding: tokens.spacing[12], color: tokens.colors.gray[400] }}>
-            <h2>문의 내역이 없습니다</h2>
+          <div className="text-center p-12 text-gray-400">
+            <h2 className="text-xl font-semibold mb-2">문의 내역이 없습니다</h2>
             <p>새로운 문의가 들어오면 여기에 표시됩니다.</p>
           </div>
         )}
-      </ContactList>
-    </ContactsContainer>
+      </div>
+    </div>
   );
 }

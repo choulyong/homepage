@@ -1,102 +1,13 @@
 /**
- * Image Upload Component
- * Supabase Storage를 사용한 이미지 업로드
+ * Image Upload Component - Tailwind CSS
+ * 자체 서버를 사용한 이미지 업로드
  */
 
 'use client';
 
 import { useState, useRef } from 'react';
-import styled from '@emotion/styled';
-import { tokens } from '@/lib/styles/tokens';
-import { Button } from './Button';
-import { createClient } from '@/lib/supabase/client';
 import Image from 'next/image';
-
-const UploadContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: ${tokens.spacing[4]};
-`;
-
-const UploadArea = styled.div<{ $isDragging?: boolean }>`
-  border: 2px dashed
-    ${(props) => (props.$isDragging ? tokens.colors.primary[400] : tokens.colors.gray[600])};
-  border-radius: ${tokens.borderRadius.lg};
-  padding: ${tokens.spacing[8]};
-  text-align: center;
-  background: ${(props) =>
-    props.$isDragging ? tokens.colors.glass.medium : tokens.colors.gray[800]};
-  transition: all ${tokens.transitions.base};
-  cursor: pointer;
-
-  &:hover {
-    border-color: ${tokens.colors.primary[500]};
-    background: ${tokens.colors.glass.light};
-  }
-`;
-
-const UploadText = styled.p`
-  color: ${tokens.colors.gray[400]};
-  font-size: ${tokens.typography.fontSize.sm};
-  margin-bottom: ${tokens.spacing[2]};
-`;
-
-const PreviewContainer = styled.div`
-  position: relative;
-  width: 200px;
-  height: 200px;
-  border-radius: ${tokens.borderRadius.md};
-  overflow: hidden;
-  margin: 0 auto;
-  border: 2px solid ${tokens.colors.glass.light};
-`;
-
-const RemoveButton = styled.button`
-  position: absolute;
-  top: ${tokens.spacing[2]};
-  right: ${tokens.spacing[2]};
-  background: ${tokens.colors.danger};
-  color: ${tokens.colors.white};
-  border: none;
-  border-radius: 50%;
-  width: 32px;
-  height: 32px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  font-size: ${tokens.typography.fontSize.lg};
-  transition: all ${tokens.transitions.base};
-
-  &:hover {
-    background: ${tokens.colors.danger};
-    transform: scale(1.1);
-  }
-`;
-
-const ProgressBar = styled.div<{ $progress: number }>`
-  width: 100%;
-  height: 4px;
-  background: ${tokens.colors.gray[700]};
-  border-radius: ${tokens.borderRadius.full};
-  overflow: hidden;
-  margin-top: ${tokens.spacing[2]};
-
-  &::after {
-    content: '';
-    display: block;
-    width: ${(props) => props.$progress}%;
-    height: 100%;
-    background: ${tokens.colors.gradients.kinetic};
-    transition: width 0.3s ease;
-  }
-`;
-
-const ErrorMessage = styled.div`
-  color: ${tokens.colors.danger};
-  font-size: ${tokens.typography.fontSize.sm};
-  text-align: center;
-`;
+import { cn } from '@/lib/utils';
 
 interface ImageUploadProps {
   onUploadComplete: (url: string) => void;
@@ -185,30 +96,26 @@ export function ImageUpload({
     setProgress(0);
 
     try {
-      const supabase = createClient();
+      // FormData 생성
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('bucket', bucket);
 
-      // 고유한 파일명 생성
-      const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = `${fileName}`;
+      // 자체 서버 API로 업로드
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
 
-      // Supabase Storage에 업로드
-      const { data, error: uploadError } = await supabase.storage
-        .from(bucket)
-        .upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false,
-        });
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '업로드에 실패했습니다.');
+      }
 
-      if (uploadError) throw uploadError;
-
-      // Public URL 가져오기
-      const {
-        data: { publicUrl },
-      } = supabase.storage.from(bucket).getPublicUrl(filePath);
+      const data = await response.json();
 
       setProgress(100);
-      onUploadComplete(publicUrl);
+      onUploadComplete(data.url);
     } catch (err: any) {
       console.error('Upload error:', err);
       setError(err.message || '업로드에 실패했습니다.');
@@ -231,30 +138,39 @@ export function ImageUpload({
   };
 
   return (
-    <UploadContainer>
+    <div className="flex flex-col gap-4">
       {preview ? (
-        <PreviewContainer>
+        <div className="relative w-52 h-52 rounded-md overflow-hidden mx-auto border-2 border-white/20">
           <Image src={preview} alt="Preview" fill style={{ objectFit: 'cover' }} />
-          <RemoveButton onClick={handleRemove}>×</RemoveButton>
-        </PreviewContainer>
+          <button
+            onClick={handleRemove}
+            className="absolute top-2 right-2 bg-red-500 text-white border-none rounded-full w-8 h-8 flex items-center justify-center cursor-pointer text-lg transition-all duration-200 hover:bg-red-600 hover:scale-110"
+          >
+            ×
+          </button>
+        </div>
       ) : (
-        <UploadArea
-          $isDragging={isDragging}
+        <div
+          className={cn(
+            'border-2 border-dashed rounded-lg p-8 text-center transition-all duration-200 cursor-pointer',
+            isDragging
+              ? 'border-teal-400 bg-white/15 dark:bg-white/10'
+              : 'border-gray-600 dark:border-gray-700 bg-gray-800 dark:bg-gray-900',
+            'hover:border-teal-500 hover:bg-white/10'
+          )}
           onDragEnter={handleDragEnter}
           onDragLeave={handleDragLeave}
           onDragOver={handleDragOver}
           onDrop={handleDrop}
           onClick={handleClick}
         >
-          <UploadText>
-            {isDragging
-              ? '여기에 드롭하세요'
-              : '클릭하거나 이미지를 드래그 앤 드롭하세요'}
-          </UploadText>
-          <UploadText style={{ fontSize: tokens.typography.fontSize.xs }}>
+          <p className="text-gray-400 text-sm mb-2">
+            {isDragging ? '여기에 드롭하세요' : '클릭하거나 이미지를 드래그 앤 드롭하세요'}
+          </p>
+          <p className="text-gray-500 text-xs">
             최대 {maxSizeMB}MB, JPG/PNG/GIF/WEBP
-          </UploadText>
-        </UploadArea>
+          </p>
+        </div>
       )}
 
       <input
@@ -262,11 +178,23 @@ export function ImageUpload({
         type="file"
         accept="image/*"
         onChange={handleFileSelect}
-        style={{ display: 'none' }}
+        className="hidden"
       />
 
-      {uploading && <ProgressBar $progress={progress} />}
-      {error && <ErrorMessage>{error}</ErrorMessage>}
-    </UploadContainer>
+      {uploading && (
+        <div className="w-full h-1 bg-gray-700 dark:bg-gray-800 rounded-full overflow-hidden mt-2">
+          <div
+            className="h-full bg-gradient-to-r from-teal-500 to-indigo-400 transition-all duration-300 ease-out"
+            style={{ width: `${progress}%` }}
+          />
+        </div>
+      )}
+
+      {error && (
+        <div className="text-red-500 dark:text-red-400 text-sm text-center">
+          {error}
+        </div>
+      )}
+    </div>
   );
 }

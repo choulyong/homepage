@@ -1,5 +1,5 @@
 /**
- * Admin About Edit Page
+ * Admin About Edit Page - Tailwind CSS
  * 프로필 정보를 편집하는 관리자 페이지
  */
 
@@ -7,160 +7,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import styled from '@emotion/styled';
-import { tokens } from '@/lib/styles/tokens';
 import { Button } from '@/components/ui/Button';
-import { Card } from '@/components/ui/Card';
+import { ImageUpload } from '@/components/ui/ImageUpload';
 import { createClient } from '@/lib/supabase/client';
-
-const EditContainer = styled.div`
-  max-width: 1000px;
-  margin: 0 auto;
-`;
-
-const Title = styled.h1`
-  font-size: ${tokens.typography.fontSize['3xl']};
-  font-weight: ${tokens.typography.fontWeight.bold};
-  background: ${tokens.colors.gradients.kinetic};
-  -webkit-background-clip: text;
-  background-clip: text;
-  -webkit-text-fill-color: transparent;
-  margin-bottom: ${tokens.spacing[8]};
-`;
-
-const Form = styled.form`
-  display: flex;
-  flex-direction: column;
-  gap: ${tokens.spacing[6]};
-`;
-
-const FormSection = styled(Card)`
-  padding: ${tokens.spacing[6]};
-`;
-
-const SectionTitle = styled.h2`
-  font-size: ${tokens.typography.fontSize.xl};
-  font-weight: ${tokens.typography.fontWeight.semibold};
-  color: ${tokens.colors.white};
-  margin-bottom: ${tokens.spacing[4]};
-`;
-
-const FormGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: ${tokens.spacing[2]};
-  margin-bottom: ${tokens.spacing[4]};
-`;
-
-const Label = styled.label`
-  font-size: ${tokens.typography.fontSize.sm};
-  font-weight: ${tokens.typography.fontWeight.medium};
-  color: ${tokens.colors.gray[300]};
-`;
-
-const Input = styled.input`
-  padding: ${tokens.spacing[3]} ${tokens.spacing[4]};
-  background: ${tokens.colors.gray[800]};
-  border: 1px solid ${tokens.colors.gray[600]};
-  border-radius: ${tokens.borderRadius.md};
-  color: ${tokens.colors.white};
-  font-size: ${tokens.typography.fontSize.base};
-  transition: all ${tokens.transitions.base};
-
-  &:focus {
-    outline: none;
-    border-color: ${tokens.colors.primary[500]};
-    box-shadow: 0 0 0 3px ${tokens.colors.primary[100]}20;
-  }
-
-  &::placeholder {
-    color: ${tokens.colors.gray[500]};
-  }
-`;
-
-const TextArea = styled.textarea`
-  padding: ${tokens.spacing[3]} ${tokens.spacing[4]};
-  background: ${tokens.colors.gray[800]};
-  border: 1px solid ${tokens.colors.gray[600]};
-  border-radius: ${tokens.borderRadius.md};
-  color: ${tokens.colors.white};
-  font-size: ${tokens.typography.fontSize.base};
-  min-height: 120px;
-  resize: vertical;
-  font-family: inherit;
-  transition: all ${tokens.transitions.base};
-
-  &:focus {
-    outline: none;
-    border-color: ${tokens.colors.primary[500]};
-    box-shadow: 0 0 0 3px ${tokens.colors.primary[100]}20;
-  }
-
-  &::placeholder {
-    color: ${tokens.colors.gray[500]};
-  }
-`;
-
-const SkillsContainer = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: ${tokens.spacing[2]};
-  margin-bottom: ${tokens.spacing[4]};
-`;
-
-const SkillTag = styled.div`
-  display: flex;
-  align-items: center;
-  gap: ${tokens.spacing[2]};
-  padding: ${tokens.spacing[2]} ${tokens.spacing[3]};
-  background: ${tokens.colors.glass.light};
-  border-radius: ${tokens.borderRadius.full};
-  color: ${tokens.colors.white};
-  font-size: ${tokens.typography.fontSize.sm};
-`;
-
-const RemoveButton = styled.button`
-  background: none;
-  border: none;
-  color: ${tokens.colors.danger};
-  cursor: pointer;
-  font-size: ${tokens.typography.fontSize.lg};
-  padding: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-
-  &:hover {
-    opacity: 0.7;
-  }
-`;
-
-const PortfolioItemCard = styled(Card)`
-  padding: ${tokens.spacing[4]};
-  margin-bottom: ${tokens.spacing[4]};
-  background: ${tokens.colors.gray[800]};
-`;
-
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: ${tokens.spacing[4]};
-  justify-content: flex-end;
-  margin-top: ${tokens.spacing[6]};
-`;
-
-const Message = styled.div<{ $type: 'success' | 'error' }>`
-  padding: ${tokens.spacing[4]};
-  border-radius: ${tokens.borderRadius.md};
-  margin-bottom: ${tokens.spacing[4]};
-  background: ${(props) =>
-    props.$type === 'success'
-      ? `${tokens.colors.success}15`
-      : `${tokens.colors.danger}15`};
-  border: 1px solid
-    ${(props) => (props.$type === 'success' ? tokens.colors.success : tokens.colors.danger)};
-  color: ${(props) =>
-    props.$type === 'success' ? tokens.colors.success : tokens.colors.danger};
-`;
+import { cn } from '@/lib/utils';
 
 interface ProfileData {
   displayName: string;
@@ -173,6 +23,8 @@ interface ProfileData {
     linkedin?: string;
     twitter?: string;
     youtube?: string;
+    instagram?: string;
+    facebook?: string;
     email?: string;
   };
   portfolioItems: Array<{
@@ -320,78 +172,110 @@ export default function AdminAboutPage() {
   };
 
   return (
-    <EditContainer>
-      <Title>프로필 편집</Title>
+    <div className="max-w-[1000px] mx-auto">
+      <h1 className="text-3xl font-bold bg-gradient-to-r from-teal-500 to-indigo-400 bg-clip-text text-transparent mb-8">
+        프로필 편집
+      </h1>
 
-      {message && <Message $type={message.type}>{message.text}</Message>}
+      {message && (
+        <div
+          className={cn(
+            'p-4 rounded-md mb-4 border',
+            message.type === 'success'
+              ? 'bg-green-500/10 border-green-500 text-green-500'
+              : 'bg-red-500/10 border-red-500 text-red-500'
+          )}
+        >
+          {message.text}
+        </div>
+      )}
 
-      <Form onSubmit={handleSubmit}>
-        <FormSection variant="glass">
-          <SectionTitle>기본 정보</SectionTitle>
+      <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+        <div className="bg-white/10 dark:bg-white/5 backdrop-blur-md border border-white/18 rounded-lg p-6">
+          <h2 className="text-xl font-semibold text-white mb-4">기본 정보</h2>
 
-          <FormGroup>
-            <Label htmlFor="displayName">이름 *</Label>
-            <Input
+          <div className="flex flex-col gap-2 mb-4">
+            <label htmlFor="displayName" className="text-sm font-medium text-gray-300">
+              이름 *
+            </label>
+            <input
               id="displayName"
               type="text"
               value={profile.displayName}
               onChange={(e) => setProfile({ ...profile, displayName: e.target.value })}
               required
               placeholder="홍길동"
+              className="p-3 bg-gray-800 border border-gray-600 rounded-md text-white placeholder:text-gray-500 focus:outline-none focus:border-teal-500 focus:shadow-[0_0_0_3px_rgba(45,212,191,0.1)]"
             />
-          </FormGroup>
+          </div>
 
-          <FormGroup>
-            <Label htmlFor="jobTitle">직함</Label>
-            <Input
+          <div className="flex flex-col gap-2 mb-4">
+            <label htmlFor="jobTitle" className="text-sm font-medium text-gray-300">
+              직함
+            </label>
+            <input
               id="jobTitle"
               type="text"
               value={profile.jobTitle}
               onChange={(e) => setProfile({ ...profile, jobTitle: e.target.value })}
               placeholder="Full Stack Developer"
+              className="p-3 bg-gray-800 border border-gray-600 rounded-md text-white placeholder:text-gray-500 focus:outline-none focus:border-teal-500 focus:shadow-[0_0_0_3px_rgba(45,212,191,0.1)]"
             />
-          </FormGroup>
+          </div>
 
-          <FormGroup>
-            <Label htmlFor="bio">자기소개</Label>
-            <TextArea
+          <div className="flex flex-col gap-2 mb-4">
+            <label htmlFor="bio" className="text-sm font-medium text-gray-300">
+              자기소개
+            </label>
+            <textarea
               id="bio"
               value={profile.bio}
               onChange={(e) => setProfile({ ...profile, bio: e.target.value })}
               placeholder="간단한 자기소개를 작성하세요"
+              className="p-3 bg-gray-800 border border-gray-600 rounded-md text-white min-h-[120px] resize-y font-[inherit] placeholder:text-gray-500 focus:outline-none focus:border-teal-500 focus:shadow-[0_0_0_3px_rgba(45,212,191,0.1)]"
             />
-          </FormGroup>
+          </div>
 
-          <FormGroup>
-            <Label htmlFor="profileImageUrl">프로필 이미지 URL</Label>
-            <Input
-              id="profileImageUrl"
-              type="url"
-              value={profile.profileImageUrl}
-              onChange={(e) => setProfile({ ...profile, profileImageUrl: e.target.value })}
-              placeholder="https://example.com/image.jpg"
+          <div className="flex flex-col gap-2 mb-4">
+            <label className="text-sm font-medium text-gray-300">
+              프로필 이미지
+            </label>
+            <ImageUpload
+              currentImageUrl={profile.profileImageUrl}
+              onUploadComplete={(url) => setProfile({ ...profile, profileImageUrl: url })}
+              bucket="avatars"
+              maxSizeMB={5}
             />
-          </FormGroup>
-        </FormSection>
+          </div>
+        </div>
 
-        <FormSection variant="glass">
-          <SectionTitle>보유 스킬</SectionTitle>
+        <div className="bg-white/10 dark:bg-white/5 backdrop-blur-md border border-white/18 rounded-lg p-6">
+          <h2 className="text-xl font-semibold text-white mb-4">보유 스킬</h2>
 
-          <SkillsContainer>
+          <div className="flex flex-wrap gap-2 mb-4">
             {profile.skills.map((skill, index) => (
-              <SkillTag key={index}>
+              <div
+                key={index}
+                className="flex items-center gap-2 px-3 py-2 bg-white/10 rounded-full text-white text-sm"
+              >
                 {skill}
-                <RemoveButton type="button" onClick={() => removeSkill(skill)}>
+                <button
+                  type="button"
+                  onClick={() => removeSkill(skill)}
+                  className="bg-transparent border-none text-red-500 cursor-pointer text-lg p-0 flex items-center justify-center hover:opacity-70"
+                >
                   ×
-                </RemoveButton>
-              </SkillTag>
+                </button>
+              </div>
             ))}
-          </SkillsContainer>
+          </div>
 
-          <FormGroup>
-            <Label htmlFor="newSkill">새 스킬 추가</Label>
-            <div style={{ display: 'flex', gap: tokens.spacing[2] }}>
-              <Input
+          <div className="flex flex-col gap-2 mb-4">
+            <label htmlFor="newSkill" className="text-sm font-medium text-gray-300">
+              새 스킬 추가
+            </label>
+            <div className="flex gap-2">
+              <input
                 id="newSkill"
                 type="text"
                 value={newSkill}
@@ -403,20 +287,23 @@ export default function AdminAboutPage() {
                   }
                 }}
                 placeholder="React, TypeScript, Node.js..."
+                className="flex-1 p-3 bg-gray-800 border border-gray-600 rounded-md text-white placeholder:text-gray-500 focus:outline-none focus:border-teal-500 focus:shadow-[0_0_0_3px_rgba(45,212,191,0.1)]"
               />
               <Button type="button" onClick={addSkill} variant="outline">
                 추가
               </Button>
             </div>
-          </FormGroup>
-        </FormSection>
+          </div>
+        </div>
 
-        <FormSection variant="glass">
-          <SectionTitle>소셜 링크</SectionTitle>
+        <div className="bg-white/10 dark:bg-white/5 backdrop-blur-md border border-white/18 rounded-lg p-6">
+          <h2 className="text-xl font-semibold text-white mb-4">소셜 링크</h2>
 
-          <FormGroup>
-            <Label htmlFor="github">GitHub</Label>
-            <Input
+          <div className="flex flex-col gap-2 mb-4">
+            <label htmlFor="github" className="text-sm font-medium text-gray-300">
+              GitHub
+            </label>
+            <input
               id="github"
               type="url"
               value={profile.socialLinks.github || ''}
@@ -427,12 +314,15 @@ export default function AdminAboutPage() {
                 })
               }
               placeholder="https://github.com/username"
+              className="p-3 bg-gray-800 border border-gray-600 rounded-md text-white placeholder:text-gray-500 focus:outline-none focus:border-teal-500 focus:shadow-[0_0_0_3px_rgba(45,212,191,0.1)]"
             />
-          </FormGroup>
+          </div>
 
-          <FormGroup>
-            <Label htmlFor="linkedin">LinkedIn</Label>
-            <Input
+          <div className="flex flex-col gap-2 mb-4">
+            <label htmlFor="linkedin" className="text-sm font-medium text-gray-300">
+              LinkedIn
+            </label>
+            <input
               id="linkedin"
               type="url"
               value={profile.socialLinks.linkedin || ''}
@@ -443,12 +333,15 @@ export default function AdminAboutPage() {
                 })
               }
               placeholder="https://linkedin.com/in/username"
+              className="p-3 bg-gray-800 border border-gray-600 rounded-md text-white placeholder:text-gray-500 focus:outline-none focus:border-teal-500 focus:shadow-[0_0_0_3px_rgba(45,212,191,0.1)]"
             />
-          </FormGroup>
+          </div>
 
-          <FormGroup>
-            <Label htmlFor="youtube">YouTube</Label>
-            <Input
+          <div className="flex flex-col gap-2 mb-4">
+            <label htmlFor="youtube" className="text-sm font-medium text-gray-300">
+              YouTube
+            </label>
+            <input
               id="youtube"
               type="url"
               value={profile.socialLinks.youtube || ''}
@@ -459,79 +352,125 @@ export default function AdminAboutPage() {
                 })
               }
               placeholder="https://youtube.com/@username"
+              className="p-3 bg-gray-800 border border-gray-600 rounded-md text-white placeholder:text-gray-500 focus:outline-none focus:border-teal-500 focus:shadow-[0_0_0_3px_rgba(45,212,191,0.1)]"
             />
-          </FormGroup>
-        </FormSection>
+          </div>
 
-        <FormSection variant="glass">
-          <SectionTitle>포트폴리오</SectionTitle>
+          <div className="flex flex-col gap-2 mb-4">
+            <label htmlFor="instagram" className="text-sm font-medium text-gray-300">
+              Instagram
+            </label>
+            <input
+              id="instagram"
+              type="url"
+              value={profile.socialLinks.instagram || ''}
+              onChange={(e) =>
+                setProfile({
+                  ...profile,
+                  socialLinks: { ...profile.socialLinks, instagram: e.target.value },
+                })
+              }
+              placeholder="https://instagram.com/username"
+              className="p-3 bg-gray-800 border border-gray-600 rounded-md text-white placeholder:text-gray-500 focus:outline-none focus:border-teal-500 focus:shadow-[0_0_0_3px_rgba(45,212,191,0.1)]"
+            />
+          </div>
+
+          <div className="flex flex-col gap-2 mb-4">
+            <label htmlFor="facebook" className="text-sm font-medium text-gray-300">
+              Facebook
+            </label>
+            <input
+              id="facebook"
+              type="url"
+              value={profile.socialLinks.facebook || ''}
+              onChange={(e) =>
+                setProfile({
+                  ...profile,
+                  socialLinks: { ...profile.socialLinks, facebook: e.target.value },
+                })
+              }
+              placeholder="https://facebook.com/username"
+              className="p-3 bg-gray-800 border border-gray-600 rounded-md text-white placeholder:text-gray-500 focus:outline-none focus:border-teal-500 focus:shadow-[0_0_0_3px_rgba(45,212,191,0.1)]"
+            />
+          </div>
+        </div>
+
+        <div className="bg-white/10 dark:bg-white/5 backdrop-blur-md border border-white/18 rounded-lg p-6">
+          <h2 className="text-xl font-semibold text-white mb-4">포트폴리오</h2>
 
           {profile.portfolioItems.map((item, index) => (
-            <PortfolioItemCard key={index} variant="bordered">
-              <FormGroup>
-                <Label>프로젝트 제목</Label>
-                <Input
+            <div
+              key={index}
+              className="bg-gray-800 border border-white/18 rounded-lg p-4 mb-4"
+            >
+              <div className="flex flex-col gap-2 mb-4">
+                <label className="text-sm font-medium text-gray-300">프로젝트 제목</label>
+                <input
                   type="text"
                   value={item.title}
                   onChange={(e) => updatePortfolioItem(index, 'title', e.target.value)}
                   placeholder="프로젝트 이름"
+                  className="p-3 bg-gray-800 border border-gray-600 rounded-md text-white placeholder:text-gray-500 focus:outline-none focus:border-teal-500 focus:shadow-[0_0_0_3px_rgba(45,212,191,0.1)]"
                 />
-              </FormGroup>
+              </div>
 
-              <FormGroup>
-                <Label>설명</Label>
-                <TextArea
+              <div className="flex flex-col gap-2 mb-4">
+                <label className="text-sm font-medium text-gray-300">설명</label>
+                <textarea
                   value={item.description}
                   onChange={(e) => updatePortfolioItem(index, 'description', e.target.value)}
                   placeholder="프로젝트 설명"
+                  className="p-3 bg-gray-800 border border-gray-600 rounded-md text-white min-h-[120px] resize-y font-[inherit] placeholder:text-gray-500 focus:outline-none focus:border-teal-500 focus:shadow-[0_0_0_3px_rgba(45,212,191,0.1)]"
                 />
-              </FormGroup>
+              </div>
 
-              <FormGroup>
-                <Label>이미지 URL</Label>
-                <Input
+              <div className="flex flex-col gap-2 mb-4">
+                <label className="text-sm font-medium text-gray-300">이미지 URL</label>
+                <input
                   type="url"
                   value={item.imageUrl || ''}
                   onChange={(e) => updatePortfolioItem(index, 'imageUrl', e.target.value)}
                   placeholder="https://example.com/project-image.jpg"
+                  className="p-3 bg-gray-800 border border-gray-600 rounded-md text-white placeholder:text-gray-500 focus:outline-none focus:border-teal-500 focus:shadow-[0_0_0_3px_rgba(45,212,191,0.1)]"
                 />
-              </FormGroup>
+              </div>
 
-              <FormGroup>
-                <Label>프로젝트 링크</Label>
-                <Input
+              <div className="flex flex-col gap-2 mb-4">
+                <label className="text-sm font-medium text-gray-300">프로젝트 링크</label>
+                <input
                   type="url"
                   value={item.link || ''}
                   onChange={(e) => updatePortfolioItem(index, 'link', e.target.value)}
                   placeholder="https://github.com/username/project"
+                  className="p-3 bg-gray-800 border border-gray-600 rounded-md text-white placeholder:text-gray-500 focus:outline-none focus:border-teal-500 focus:shadow-[0_0_0_3px_rgba(45,212,191,0.1)]"
                 />
-              </FormGroup>
+              </div>
 
               <Button
                 type="button"
                 variant="outline"
                 onClick={() => removePortfolioItem(index)}
-                style={{ marginTop: tokens.spacing[2] }}
+                className="mt-2"
               >
                 삭제
               </Button>
-            </PortfolioItemCard>
+            </div>
           ))}
 
           <Button type="button" variant="outline" onClick={addPortfolioItem}>
             + 포트폴리오 항목 추가
           </Button>
-        </FormSection>
+        </div>
 
-        <ButtonGroup>
+        <div className="flex gap-4 justify-end mt-6">
           <Button type="button" variant="outline" onClick={() => router.push('/about')}>
             취소
           </Button>
           <Button type="submit" variant="primary" disabled={loading}>
             {loading ? '저장 중...' : '저장'}
           </Button>
-        </ButtonGroup>
-      </Form>
-    </EditContainer>
+        </div>
+      </form>
+    </div>
   );
 }

@@ -1,9 +1,19 @@
 'use client';
 
 import { useTheme } from '@/contexts/ThemeContext';
+import { useEffect, useState } from 'react';
 
 export function DarkModeToggle() {
+  const [mounted, setMounted] = useState(false);
   const { theme, toggleTheme } = useTheme();
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
 
   return (
     <button

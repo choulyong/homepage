@@ -1,30 +1,11 @@
 /**
- * Admin Layout
+ * Admin Layout - Tailwind CSS
  * 관리자 대시보드 레이아웃 (Protected)
  */
 
 'use client';
 
 import { AdminSidebar } from './components/AdminSidebar';
-import styled from '@emotion/styled';
-import { tokens } from '@/lib/styles/tokens';
-
-const AdminContainer = styled.div`
-  display: flex;
-  min-height: 100vh;
-  background: ${tokens.colors.gradients.dark};
-`;
-
-const MainContent = styled.main`
-  flex: 1;
-  padding: ${tokens.spacing[8]};
-  margin-left: 280px; /* Sidebar width */
-
-  @media (max-width: 768px) {
-    margin-left: 0;
-    padding: ${tokens.spacing[4]};
-  }
-`;
 
 export default function AdminLayout({
   children,
@@ -33,9 +14,11 @@ export default function AdminLayout({
 }) {
   // Middleware에서 이미 관리자 인증을 처리하므로 여기서는 레이아웃만 제공
   return (
-    <AdminContainer>
+    <div className="flex min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 dark:from-gray-950 dark:to-gray-900">
       <AdminSidebar />
-      <MainContent>{children}</MainContent>
-    </AdminContainer>
+      <main className="flex-1 p-8 ml-[280px] md:ml-0 md:p-4">
+        {children}
+      </main>
+    </div>
   );
 }

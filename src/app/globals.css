@@ -1,12 +1,14 @@
 /**
  * Global Styles for metaldragon
- * Tailwind CSS v4 with custom design tokens
+ * Tailwind CSS v3 with custom design tokens
  */
 
-@import "tailwindcss";
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-/* Tailwind v4 Theme Configuration */
-@theme {
+/* Custom CSS Variables */
+:root {
   /* Color Palette - Teal & Indigo Gradient System */
   --color-teal-50: #f0fdfa;
   --color-teal-100: #ccfbf1;
@@ -191,4 +193,43 @@ a {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+/* Custom Animations */
+@keyframes gradientShift {
+  0%, 100% {
+    transform: translateX(0) translateY(0);
+  }
+  50% {
+    transform: translateX(10%) translateY(10%);
+  }
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-gradient-shift {
+  animation: gradientShift 8s ease infinite;
+}
+
+.animate-fade-in-up {
+  animation: fadeInUp 0.8s ease-out;
+}
+
+.animation-delay-200 {
+  animation-delay: 0.2s;
+  animation-fill-mode: both;
+}
+
+.animation-delay-400 {
+  animation-delay: 0.4s;
+  animation-fill-mode: both;
 }

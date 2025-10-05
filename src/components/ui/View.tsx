@@ -1,12 +1,12 @@
 /**
- * View Component - Base Container (React Native inspired)
+ * View Component - Base Container (React Native inspired) - Tailwind CSS
  * Based on LLD.md and HELP_GPT design principles
  */
 
 'use client';
 
-import styled from '@emotion/styled';
 import { HTMLAttributes } from 'react';
+import { cn } from '@/lib/utils';
 
 interface ViewProps extends HTMLAttributes<HTMLDivElement> {
   flex?: boolean;
@@ -18,28 +18,61 @@ interface ViewProps extends HTMLAttributes<HTMLDivElement> {
   glass?: 'light' | 'medium' | 'heavy';
 }
 
-export const View = styled.div<ViewProps>`
-  ${(props) => props.flex && `display: flex;`}
-  ${(props) => props.direction && `flex-direction: ${props.direction};`}
-  ${(props) => props.align && `align-items: ${props.align};`}
-  ${(props) => props.justify && `
-    justify-content: ${
-      props.justify === 'between' ? 'space-between' :
-      props.justify === 'around' ? 'space-around' :
-      props.justify === 'evenly' ? 'space-evenly' :
-      props.justify
-    };
-  `}
-  ${(props) => props.gap && `gap: ${props.gap * 4}px;`}
-  ${(props) => props.padding && `padding: ${props.padding * 4}px;`}
-  ${(props) => props.glass && `
-    background: ${
-      props.glass === 'light' ? 'rgba(255, 255, 255, 0.1)' :
-      props.glass === 'medium' ? 'rgba(255, 255, 255, 0.15)' :
-      'rgba(255, 255, 255, 0.25)'
-    };
-    backdrop-filter: blur(10px);
-    -webkit-backdrop-filter: blur(10px);
-    border: 1px solid rgba(255, 255, 255, 0.18);
-  `}
-`;
+export function View({
+  flex,
+  direction,
+  align,
+  justify,
+  gap,
+  padding,
+  glass,
+  className,
+  children,
+  ...props
+}: ViewProps) {
+  const classes = cn(
+    // Flex
+    flex && 'flex',
+
+    // Direction
+    direction === 'row' && 'flex-row',
+    direction === 'column' && 'flex-col',
+    direction === 'row-reverse' && 'flex-row-reverse',
+    direction === 'column-reverse' && 'flex-col-reverse',
+
+    // Align
+    align === 'start' && 'items-start',
+    align === 'center' && 'items-center',
+    align === 'end' && 'items-end',
+    align === 'stretch' && 'items-stretch',
+    align === 'baseline' && 'items-baseline',
+
+    // Justify
+    justify === 'start' && 'justify-start',
+    justify === 'center' && 'justify-center',
+    justify === 'end' && 'justify-end',
+    justify === 'between' && 'justify-between',
+    justify === 'around' && 'justify-around',
+    justify === 'evenly' && 'justify-evenly',
+
+    // Glass Effect
+    glass === 'light' && 'bg-white/10 backdrop-blur-md border border-white/18',
+    glass === 'medium' && 'bg-white/15 backdrop-blur-md border border-white/18',
+    glass === 'heavy' && 'bg-white/25 backdrop-blur-md border border-white/18',
+
+    // Custom className
+    className
+  );
+
+  const style = {
+    ...props.style,
+    ...(gap && { gap: `${gap * 4}px` }),
+    ...(padding && { padding: `${padding * 4}px` }),
+  };
+
+  return (
+    <div className={classes} style={style} {...props}>
+      {children}
+    </div>
+  );
+}

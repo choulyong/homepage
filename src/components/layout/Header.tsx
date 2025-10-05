@@ -21,7 +21,7 @@ export function Header() {
     { href: '/schedule', label: '일정' },
     { href: '/board/ai_study', label: 'AI 스터디' },
     { href: '/board/bigdata_study', label: '빅데이터' },
-    { href: '/news', label: 'IT News' },
+    { href: '/news', label: 'News' },
     { href: '/artworks', label: 'AI 작품' },
     { href: '/youtube', label: 'YouTube' },
     { href: '/contact', label: 'Contact' },
@@ -63,14 +63,9 @@ export function Header() {
             <DarkModeToggle />
 
             <div className="hidden sm:flex items-center gap-2">
-              <Link href="/login">
-                <Button variant="ghost" size="sm">
-                  Login
-                </Button>
-              </Link>
-              <Link href="/signup">
+              <Link href="/admin">
                 <Button variant="primary" size="sm">
-                  Sign Up
+                  ⚙️ 관리자
                 </Button>
               </Link>
             </div>
@@ -125,25 +120,15 @@ export function Header() {
                   {link.label}
                 </Link>
               ))}
-              <div className="flex gap-2 pt-2 border-t border-gray-200 dark:border-gray-800">
-                <Link href="/login" className="flex-1">
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    fullWidth
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Login
-                  </Button>
-                </Link>
-                <Link href="/signup" className="flex-1">
+              <div className="pt-2 border-t border-gray-200 dark:border-gray-800">
+                <Link href="/admin">
                   <Button
                     variant="primary"
                     size="sm"
                     fullWidth
                     onClick={() => setMobileMenuOpen(false)}
                   >
-                    Sign Up
+                    ⚙️ 관리자
                   </Button>
                 </Link>
               </div>
