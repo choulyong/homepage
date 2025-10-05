@@ -3,28 +3,31 @@ node_modules
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
 
 # Next.js
 .next
 out
+
+# Production
 build
 dist
-
-# Testing
-coverage
-.nyc_output
 
 # Environment variables
 .env
 .env.local
 .env.*.local
+.env.production
 
-# IDEs
+# Testing
+coverage
+.nyc_output
+
+# IDE
 .vscode
 .idea
 *.swp
 *.swo
+*.swn
 *~
 
 # OS
@@ -36,19 +39,24 @@ Thumbs.db
 .gitignore
 
 # Documentation
+README.md
+PLAN.md
+PRD.md
+LLD.md
+CLAUDE.md
+DEPLOYMENT*.md
 *.md
-!README.md
+
+# Docker
+Dockerfile
+docker-compose*.yml
+.dockerignore
 
 # Logs
-*.log
 logs
-
-# Monitoring data
-loki-data
-grafana-data
-redis-data
+*.log
 
 # Misc
 .cache
-temp
-tmp
+.temp
+.tmp

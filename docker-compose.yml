@@ -1,9 +1,36 @@
-# Metaldragon Monitoring Stack
-# Loki + Grafana + Promtail for centralized logging and visualization
+# Metaldragon Full Stack
+# Next.js App + Monitoring Stack (Loki + Grafana + Promtail + Redis)
 
 version: '3.8'
 
 services:
+  # Next.js Application
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: metaldragon-app
+    ports:
+      - "3000:3000"
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_SUPABASE_URL=${NEXT_PUBLIC_SUPABASE_URL}
+      - NEXT_PUBLIC_SUPABASE_ANON_KEY=${NEXT_PUBLIC_SUPABASE_ANON_KEY}
+      - SUPABASE_SERVICE_ROLE_KEY=${SUPABASE_SERVICE_ROLE_KEY}
+      - NEXT_PUBLIC_GOOGLE_CALENDAR_ID=${NEXT_PUBLIC_GOOGLE_CALENDAR_ID}
+      - NEXT_PUBLIC_GOOGLE_API_KEY=${NEXT_PUBLIC_GOOGLE_API_KEY}
+      - YOUTUBE_API_KEY=${YOUTUBE_API_KEY}
+      - UPSTASH_REDIS_REST_URL=${UPSTASH_REDIS_REST_URL:-http://redis:6379}
+      - UPSTASH_REDIS_REST_TOKEN=${UPSTASH_REDIS_REST_TOKEN:-}
+      - RESEND_API_KEY=${RESEND_API_KEY:-}
+    networks:
+      - monitoring
+    restart: unless-stopped
+    depends_on:
+      - redis
+      - loki
+    labels:
+      - "logging=promtail"
   # Loki - Log aggregation system
   loki:
     image: grafana/loki:2.9.3
