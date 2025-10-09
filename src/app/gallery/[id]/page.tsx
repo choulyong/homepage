@@ -10,6 +10,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { LikeButton } from '@/components/LikeButton';
 import Image from 'next/image';
 
 interface Photo {
@@ -163,6 +164,11 @@ export default function GalleryDetailPage() {
                 🕐 업로드:{' '}
                 {new Date(photo.created_at).toLocaleDateString('ko-KR')}
               </p>
+            </div>
+
+            {/* Like Button */}
+            <div className="mb-4">
+              <LikeButton targetType="gallery" targetId={parseInt(photo.id)} />
             </div>
 
             {/* Download Button */}

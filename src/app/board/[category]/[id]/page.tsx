@@ -6,6 +6,7 @@
 import { createClient } from '@/lib/supabase/server';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { PostLikeButton } from '@/components/PostLikeButton';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -94,6 +95,11 @@ export default async function PostDetailPage({ params }: PageProps) {
         {/* Content */}
         <div className="text-base leading-relaxed text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-words">
           {post.content}
+        </div>
+
+        {/* Like Button */}
+        <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+          <PostLikeButton postId={parseInt(id)} />
         </div>
 
         {/* Action Buttons */}

@@ -9,6 +9,7 @@ import './globals.css';
 import { Header } from '@/components/layout/Header';
 import { Footer } from '@/components/layout/Footer';
 import { Providers } from './providers';
+import { AnalyticsTracker } from '@/components/AnalyticsTracker';
 
 const inter = Inter({
   subsets: ['latin'],
@@ -48,6 +49,7 @@ export default function RootLayout({
     <html lang="ko">
       <body className={`${inter.variable} ${redHatDisplay.variable}`}>
         <Providers>
+          <AnalyticsTracker />
           <div
             style={{
               display: 'flex',

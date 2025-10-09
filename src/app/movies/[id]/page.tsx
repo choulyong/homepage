@@ -10,6 +10,7 @@ import { useParams, useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
+import { LikeButton } from '@/components/LikeButton';
 import Image from 'next/image';
 
 interface Movie {
@@ -203,6 +204,11 @@ export default function MovieDetailPage() {
                   {movie.review}
                 </p>
               </div>
+            </div>
+
+            {/* Like Button */}
+            <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
+              <LikeButton targetType="movie" targetId={parseInt(movie.id)} />
             </div>
 
             {/* Action Buttons (Author Only) */}
