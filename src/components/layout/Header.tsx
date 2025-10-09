@@ -11,6 +11,7 @@ import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { DarkModeToggle } from '@/components/DarkModeToggle';
 import { SearchModal } from '@/components/SearchModal';
+import { NotificationDropdown } from '@/components/NotificationDropdown';
 import { cn } from '@/lib/utils';
 
 export function Header() {
@@ -85,6 +86,9 @@ export function Header() {
                 />
               </svg>
             </button>
+
+            {/* Notification Bell */}
+            <NotificationDropdown />
 
             <DarkModeToggle />
 
