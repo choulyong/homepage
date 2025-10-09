@@ -92,14 +92,6 @@ export function Header() {
 
             <DarkModeToggle />
 
-            <div className="hidden sm:flex items-center gap-2">
-              <Link href="/admin">
-                <Button variant="primary" size="sm">
-                  ⚙️ 관리자
-                </Button>
-              </Link>
-            </div>
-
             {/* Mobile menu button */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
@@ -150,18 +142,6 @@ export function Header() {
                   {link.label}
                 </Link>
               ))}
-              <div className="pt-2 border-t border-gray-200 dark:border-gray-800">
-                <Link href="/admin">
-                  <Button
-                    variant="primary"
-                    size="sm"
-                    fullWidth
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    ⚙️ 관리자
-                  </Button>
-                </Link>
-              </div>
             </div>
           </div>
         )}

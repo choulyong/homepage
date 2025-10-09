@@ -1,11 +1,14 @@
 /**
- * Comments API
+ * Comments API (Guest-friendly)
  * GET: Fetch comments for a target
- * POST: Create new comment
+ * POST: Create new comment (guest or authenticated)
+ * PATCH: Update comment (with password for guests)
+ * DELETE: Delete comment (with password for guests)
  */
 
 import { createClient } from '@/lib/supabase/server';
 import { NextRequest, NextResponse } from 'next/server';
+import bcrypt from 'bcryptjs';
 
 // GET /api/comments?targetType=post&targetId=123
 export async function GET(request: NextRequest) {
@@ -23,7 +26,7 @@ export async function GET(request: NextRequest) {
 
     const supabase = await createClient();
 
-    // Fetch comments with user info
+    // Fetch comments (include both guest and user comments)
     const { data: comments, error } = await supabase
       .from('comments')
       .select(
@@ -58,7 +61,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    const { targetType, targetId, content, parentId } = body;
+    const { targetType, targetId, content, parentId, authorName, authorPassword } = body;
 
     if (!targetType || !targetId || !content) {
       return NextResponse.json(
@@ -69,26 +72,49 @@ export async function POST(request: NextRequest) {
 
     const supabase = await createClient();
 
-    // Get current user
+    // Get current user (optional)
     const {
       data: { user },
-      error: authError,
     } = await supabase.auth.getUser();
 
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
+    let commentData: any;
 
-    // Insert comment
-    const { data: comment, error } = await supabase
-      .from('comments')
-      .insert({
+    if (user) {
+      // Authenticated user comment
+      commentData = {
         user_id: user.id,
         target_type: targetType,
         target_id: parseInt(targetId),
         content,
         parent_id: parentId || null,
-      })
+      };
+    } else {
+      // Guest comment
+      if (!authorName || !authorPassword) {
+        return NextResponse.json(
+          { error: 'Guest comments require authorName and authorPassword' },
+          { status: 400 }
+        );
+      }
+
+      // Hash password for security
+      const hashedPassword = await bcrypt.hash(authorPassword, 10);
+
+      commentData = {
+        user_id: null,
+        author_name: authorName,
+        author_password: hashedPassword,
+        target_type: targetType,
+        target_id: parseInt(targetId),
+        content,
+        parent_id: parentId || null,
+      };
+    }
+
+    // Insert comment
+    const { data: comment, error } = await supabase
+      .from('comments')
+      .insert(commentData)
       .select(
         `
         *,
@@ -119,7 +145,7 @@ export async function POST(request: NextRequest) {
 export async function PATCH(request: NextRequest) {
   try {
     const body = await request.json();
-    const { commentId, content } = body;
+    const { commentId, content, password } = body;
 
     if (!commentId || !content) {
       return NextResponse.json(
@@ -130,20 +156,15 @@ export async function PATCH(request: NextRequest) {
 
     const supabase = await createClient();
 
-    // Get current user
+    // Get current user (optional)
     const {
       data: { user },
-      error: authError,
     } = await supabase.auth.getUser();
 
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Check if user owns the comment
+    // Fetch comment to check ownership
     const { data: comment, error: fetchError } = await supabase
       .from('comments')
-      .select('user_id')
+      .select('user_id, author_password')
       .eq('id', commentId)
       .single();
 
@@ -151,8 +172,25 @@ export async function PATCH(request: NextRequest) {
       return NextResponse.json({ error: 'Comment not found' }, { status: 404 });
     }
 
-    if (comment.user_id !== user.id) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    // Authorization check
+    if (comment.user_id) {
+      // Authenticated user comment
+      if (!user || comment.user_id !== user.id) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    } else {
+      // Guest comment - verify password
+      if (!password) {
+        return NextResponse.json(
+          { error: 'Password required for guest comments' },
+          { status: 400 }
+        );
+      }
+
+      const passwordMatch = await bcrypt.compare(password, comment.author_password);
+      if (!passwordMatch) {
+        return NextResponse.json({ error: 'Invalid password' }, { status: 403 });
+      }
     }
 
     // Update comment
@@ -197,6 +235,7 @@ export async function DELETE(request: NextRequest) {
   try {
     const { searchParams } = new URL(request.url);
     const commentId = searchParams.get('commentId');
+    const password = searchParams.get('password');
 
     if (!commentId) {
       return NextResponse.json(
@@ -207,20 +246,15 @@ export async function DELETE(request: NextRequest) {
 
     const supabase = await createClient();
 
-    // Get current user
+    // Get current user (optional)
     const {
       data: { user },
-      error: authError,
     } = await supabase.auth.getUser();
 
-    if (authError || !user) {
-      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
-    }
-
-    // Check if user owns the comment
+    // Fetch comment to check ownership
     const { data: comment, error: fetchError } = await supabase
       .from('comments')
-      .select('user_id')
+      .select('user_id, author_password')
       .eq('id', commentId)
       .single();
 
@@ -228,8 +262,25 @@ export async function DELETE(request: NextRequest) {
       return NextResponse.json({ error: 'Comment not found' }, { status: 404 });
     }
 
-    if (comment.user_id !== user.id) {
-      return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+    // Authorization check
+    if (comment.user_id) {
+      // Authenticated user comment
+      if (!user || comment.user_id !== user.id) {
+        return NextResponse.json({ error: 'Forbidden' }, { status: 403 });
+      }
+    } else {
+      // Guest comment - verify password
+      if (!password) {
+        return NextResponse.json(
+          { error: 'Password required for guest comments' },
+          { status: 400 }
+        );
+      }
+
+      const passwordMatch = await bcrypt.compare(password, comment.author_password);
+      if (!passwordMatch) {
+        return NextResponse.json({ error: 'Invalid password' }, { status: 403 });
+      }
     }
 
     // Delete comment (cascade will delete replies)

@@ -7,7 +7,8 @@ import { Card } from './ui/Card';
 
 interface Comment {
   id: string;
-  user_id: string;
+  user_id: string | null;
+  author_name: string | null;
   content: string;
   parent_id: string | null;
   created_at: string;
@@ -15,7 +16,7 @@ interface Comment {
   users: {
     username: string;
     avatar_url: string | null;
-  };
+  } | null;
 }
 
 interface CommentsSectionProps {
@@ -28,9 +29,12 @@ export function CommentsSection({ targetType, targetId }: CommentsSectionProps) 
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
   const [newComment, setNewComment] = useState('');
+  const [guestName, setGuestName] = useState('');
+  const [guestPassword, setGuestPassword] = useState('');
   const [replyTo, setReplyTo] = useState<string | null>(null);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editContent, setEditContent] = useState('');
+  const [editPassword, setEditPassword] = useState('');
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -62,23 +66,39 @@ export function CommentsSection({ targetType, targetId }: CommentsSectionProps) 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newComment.trim() || !currentUser) return;
+    if (!newComment.trim()) return;
+
+    // Validation for guest comments
+    if (!currentUser && (!guestName.trim() || !guestPassword.trim())) {
+      alert('이름과 비밀번호를 입력해주세요');
+      return;
+    }
 
     setSubmitting(true);
     try {
+      const payload: any = {
+        targetType,
+        targetId,
+        content: newComment,
+        parentId: replyTo,
+      };
+
+      // Add guest info if not authenticated
+      if (!currentUser) {
+        payload.authorName = guestName;
+        payload.authorPassword = guestPassword;
+      }
+
       const response = await fetch('/api/comments', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          targetType,
-          targetId,
-          content: newComment,
-          parentId: replyTo,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
         setNewComment('');
+        setGuestName('');
+        setGuestPassword('');
         setReplyTo(null);
         await loadComments();
       } else {
@@ -93,23 +113,36 @@ export function CommentsSection({ targetType, targetId }: CommentsSectionProps) 
     }
   };
 
-  const handleEdit = async (commentId: string) => {
+  const handleEdit = async (commentId: string, isGuest: boolean) => {
     if (!editContent.trim()) return;
+
+    // Require password for guest comments
+    if (isGuest && !editPassword.trim()) {
+      alert('비밀번호를 입력해주세요');
+      return;
+    }
 
     setSubmitting(true);
     try {
+      const payload: any = {
+        commentId,
+        content: editContent,
+      };
+
+      if (isGuest) {
+        payload.password = editPassword;
+      }
+
       const response = await fetch('/api/comments', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          commentId,
-          content: editContent,
-        }),
+        body: JSON.stringify(payload),
       });
 
       if (response.ok) {
         setEditingId(null);
         setEditContent('');
+        setEditPassword('');
         await loadComments();
       } else {
         const error = await response.json();
@@ -123,11 +156,21 @@ export function CommentsSection({ targetType, targetId }: CommentsSectionProps) 
     }
   };
 
-  const handleDelete = async (commentId: string) => {
+  const handleDelete = async (commentId: string, isGuest: boolean) => {
+    let password = '';
+    if (isGuest) {
+      password = prompt('비밀번호를 입력하세요:') || '';
+      if (!password) return;
+    }
+
     if (!confirm('댓글을 삭제하시겠습니까?')) return;
 
     try {
-      const response = await fetch(`/api/comments?commentId=${commentId}`, {
+      const url = isGuest
+        ? `/api/comments?commentId=${commentId}&password=${encodeURIComponent(password)}`
+        : `/api/comments?commentId=${commentId}`;
+
+      const response = await fetch(url, {
         method: 'DELETE',
       });
 
@@ -143,8 +186,23 @@ export function CommentsSection({ targetType, targetId }: CommentsSectionProps) 
     }
   };
 
+  const getCommentAuthorName = (comment: Comment) => {
+    if (comment.user_id && comment.users) {
+      return comment.users.username || '익명';
+    }
+    return comment.author_name || '손님';
+  };
+
+  const isCommentEditable = (comment: Comment) => {
+    if (comment.user_id) {
+      return currentUser?.id === comment.user_id;
+    }
+    return true; // Guest comments are editable with password
+  };
+
   const renderComment = (comment: Comment, isReply: boolean = false) => {
-    const isAuthor = currentUser?.id === comment.user_id;
+    const isGuest = !comment.user_id;
+    const isEditable = isCommentEditable(comment);
     const isEditing = editingId === comment.id;
     const replies = comments.filter((c) => c.parent_id === comment.id);
 
@@ -157,14 +215,15 @@ export function CommentsSection({ targetType, targetId }: CommentsSectionProps) 
           <div className="flex items-start gap-3">
             {/* Avatar */}
             <div className="w-10 h-10 rounded-full bg-gradient-to-br from-teal-400 to-indigo-500 flex items-center justify-center text-white font-medium">
-              {comment.users?.username?.[0]?.toUpperCase() || '?'}
+              {getCommentAuthorName(comment)[0]?.toUpperCase() || '?'}
             </div>
 
             <div className="flex-1 min-w-0">
               {/* Header */}
               <div className="flex items-center gap-2 mb-2">
                 <span className="font-medium text-gray-900 dark:text-white">
-                  {comment.users?.username || '익명'}
+                  {getCommentAuthorName(comment)}
+                  {isGuest && <span className="text-xs text-gray-500 ml-1">(손님)</span>}
                 </span>
                 <span className="text-xs text-gray-500 dark:text-gray-400">
                   {new Date(comment.created_at).toLocaleDateString('ko-KR', {
@@ -190,10 +249,19 @@ export function CommentsSection({ targetType, targetId }: CommentsSectionProps) 
                     className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white resize-none focus:ring-2 focus:ring-teal-500"
                     rows={3}
                   />
+                  {isGuest && (
+                    <input
+                      type="password"
+                      value={editPassword}
+                      onChange={(e) => setEditPassword(e.target.value)}
+                      placeholder="비밀번호"
+                      className="w-full mt-2 px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:ring-2 focus:ring-teal-500"
+                    />
+                  )}
                   <div className="flex gap-2 mt-2">
                     <Button
                       variant="primary"
-                      onClick={() => handleEdit(comment.id)}
+                      onClick={() => handleEdit(comment.id, isGuest)}
                       disabled={submitting}
                     >
                       저장
@@ -203,6 +271,7 @@ export function CommentsSection({ targetType, targetId }: CommentsSectionProps) 
                       onClick={() => {
                         setEditingId(null);
                         setEditContent('');
+                        setEditPassword('');
                       }}
                     >
                       취소
@@ -217,7 +286,7 @@ export function CommentsSection({ targetType, targetId }: CommentsSectionProps) 
 
                   {/* Actions */}
                   <div className="flex gap-3 mt-3">
-                    {currentUser && !isReply && (
+                    {!isReply && (
                       <button
                         onClick={() => setReplyTo(comment.id)}
                         className="text-sm text-teal-600 dark:text-teal-400 hover:text-teal-500"
@@ -225,7 +294,7 @@ export function CommentsSection({ targetType, targetId }: CommentsSectionProps) 
                         답글
                       </button>
                     )}
-                    {isAuthor && (
+                    {isEditable && (
                       <>
                         <button
                           onClick={() => {
@@ -237,7 +306,7 @@ export function CommentsSection({ targetType, targetId }: CommentsSectionProps) 
                           수정
                         </button>
                         <button
-                          onClick={() => handleDelete(comment.id)}
+                          onClick={() => handleDelete(comment.id, isGuest)}
                           className="text-sm text-red-600 dark:text-red-400 hover:text-red-500"
                         >
                           삭제
@@ -281,46 +350,62 @@ export function CommentsSection({ targetType, targetId }: CommentsSectionProps) 
       </h2>
 
       {/* Comment Form */}
-      {currentUser ? (
-        <form onSubmit={handleSubmit} className="mb-6">
-          {replyTo && (
-            <div className="mb-2 flex items-center gap-2">
-              <span className="text-sm text-teal-600 dark:text-teal-400">
-                답글 작성 중
-              </span>
-              <button
-                type="button"
-                onClick={() => setReplyTo(null)}
-                className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
-              >
-                취소
-              </button>
-            </div>
-          )}
-          <textarea
-            value={newComment}
-            onChange={(e) => setNewComment(e.target.value)}
-            placeholder="댓글을 입력하세요"
-            className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 resize-none focus:ring-2 focus:ring-teal-500"
-            rows={3}
-          />
-          <div className="flex justify-end mt-2">
-            <Button
-              type="submit"
-              variant="primary"
-              disabled={!newComment.trim() || submitting}
+      <form onSubmit={handleSubmit} className="mb-6">
+        {replyTo && (
+          <div className="mb-2 flex items-center gap-2">
+            <span className="text-sm text-teal-600 dark:text-teal-400">
+              답글 작성 중
+            </span>
+            <button
+              type="button"
+              onClick={() => setReplyTo(null)}
+              className="text-sm text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200"
             >
-              {submitting ? '작성 중...' : '댓글 작성'}
-            </Button>
+              취소
+            </button>
           </div>
-        </form>
-      ) : (
-        <div className="mb-6 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg text-center">
-          <p className="text-gray-600 dark:text-gray-400">
-            댓글을 작성하려면 로그인이 필요합니다
-          </p>
+        )}
+
+        {/* Guest name/password fields */}
+        {!currentUser && (
+          <div className="grid grid-cols-2 gap-3 mb-3">
+            <input
+              type="text"
+              value={guestName}
+              onChange={(e) => setGuestName(e.target.value)}
+              placeholder="이름"
+              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-teal-500"
+              required
+            />
+            <input
+              type="password"
+              value={guestPassword}
+              onChange={(e) => setGuestPassword(e.target.value)}
+              placeholder="비밀번호 (수정/삭제시 필요)"
+              className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 focus:ring-2 focus:ring-teal-500"
+              required
+            />
+          </div>
+        )}
+
+        <textarea
+          value={newComment}
+          onChange={(e) => setNewComment(e.target.value)}
+          placeholder="댓글을 입력하세요"
+          className="w-full px-4 py-3 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white placeholder-gray-500 dark:placeholder-gray-400 resize-none focus:ring-2 focus:ring-teal-500"
+          rows={3}
+          required
+        />
+        <div className="flex justify-end mt-2">
+          <Button
+            type="submit"
+            variant="primary"
+            disabled={!newComment.trim() || submitting}
+          >
+            {submitting ? '작성 중...' : '댓글 작성'}
+          </Button>
         </div>
-      )}
+      </form>
 
       {/* Comments List */}
       {topLevelComments.length === 0 ? (
