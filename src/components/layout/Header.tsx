@@ -19,6 +19,9 @@ export function Header() {
   const navLinks = [
     { href: '/about', label: 'About' },
     { href: '/schedule', label: '일정' },
+    { href: '/free-board', label: '자유게시판' },
+    { href: '/gallery', label: '갤러리' },
+    { href: '/movies', label: '영화' },
     { href: '/board/ai_study', label: 'AI 스터디' },
     { href: '/board/bigdata_study', label: '빅데이터' },
     { href: '/news', label: 'News' },

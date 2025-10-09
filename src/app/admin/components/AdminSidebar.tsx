@@ -15,6 +15,7 @@ export function AdminSidebar() {
   const pathname = usePathname();
   const router = useRouter();
   const [isLoggingOut, setIsLoggingOut] = useState(false);
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
@@ -35,6 +36,7 @@ export function AdminSidebar() {
     return (
       <Link
         href={href}
+        onClick={() => setIsMobileMenuOpen(false)}
         className={cn(
           'px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200',
           isActive
@@ -48,13 +50,41 @@ export function AdminSidebar() {
   };
 
   const SectionTitle = ({ children }: { children: React.ReactNode }) => (
-    <h3 className="text-xs font-semibold text-gray-500 dark:text-gray-400 uppercase tracking-wider mb-2">
+    <h3 className="text-xs font-semibold text-gray-500 dark:text-white uppercase tracking-wider mb-2">
       {children}
     </h3>
   );
 
   return (
-    <aside className="fixed left-0 top-0 w-72 h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 p-6 flex flex-col gap-6 overflow-y-auto md:relative md:w-auto">
+    <>
+      {/* Mobile Menu Button */}
+      <button
+        onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
+        className="lg:hidden fixed top-4 left-4 z-50 p-2 rounded-lg bg-teal-500 text-white shadow-lg"
+      >
+        <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          {isMobileMenuOpen ? (
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          ) : (
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+          )}
+        </svg>
+      </button>
+
+      {/* Backdrop for Mobile */}
+      {isMobileMenuOpen && (
+        <div
+          className="lg:hidden fixed inset-0 bg-black/50 z-40"
+          onClick={() => setIsMobileMenuOpen(false)}
+        />
+      )}
+
+      {/* Sidebar */}
+      <aside className={cn(
+        'fixed left-0 top-0 w-72 h-screen bg-white dark:bg-gray-900 border-r border-gray-200 dark:border-gray-800 p-6 flex flex-col gap-6 overflow-y-auto transition-transform duration-300 z-40',
+        'lg:translate-x-0',
+        isMobileMenuOpen ? 'translate-x-0' : '-translate-x-full'
+      )}>
       {/* Logo */}
       <div className="text-2xl font-display font-bold gradient-text text-center pb-4 border-b border-gray-200 dark:border-gray-800">
         Metaldragon Admin
@@ -78,6 +108,9 @@ export function AdminSidebar() {
       <div className="flex flex-col gap-2">
         <SectionTitle>게시판 관리</SectionTitle>
         <NavItem href="/admin/posts">게시글 관리</NavItem>
+        <NavItem href="/admin/free-board">자유게시판</NavItem>
+        <NavItem href="/admin/gallery">갤러리</NavItem>
+        <NavItem href="/admin/movies">영화 게시판</NavItem>
         <NavItem href="/admin/ai-study">AI 스터디</NavItem>
         <NavItem href="/admin/bigdata-study">빅데이터 스터디</NavItem>
         <NavItem href="/admin/ai-artwork">AI 작품 갤러리</NavItem>
@@ -86,6 +119,7 @@ export function AdminSidebar() {
       {/* Other */}
       <div className="flex flex-col gap-2">
         <SectionTitle>기타</SectionTitle>
+        <NavItem href="/admin/site-settings">사이트 설정</NavItem>
         <NavItem href="/admin/news">IT 뉴스 관리</NavItem>
         <NavItem href="/admin/youtube">YouTube 링크</NavItem>
         <NavItem href="/admin/finance">가계부 관리</NavItem>
@@ -101,5 +135,6 @@ export function AdminSidebar() {
         {isLoggingOut ? '로그아웃 중...' : '로그아웃'}
       </button>
     </aside>
+    </>
   );
 }

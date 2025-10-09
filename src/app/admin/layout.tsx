@@ -5,6 +5,8 @@
 
 'use client';
 
+export const dynamic = 'force-dynamic';
+
 import { AdminSidebar } from './components/AdminSidebar';
 
 export default function AdminLayout({
@@ -16,7 +18,7 @@ export default function AdminLayout({
   return (
     <div className="flex min-h-screen bg-gradient-to-br from-gray-900 to-gray-800 dark:from-gray-950 dark:to-gray-900">
       <AdminSidebar />
-      <main className="flex-1 p-8 ml-[280px] md:ml-0 md:p-4">
+      <main className="flex-1 p-4 lg:ml-72 lg:p-8">
         {children}
       </main>
     </div>

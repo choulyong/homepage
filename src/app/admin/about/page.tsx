@@ -13,12 +13,12 @@ import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 
 interface ProfileData {
-  displayName: string;
-  jobTitle: string;
+  display_name: string;
+  job_title: string;
   bio: string;
-  profileImageUrl: string;
+  profile_image_url: string;
   skills: string[];
-  socialLinks: {
+  social_links: {
     github?: string;
     linkedin?: string;
     twitter?: string;
@@ -27,7 +27,7 @@ interface ProfileData {
     facebook?: string;
     email?: string;
   };
-  portfolioItems: Array<{
+  portfolio_items: Array<{
     title: string;
     description: string;
     imageUrl?: string;
@@ -45,13 +45,13 @@ export default function AdminAboutPage() {
   const [newSkill, setNewSkill] = useState('');
 
   const [profile, setProfile] = useState<ProfileData>({
-    displayName: '',
-    jobTitle: '',
+    display_name: '',
+    job_title: '',
     bio: '',
-    profileImageUrl: '',
+    profile_image_url: '',
     skills: [],
-    socialLinks: {},
-    portfolioItems: [],
+    social_links: {},
+    portfolio_items: [],
   });
 
   // 프로필 데이터 로드
@@ -62,13 +62,13 @@ export default function AdminAboutPage() {
 
       if (data) {
         setProfile({
-          displayName: data.displayName || '',
-          jobTitle: data.jobTitle || '',
+          display_name: data.display_name || '',
+          job_title: data.job_title || '',
           bio: data.bio || '',
-          profileImageUrl: data.profileImageUrl || '',
+          profile_image_url: data.profile_image_url || '',
           skills: data.skills || [],
-          socialLinks: data.socialLinks || {},
-          portfolioItems: data.portfolioItems || [],
+          social_links: data.social_links || {},
+          portfolio_items: data.portfolio_items || [],
         });
       }
     };
@@ -97,7 +97,7 @@ export default function AdminAboutPage() {
           .from('profile')
           .update({
             ...profile,
-            updatedAt: new Date().toISOString(),
+            updated_at: new Date().toISOString(),
           })
           .eq('id', existingProfile.id);
 
@@ -112,7 +112,7 @@ export default function AdminAboutPage() {
 
         const { error } = await supabase.from('profile').insert({
           ...profile,
-          userId: user.id,
+          user_id: user.id,
         });
 
         if (error) throw error;
@@ -151,23 +151,23 @@ export default function AdminAboutPage() {
   const addPortfolioItem = () => {
     setProfile({
       ...profile,
-      portfolioItems: [
-        ...profile.portfolioItems,
+      portfolio_items: [
+        ...profile.portfolio_items,
         { title: '', description: '', imageUrl: '', link: '', tags: [] },
       ],
     });
   };
 
   const updatePortfolioItem = (index: number, field: string, value: any) => {
-    const updatedItems = [...profile.portfolioItems];
+    const updatedItems = [...profile.portfolio_items];
     updatedItems[index] = { ...updatedItems[index], [field]: value };
-    setProfile({ ...profile, portfolioItems: updatedItems });
+    setProfile({ ...profile, portfolio_items: updatedItems });
   };
 
   const removePortfolioItem = (index: number) => {
     setProfile({
       ...profile,
-      portfolioItems: profile.portfolioItems.filter((_, i) => i !== index),
+      portfolio_items: profile.portfolio_items.filter((_, i) => i !== index),
     });
   };
 
@@ -201,8 +201,8 @@ export default function AdminAboutPage() {
             <input
               id="displayName"
               type="text"
-              value={profile.displayName}
-              onChange={(e) => setProfile({ ...profile, displayName: e.target.value })}
+              value={profile.display_name}
+              onChange={(e) => setProfile({ ...profile, display_name: e.target.value })}
               required
               placeholder="홍길동"
               className="p-3 bg-gray-800 border border-gray-600 rounded-md text-white placeholder:text-gray-500 focus:outline-none focus:border-teal-500 focus:shadow-[0_0_0_3px_rgba(45,212,191,0.1)]"
@@ -216,8 +216,8 @@ export default function AdminAboutPage() {
             <input
               id="jobTitle"
               type="text"
-              value={profile.jobTitle}
-              onChange={(e) => setProfile({ ...profile, jobTitle: e.target.value })}
+              value={profile.job_title}
+              onChange={(e) => setProfile({ ...profile, job_title: e.target.value })}
               placeholder="Full Stack Developer"
               className="p-3 bg-gray-800 border border-gray-600 rounded-md text-white placeholder:text-gray-500 focus:outline-none focus:border-teal-500 focus:shadow-[0_0_0_3px_rgba(45,212,191,0.1)]"
             />
@@ -241,8 +241,8 @@ export default function AdminAboutPage() {
               프로필 이미지
             </label>
             <ImageUpload
-              currentImageUrl={profile.profileImageUrl}
-              onUploadComplete={(url) => setProfile({ ...profile, profileImageUrl: url })}
+              currentImageUrl={profile.profile_image_url}
+              onUploadComplete={(url) => setProfile({ ...profile, profile_image_url: url })}
               bucket="avatars"
               maxSizeMB={5}
             />
@@ -306,11 +306,11 @@ export default function AdminAboutPage() {
             <input
               id="github"
               type="url"
-              value={profile.socialLinks.github || ''}
+              value={profile.social_links.github || ''}
               onChange={(e) =>
                 setProfile({
                   ...profile,
-                  socialLinks: { ...profile.socialLinks, github: e.target.value },
+                  social_links: { ...profile.social_links, github: e.target.value },
                 })
               }
               placeholder="https://github.com/username"
@@ -325,11 +325,11 @@ export default function AdminAboutPage() {
             <input
               id="linkedin"
               type="url"
-              value={profile.socialLinks.linkedin || ''}
+              value={profile.social_links.linkedin || ''}
               onChange={(e) =>
                 setProfile({
                   ...profile,
-                  socialLinks: { ...profile.socialLinks, linkedin: e.target.value },
+                  social_links: { ...profile.social_links, linkedin: e.target.value },
                 })
               }
               placeholder="https://linkedin.com/in/username"
@@ -344,11 +344,11 @@ export default function AdminAboutPage() {
             <input
               id="youtube"
               type="url"
-              value={profile.socialLinks.youtube || ''}
+              value={profile.social_links.youtube || ''}
               onChange={(e) =>
                 setProfile({
                   ...profile,
-                  socialLinks: { ...profile.socialLinks, youtube: e.target.value },
+                  social_links: { ...profile.social_links, youtube: e.target.value },
                 })
               }
               placeholder="https://youtube.com/@username"
@@ -363,11 +363,11 @@ export default function AdminAboutPage() {
             <input
               id="instagram"
               type="url"
-              value={profile.socialLinks.instagram || ''}
+              value={profile.social_links.instagram || ''}
               onChange={(e) =>
                 setProfile({
                   ...profile,
-                  socialLinks: { ...profile.socialLinks, instagram: e.target.value },
+                  social_links: { ...profile.social_links, instagram: e.target.value },
                 })
               }
               placeholder="https://instagram.com/username"
@@ -382,11 +382,11 @@ export default function AdminAboutPage() {
             <input
               id="facebook"
               type="url"
-              value={profile.socialLinks.facebook || ''}
+              value={profile.social_links.facebook || ''}
               onChange={(e) =>
                 setProfile({
                   ...profile,
-                  socialLinks: { ...profile.socialLinks, facebook: e.target.value },
+                  social_links: { ...profile.social_links, facebook: e.target.value },
                 })
               }
               placeholder="https://facebook.com/username"
@@ -398,7 +398,7 @@ export default function AdminAboutPage() {
         <div className="bg-white/10 dark:bg-white/5 backdrop-blur-md border border-white/18 rounded-lg p-6">
           <h2 className="text-xl font-semibold text-white mb-4">포트폴리오</h2>
 
-          {profile.portfolioItems.map((item, index) => (
+          {profile.portfolio_items.map((item, index) => (
             <div
               key={index}
               className="bg-gray-800 border border-white/18 rounded-lg p-4 mb-4"

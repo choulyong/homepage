@@ -29,10 +29,23 @@ export default function NewsPage() {
   const [selectedCategory, setSelectedCategory] = useState<CategoryFilter>('all');
   const [selectedNews, setSelectedNews] = useState<any | null>(null);
   const [iframeError, setIframeError] = useState(false);
+  const [lastUpdated, setLastUpdated] = useState<Date>(new Date());
+  const [autoRefresh, setAutoRefresh] = useState(true);
 
   useEffect(() => {
     loadNews();
   }, [selectedCategory]);
+
+  // 자동 새로고침 (5분마다)
+  useEffect(() => {
+    if (!autoRefresh) return;
+
+    const interval = setInterval(() => {
+      loadNews();
+    }, 5 * 60 * 1000); // 5분
+
+    return () => clearInterval(interval);
+  }, [autoRefresh, selectedCategory]);
 
   useEffect(() => {
     const handleEscape = (e: KeyboardEvent) => {
@@ -71,7 +84,27 @@ export default function NewsPage() {
     const { data: newsData } = await query;
 
     setNews(newsData || []);
+    setLastUpdated(new Date());
     setLoading(false);
+  };
+
+  const handleRefresh = async () => {
+    setLoading(true);
+    try {
+      // 뉴스 크롤링 API 호출
+      const response = await fetch('/api/cron/news');
+      if (response.ok) {
+        // 크롤링 후 DB에서 새로운 뉴스 로드
+        await loadNews();
+      } else {
+        alert('뉴스 새로고침에 실패했습니다.');
+        setLoading(false);
+      }
+    } catch (error) {
+      console.error('Refresh error:', error);
+      alert('뉴스 새로고침 중 오류가 발생했습니다.');
+      setLoading(false);
+    }
   };
 
   const getCategoryColor = (category: string) => {
@@ -115,7 +148,7 @@ export default function NewsPage() {
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center py-12 text-gray-600 dark:text-gray-400">
+        <div className="text-center py-12 text-gray-600 dark:text-white">
           <p>로딩 중...</p>
         </div>
       </div>
@@ -126,12 +159,59 @@ export default function NewsPage() {
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {/* Header */}
       <div className="mb-8">
-        <h1 className="text-4xl md:text-5xl font-display font-bold gradient-text mb-2">
-          뉴스
-        </h1>
-        <p className="text-lg text-gray-600 dark:text-gray-400">
-          기술, 비즈니스, 세계, 과학, AI 등 다양한 분야의 최신 뉴스
-        </p>
+        <div className="flex justify-between items-start mb-4">
+          <div>
+            <h1 className="text-4xl md:text-5xl font-display font-bold gradient-text mb-2">
+              뉴스
+            </h1>
+            <p className="text-lg text-gray-600 dark:text-gray-300">
+              기술, 비즈니스, 세계, 과학, AI 등 다양한 분야의 최신 뉴스
+            </p>
+          </div>
+
+          {/* Refresh Controls */}
+          <div className="flex flex-col items-end gap-2">
+            <button
+              onClick={handleRefresh}
+              disabled={loading}
+              className={cn(
+                'flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-200',
+                loading
+                  ? 'bg-gray-300 dark:bg-gray-700 text-gray-500 cursor-not-allowed'
+                  : 'bg-teal-500 text-white hover:bg-teal-600 active:scale-95'
+              )}
+            >
+              <svg
+                className={cn('w-5 h-5', loading && 'animate-spin')}
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"
+                />
+              </svg>
+              {loading ? '새로고침 중...' : '새로고침'}
+            </button>
+
+            <label className="flex items-center gap-2 text-sm text-gray-600 dark:text-white cursor-pointer">
+              <input
+                type="checkbox"
+                checked={autoRefresh}
+                onChange={(e) => setAutoRefresh(e.target.checked)}
+                className="w-4 h-4 text-teal-500 rounded focus:ring-teal-500"
+              />
+              자동 새로고침 (5분)
+            </label>
+
+            <p className="text-xs text-gray-500 dark:text-gray-100">
+              마지막 업데이트: {lastUpdated.toLocaleTimeString('ko-KR')}
+            </p>
+          </div>
+        </div>
       </div>
 
       {/* Category Tabs */}
@@ -156,12 +236,11 @@ export default function NewsPage() {
       {news && news.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {news.map((item) => (
-            <div
+            <a
               key={item.id}
-              onClick={() => {
-                setSelectedNews(item);
-                setIframeError(false);
-              }}
+              href={item.url}
+              target="_blank"
+              rel="noopener noreferrer"
               className="group cursor-pointer"
             >
               <Card
@@ -188,13 +267,13 @@ export default function NewsPage() {
                   </h3>
 
                   {item.description && (
-                    <p className="text-sm text-gray-600 dark:text-gray-400 line-clamp-3 mb-4 flex-1">
+                    <p className="text-sm text-gray-600 dark:text-white line-clamp-3 mb-4 flex-1">
                       {item.description}
                     </p>
                   )}
 
                   {/* Meta */}
-                  <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-500">
+                  <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-100">
                     <div className="flex gap-2 items-center">
                       {item.category && (
                         <span className={cn('px-3 py-1 rounded-full font-medium', getCategoryColor(item.category))}>
@@ -209,7 +288,7 @@ export default function NewsPage() {
                   </div>
                 </div>
               </Card>
-            </div>
+            </a>
           ))}
         </div>
       ) : (
@@ -219,7 +298,7 @@ export default function NewsPage() {
               ? '아직 뉴스가 없습니다'
               : `${CATEGORY_TABS.find(t => t.value === selectedCategory)?.label} 카테고리에 뉴스가 없습니다`}
           </h2>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-gray-600 dark:text-white">
             {selectedCategory === 'all'
               ? '자동 크롤링이 실행되면 뉴스가 표시됩니다.'
               : '다른 카테고리를 선택하거나 자동 크롤링을 기다려주세요.'}
@@ -247,7 +326,7 @@ export default function NewsPage() {
                 <h2 className="text-xl font-bold text-gray-900 dark:text-white line-clamp-1">
                   {selectedNews.title}
                 </h2>
-                <div className="flex gap-2 items-center mt-1 text-sm text-gray-500 dark:text-gray-400">
+                <div className="flex gap-2 items-center mt-1 text-sm text-gray-500 dark:text-white">
                   <span className={cn('px-2 py-0.5 rounded text-xs', getCategoryColor(selectedNews.category))}>
                     {getCategoryLabel(selectedNews.category)}
                   </span>
@@ -269,7 +348,7 @@ export default function NewsPage() {
                     setSelectedNews(null);
                     setIframeError(false);
                   }}
-                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+                  className="text-gray-500 hover:text-gray-700 dark:text-white dark:hover:text-gray-200 transition-colors"
                 >
                   <svg
                     className="w-6 h-6"
@@ -299,34 +378,58 @@ export default function NewsPage() {
                   sandbox="allow-same-origin allow-scripts allow-popups allow-forms"
                 />
               ) : (
-                <div className="flex flex-col items-center justify-center h-full p-8 text-center">
-                  <svg
-                    className="w-16 h-16 text-gray-400 mb-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
-                    />
-                  </svg>
-                  <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-2">
-                    페이지를 표시할 수 없습니다
-                  </h3>
-                  <p className="text-gray-600 dark:text-gray-400 mb-4">
-                    일부 뉴스 사이트는 보안 정책상 iframe으로 표시할 수 없습니다.
-                  </p>
-                  <a
-                    href={selectedNews.url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium"
-                  >
-                    새 탭에서 열기
-                  </a>
+                <div className="flex flex-col h-full p-8">
+                  {/* 뉴스 이미지 */}
+                  {selectedNews.image_url && (
+                    <div className="relative w-full h-64 mb-6 rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
+                      <Image
+                        src={selectedNews.image_url}
+                        alt={selectedNews.title}
+                        fill
+                        className="object-cover"
+                      />
+                    </div>
+                  )}
+
+                  {/* 뉴스 요약 */}
+                  {selectedNews.description && (
+                    <div className="flex-1 mb-6">
+                      <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
+                        📰 뉴스 요약
+                      </h3>
+                      <p className="text-base leading-relaxed text-gray-700 dark:text-gray-300 whitespace-pre-wrap">
+                        {selectedNews.description}
+                      </p>
+                    </div>
+                  )}
+
+                  {/* 안내 메시지 */}
+                  <div className="text-center p-6 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <svg
+                      className="w-12 h-12 text-gray-400 mx-auto mb-3"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
+                      />
+                    </svg>
+                    <p className="text-sm text-gray-600 dark:text-white mb-4">
+                      원문 전체를 보려면 새 탭에서 여세요
+                    </p>
+                    <a
+                      href={selectedNews.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-block px-6 py-3 bg-teal-600 text-white rounded-lg hover:bg-teal-700 transition-colors font-medium"
+                    >
+                      원문 보기 →
+                    </a>
+                  </div>
                 </div>
               )}
             </div>

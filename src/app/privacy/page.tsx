@@ -18,7 +18,7 @@ export default function PrivacyPage() {
       </h1>
 
       <Card padding="lg" className="prose dark:prose-invert max-w-none">
-        <p className="text-gray-600 dark:text-gray-400 mb-8">
+        <p className="text-gray-600 dark:text-white mb-8">
           최종 수정일: {new Date().toLocaleDateString('ko-KR')}
         </p>
 

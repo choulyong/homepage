@@ -6,8 +6,25 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
+import { createClient } from '@/lib/supabase/server';
 
-export default function Home() {
+export default async function Home() {
+  // DB에서 사이트 설정 가져오기
+  const supabase = await createClient();
+  const { data: settings } = await supabase
+    .from('site_settings')
+    .select('key, value');
+
+  const settingsMap: Record<string, string> = {};
+  settings?.forEach((s) => {
+    settingsMap[s.key] = s.value;
+  });
+
+  const heroTitle = settingsMap['hero_title'] || 'metaldragon';
+  const heroSubtitle = settingsMap['hero_subtitle'] || 'AI, 빅데이터 학습부터 개인 포트폴리오까지<br />모든 것을 하나의 플랫폼에서';
+  const featuresTitle = settingsMap['features_title'] || '다양한 기능을 탐험하세요';
+  const featuresDescription = settingsMap['features_description'] || '학습, 창작, 공유가 한곳에서';
+
   const features = [
     {
       title: 'AI 스터디',
@@ -20,6 +37,24 @@ export default function Home() {
       description: '데이터 분석과 머신러닝을 실전으로 익히는 스터디',
       icon: '📊',
       link: '/board/bigdata_study',
+    },
+    {
+      title: '자유게시판',
+      description: '자유롭게 생각을 나누는 커뮤니티 공간',
+      icon: '💬',
+      link: '/free-board',
+    },
+    {
+      title: '갤러리',
+      description: '일상의 순간을 원본 화질로 공유하세요',
+      icon: '📷',
+      link: '/gallery',
+    },
+    {
+      title: '영화 리뷰',
+      description: '나만의 평점과 감상평을 기록하는 공간',
+      icon: '🎬',
+      link: '/movies',
     },
     {
       title: 'IT 뉴스',
@@ -54,13 +89,12 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-display font-bold mb-6">
-              <span className="gradient-text">metaldragon</span>
+              <span className="gradient-text">{heroTitle}</span>
             </h1>
-            <p className="text-xl md:text-2xl text-gray-700 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
-              AI, 빅데이터 학습부터 개인 포트폴리오까지
-              <br />
-              모든 것을 하나의 플랫폼에서
-            </p>
+            <p
+              className="text-xl md:text-2xl text-gray-700 dark:text-gray-300 mb-8 max-w-3xl mx-auto"
+              dangerouslySetInnerHTML={{ __html: heroSubtitle }}
+            />
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
               <Link href="/board/ai_study">
                 <Button size="lg">
@@ -82,10 +116,10 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-gray-900 dark:text-white mb-4">
-              다양한 기능을 탐험하세요
+              {featuresTitle}
             </h2>
-            <p className="text-lg text-gray-600 dark:text-gray-400">
-              학습, 창작, 공유가 한곳에서
+            <p className="text-lg text-gray-600 dark:text-white">
+              {featuresDescription}
             </p>
           </div>
 
@@ -98,7 +132,7 @@ export default function Home() {
                     <CardTitle>{feature.title}</CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <p className="text-gray-600 dark:text-gray-400">
+                    <p className="text-gray-600 dark:text-white">
                       {feature.description}
                     </p>
                   </CardContent>

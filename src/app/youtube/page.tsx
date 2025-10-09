@@ -101,7 +101,7 @@ export default function YouTubePage() {
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center py-12 text-gray-600 dark:text-gray-400">
+        <div className="text-center py-12 text-gray-600 dark:text-white">
           <p>로딩 중...</p>
         </div>
       </div>
@@ -117,7 +117,7 @@ export default function YouTubePage() {
             <h1 className="text-4xl md:text-5xl font-display font-bold gradient-text mb-2">
               YouTube 커버 영상
             </h1>
-            <p className="text-lg text-gray-600 dark:text-gray-400">
+            <p className="text-lg text-gray-600 dark:text-white">
               노래 커버와 연주 영상을 공유합니다
             </p>
           </div>
@@ -205,7 +205,7 @@ export default function YouTubePage() {
                   </h3>
 
                   {video.published_at && (
-                    <div className="text-sm text-gray-500 dark:text-gray-500 mt-auto">
+                    <div className="text-sm text-gray-500 dark:text-gray-100 mt-auto">
                       {new Date(video.published_at).toLocaleDateString('ko-KR')}
                     </div>
                   )}
@@ -219,7 +219,7 @@ export default function YouTubePage() {
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
             아직 영상이 없습니다
           </h2>
-          <p className="text-gray-600 dark:text-gray-400">
+          <p className="text-gray-600 dark:text-white">
             곧 멋진 커버 영상을 업로드할 예정입니다!
           </p>
         </div>

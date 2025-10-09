@@ -142,7 +142,7 @@ export default function SignupPage() {
           </form>
 
           {/* Login Link */}
-          <p className="text-center mt-6 text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-center mt-6 text-sm text-gray-600 dark:text-white">
             이미 계정이 있으신가요?{' '}
             <Link
               href="/login"

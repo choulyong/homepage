@@ -32,14 +32,29 @@ export default function ContactPage() {
     try {
       const supabase = createClient();
 
-      const { error } = await supabase.from('contact_messages').insert({
+      // 1. 데이터베이스에 저장
+      const { error: dbError } = await supabase.from('contact_messages').insert({
         name: formData.name,
         email: formData.email,
         subject: formData.subject,
         message: formData.message,
       });
 
-      if (error) throw error;
+      if (dbError) throw dbError;
+
+      // 2. 이메일 발송
+      const emailResponse = await fetch('/api/send-contact-email', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(formData),
+      });
+
+      if (!emailResponse.ok) {
+        const errorData = await emailResponse.json();
+        throw new Error(errorData.error || '이메일 발송 실패');
+      }
 
       setMessage({
         type: 'success',
@@ -68,7 +83,7 @@ export default function ContactPage() {
       <h1 className="text-4xl md:text-5xl font-display font-bold gradient-text text-center mb-2">
         문의하기
       </h1>
-      <p className="text-lg text-gray-600 dark:text-gray-400 text-center mb-8">
+      <p className="text-lg text-gray-600 dark:text-white text-center mb-8">
         궁금한 점이 있으시면 언제든 연락주세요
       </p>
 
@@ -151,17 +166,17 @@ export default function ContactPage() {
         <Card padding="md" className="text-center">
           <div className="text-3xl mb-3">📧</div>
           <h3 className="font-semibold text-gray-900 dark:text-white mb-1">이메일</h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">choulyong@metaldragon.co.kr</p>
+          <p className="text-sm text-gray-600 dark:text-white">choulyong@metaldragon.co.kr</p>
         </Card>
         <Card padding="md" className="text-center">
           <div className="text-3xl mb-3">💬</div>
           <h3 className="font-semibold text-gray-900 dark:text-white mb-1">응답 시간</h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">영업일 기준 1-2일 이내</p>
+          <p className="text-sm text-gray-600 dark:text-white">영업일 기준 1-2일 이내</p>
         </Card>
         <Card padding="md" className="text-center">
           <div className="text-3xl mb-3">🌐</div>
           <h3 className="font-semibold text-gray-900 dark:text-white mb-1">SNS</h3>
-          <p className="text-sm text-gray-600 dark:text-gray-400">GitHub, LinkedIn</p>
+          <p className="text-sm text-gray-600 dark:text-white">GitHub, LinkedIn</p>
         </Card>
       </div>
     </div>

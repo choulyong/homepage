@@ -40,7 +40,7 @@ export default function AboutPage() {
   if (loading) {
     return (
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center py-12 text-gray-600 dark:text-gray-400">
+        <div className="text-center py-12 text-gray-600 dark:text-white">
           <p>로딩 중...</p>
         </div>
       </div>
@@ -54,7 +54,7 @@ export default function AboutPage() {
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
             프로필 정보가 없습니다
           </h2>
-          <p className="text-gray-600 dark:text-gray-400 mb-6">
+          <p className="text-gray-600 dark:text-white mb-6">
             관리자 페이지에서 프로필을 생성하세요
           </p>
           {user && (
@@ -84,8 +84,8 @@ export default function AboutPage() {
         <div className="relative w-48 h-48 rounded-full overflow-hidden p-1 bg-gradient-to-r from-teal-500 to-indigo-500">
           <div className="relative w-full h-full rounded-full overflow-hidden bg-white dark:bg-gray-900">
             <Image
-              src={profile.profileImageUrl || '/placeholder-avatar.png'}
-              alt={profile.displayName}
+              src={profile.profile_image_url || '/placeholder-avatar.png'}
+              alt={profile.display_name}
               width={200}
               height={200}
               className="object-cover w-full h-full"
@@ -96,25 +96,25 @@ export default function AboutPage() {
         {/* Profile Content */}
         <div className="flex-1 text-center md:text-left">
           <h1 className="text-4xl md:text-5xl font-display font-bold gradient-text mb-2">
-            {profile.displayName}
+            {profile.display_name}
           </h1>
-          {profile.jobTitle && (
+          {profile.job_title && (
             <h2 className="text-xl text-gray-700 dark:text-gray-300 mb-4">
-              {profile.jobTitle}
+              {profile.job_title}
             </h2>
           )}
           {profile.bio && (
-            <p className="text-gray-600 dark:text-gray-400 leading-relaxed">
+            <p className="text-gray-600 dark:text-white leading-relaxed">
               {profile.bio}
             </p>
           )}
 
           {/* Social Links */}
-          {profile.socialLinks && Object.keys(profile.socialLinks).length > 0 && (
+          {profile.social_links && Object.keys(profile.social_links).length > 0 && (
             <div className="flex gap-4 mt-4 justify-center md:justify-start">
-              {profile.socialLinks.github && (
+              {profile.social_links.github && (
                 <a
-                  href={profile.socialLinks.github}
+                  href={profile.social_links.github}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-teal-500 hover:to-indigo-500 hover:text-white transition-all duration-200 hover:-translate-y-1"
@@ -125,9 +125,9 @@ export default function AboutPage() {
                   </svg>
                 </a>
               )}
-              {profile.socialLinks.linkedin && (
+              {profile.social_links.linkedin && (
                 <a
-                  href={profile.socialLinks.linkedin}
+                  href={profile.social_links.linkedin}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-teal-500 hover:to-indigo-500 hover:text-white transition-all duration-200 hover:-translate-y-1"
@@ -138,9 +138,9 @@ export default function AboutPage() {
                   </svg>
                 </a>
               )}
-              {profile.socialLinks.twitter && (
+              {profile.social_links.twitter && (
                 <a
-                  href={profile.socialLinks.twitter}
+                  href={profile.social_links.twitter}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-teal-500 hover:to-indigo-500 hover:text-white transition-all duration-200 hover:-translate-y-1"
@@ -151,9 +151,9 @@ export default function AboutPage() {
                   </svg>
                 </a>
               )}
-              {profile.socialLinks.youtube && (
+              {profile.social_links.youtube && (
                 <a
-                  href={profile.socialLinks.youtube}
+                  href={profile.social_links.youtube}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-teal-500 hover:to-indigo-500 hover:text-white transition-all duration-200 hover:-translate-y-1"
@@ -161,6 +161,19 @@ export default function AboutPage() {
                   <span className="sr-only">YouTube</span>
                   <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/>
+                  </svg>
+                </a>
+              )}
+              {profile.social_links.instagram && (
+                <a
+                  href={profile.social_links.instagram}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center justify-center w-10 h-10 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gradient-to-r hover:from-teal-500 hover:to-indigo-500 hover:text-white transition-all duration-200 hover:-translate-y-1"
+                >
+                  <span className="sr-only">Instagram</span>
+                  <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/>
                   </svg>
                 </a>
               )}
@@ -193,13 +206,13 @@ export default function AboutPage() {
       )}
 
       {/* Portfolio Section */}
-      {profile.portfolioItems && profile.portfolioItems.length > 0 && (
+      {profile.portfolio_items && profile.portfolio_items.length > 0 && (
         <section>
           <h3 className="text-2xl font-display font-bold text-gray-900 dark:text-white mb-6">
             포트폴리오
           </h3>
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {profile.portfolioItems.map((item: any, index: number) => (
+            {profile.portfolio_items.map((item: any, index: number) => (
               <Card key={index} padding="lg" className="flex flex-col gap-4">
                 {item.imageUrl && (
                   <div className="relative w-full h-48 rounded-lg overflow-hidden">
@@ -215,7 +228,7 @@ export default function AboutPage() {
                 <h4 className="text-xl font-display font-bold text-gray-900 dark:text-white">
                   {item.title}
                 </h4>
-                <p className="text-sm text-gray-600 dark:text-gray-400 leading-relaxed">
+                <p className="text-sm text-gray-600 dark:text-white leading-relaxed">
                   {item.description}
                 </p>
                 {item.tags && item.tags.length > 0 && (

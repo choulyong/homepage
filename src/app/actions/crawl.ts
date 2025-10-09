@@ -179,16 +179,19 @@ async function crawlYouTubeVideosRSS() {
  */
 const RSS_FEEDS = {
   technology: [
+    { name: '네이버 IT/과학', url: 'https://news.naver.com/rss/digital.xml', category: 'tech' },
     { name: 'TechCrunch', url: 'https://techcrunch.com/feed/', category: 'tech' },
     { name: 'The Verge', url: 'https://www.theverge.com/rss/index.xml', category: 'tech' },
     { name: 'Ars Technica', url: 'https://feeds.arstechnica.com/arstechnica/index', category: 'tech' },
   ],
   business: [
+    { name: '네이버 경제', url: 'https://news.naver.com/rss/economy.xml', category: 'business' },
     { name: 'CNBC Business', url: 'https://www.cnbc.com/id/10001147/device/rss/rss.html', category: 'business' },
     { name: 'MarketWatch', url: 'https://feeds.marketwatch.com/marketwatch/topstories/', category: 'business' },
     { name: 'Google News Business', url: 'https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx6TVdZU0FtdHZHZ0pMVWlnQVAB?hl=ko&gl=KR&ceid=KR:ko', category: 'business' },
   ],
   world: [
+    { name: '네이버 세계', url: 'https://news.naver.com/rss/world.xml', category: 'world' },
     { name: 'BBC World', url: 'http://feeds.bbci.co.uk/news/world/rss.xml', category: 'world' },
     { name: 'CNN World', url: 'http://rss.cnn.com/rss/edition_world.rss', category: 'world' },
     { name: 'Google News World', url: 'https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx1YlY4U0FtdHZHZ0pMVWlnQVAB?hl=ko&gl=KR&ceid=KR:ko', category: 'world' },
@@ -200,6 +203,9 @@ const RSS_FEEDS = {
     { name: 'Google News AI', url: 'https://news.google.com/rss/search?q=artificial+intelligence+OR+AI+OR+machine+learning&hl=ko&gl=KR&ceid=KR:ko', category: 'ai' },
   ],
   korea: [
+    { name: '네이버 뉴스 메인', url: 'https://news.naver.com/rss/index.xml', category: 'korea' },
+    { name: '네이버 정치', url: 'https://news.naver.com/rss/politics.xml', category: 'korea' },
+    { name: '네이버 사회', url: 'https://news.naver.com/rss/society.xml', category: 'korea' },
     { name: 'Google News Korea', url: 'https://news.google.com/rss?hl=ko&gl=KR&ceid=KR:ko', category: 'korea' },
   ],
 };

@@ -156,7 +156,7 @@ export default function LoginPage() {
           {/* Divider */}
           <div className="flex items-center gap-4 my-6">
             <div className="flex-1 h-px bg-gray-300 dark:bg-gray-600"></div>
-            <span className="text-sm text-gray-500 dark:text-gray-400">또는</span>
+            <span className="text-sm text-gray-500 dark:text-white">또는</span>
             <div className="flex-1 h-px bg-gray-300 dark:bg-gray-600"></div>
           </div>
 
@@ -209,7 +209,7 @@ export default function LoginPage() {
           </div>
 
           {/* Sign Up Link */}
-          <p className="text-center mt-6 text-sm text-gray-600 dark:text-gray-400">
+          <p className="text-center mt-6 text-sm text-gray-600 dark:text-white">
             계정이 없으신가요?{' '}
             <Link
               href="/signup"

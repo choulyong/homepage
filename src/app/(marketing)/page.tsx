@@ -66,7 +66,7 @@ export default async function MarketingPage() {
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
               스터디 게시판
             </h3>
-            <p className="text-base text-gray-600 dark:text-gray-400 leading-relaxed">
+            <p className="text-base text-gray-600 dark:text-white leading-relaxed">
               AI, 빅데이터처리기사 등 다양한 주제의 스터디 자료를 공유하고 토론하세요.
             </p>
           </div>
@@ -77,7 +77,7 @@ export default async function MarketingPage() {
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
               IT 뉴스 자동 업데이트
             </h3>
-            <p className="text-base text-gray-600 dark:text-gray-400 leading-relaxed">
+            <p className="text-base text-gray-600 dark:text-white leading-relaxed">
               AI와 코인 관련 최신 뉴스를 매일 자동으로 받아보세요.
             </p>
           </div>
@@ -88,7 +88,7 @@ export default async function MarketingPage() {
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
               스마트 가계부
             </h3>
-            <p className="text-base text-gray-600 dark:text-gray-400 leading-relaxed">
+            <p className="text-base text-gray-600 dark:text-white leading-relaxed">
               문자 메시지 연동으로 자동으로 지출을 기록하고 통계를 확인하세요.
             </p>
           </div>
@@ -99,7 +99,7 @@ export default async function MarketingPage() {
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
               AI 작품 갤러리
             </h3>
-            <p className="text-base text-gray-600 dark:text-gray-400 leading-relaxed">
+            <p className="text-base text-gray-600 dark:text-white leading-relaxed">
               AI로 생성한 이미지, 동영상, 음악 등의 창작물을 아카이빙하세요.
             </p>
           </div>
@@ -110,7 +110,7 @@ export default async function MarketingPage() {
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
               일정 관리
             </h3>
-            <p className="text-base text-gray-600 dark:text-gray-400 leading-relaxed">
+            <p className="text-base text-gray-600 dark:text-white leading-relaxed">
               캘린더에서 일정을 관리하고 알림을 받아보세요.
             </p>
           </div>
@@ -121,7 +121,7 @@ export default async function MarketingPage() {
             <h3 className="text-xl font-semibold text-gray-900 dark:text-white mb-2">
               유튜브 커버 링크
             </h3>
-            <p className="text-base text-gray-600 dark:text-gray-400 leading-relaxed">
+            <p className="text-base text-gray-600 dark:text-white leading-relaxed">
               유튜브 커버 영상을 자동으로 수집하고 정리하세요.
             </p>
           </div>

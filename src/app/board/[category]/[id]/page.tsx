@@ -65,7 +65,7 @@ export default async function PostDetailPage({ params }: PageProps) {
             {post.title}
           </h1>
 
-          <div className="flex gap-4 text-sm text-gray-500 dark:text-gray-500">
+          <div className="flex gap-4 text-sm text-gray-500 dark:text-gray-100">
             <span>작성자: {post.users?.username || '익명'}</span>
             <span>•</span>
             <span>{new Date(post.created_at).toLocaleDateString('ko-KR')}</span>
@@ -73,6 +73,23 @@ export default async function PostDetailPage({ params }: PageProps) {
             <span>조회 {post.view_count || 0}</span>
           </div>
         </div>
+
+        {/* Images */}
+        {post.image_urls && post.image_urls.length > 0 && (
+          <div className="mb-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {post.image_urls.map((url: string, index: number) => (
+                <div key={index} className="relative rounded-lg overflow-hidden bg-gray-100 dark:bg-gray-800">
+                  <img
+                    src={url}
+                    alt={`${post.title} - 이미지 ${index + 1}`}
+                    className="w-full h-auto object-contain"
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Content */}
         <div className="text-base leading-relaxed text-gray-800 dark:text-gray-200 whitespace-pre-wrap break-words">
