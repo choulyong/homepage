@@ -29,9 +29,15 @@ interface Photo {
 export default function GalleryPage() {
   const { isAdmin, loading: adminLoading } = useAdmin();
   const [photos, setPhotos] = useState<Photo[]>([]);
+  const [filteredPhotos, setFilteredPhotos] = useState<Photo[]>([]);
   const [loading, setLoading] = useState(true);
   const [showForm, setShowForm] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
+
+  // 필터 상태
+  const [searchQuery, setSearchQuery] = useState('');
+  const [sortBy, setSortBy] = useState<'date' | 'title' | 'views'>('date');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
 
   // Form states
   const [title, setTitle] = useState('');
@@ -45,6 +51,38 @@ export default function GalleryPage() {
   useEffect(() => {
     loadPhotos();
   }, []);
+
+  // 필터링 및 정렬
+  useEffect(() => {
+    let result = [...photos];
+
+    // 검색 필터
+    if (searchQuery.trim()) {
+      result = result.filter(photo =>
+        photo.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (photo.description && photo.description.toLowerCase().includes(searchQuery.toLowerCase()))
+      );
+    }
+
+    // 정렬
+    result.sort((a, b) => {
+      let comparison = 0;
+
+      if (sortBy === 'date') {
+        const dateA = new Date(a.taken_at || a.created_at).getTime();
+        const dateB = new Date(b.taken_at || b.created_at).getTime();
+        comparison = dateB - dateA;
+      } else if (sortBy === 'title') {
+        comparison = a.title.localeCompare(b.title);
+      } else if (sortBy === 'views') {
+        comparison = b.view_count - a.view_count;
+      }
+
+      return sortOrder === 'asc' ? -comparison : comparison;
+    });
+
+    setFilteredPhotos(result);
+  }, [photos, searchQuery, sortBy, sortOrder]);
 
   const loadPhotos = async () => {
     const supabase = createClient();
@@ -252,43 +290,89 @@ export default function GalleryPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
       {/* Header */}
-      <div className="mb-8 flex justify-between items-center">
-        <div>
-          <h1 className="text-4xl md:text-5xl font-display font-bold gradient-text mb-2">
-            갤러리
-          </h1>
-          <p className="text-lg text-gray-600 dark:text-white">
-            일상의 순간을 원본 화질로 공유하세요
-          </p>
-        </div>
-        {isAdmin && (
-          <div className="flex gap-2">
-            <input
-              type="file"
-              multiple
-              accept="image/*"
-              onChange={handleFileSelect}
-              className="hidden"
-              id="multipleFileInput"
-            />
-            <label htmlFor="multipleFileInput" className="inline-block">
-              <div className="px-6 py-3 bg-white/10 dark:bg-white/5 backdrop-blur-md border border-white/20 rounded-lg font-medium text-gray-900 dark:text-white hover:bg-white/20 dark:hover:bg-white/10 cursor-pointer transition-all duration-200 whitespace-nowrap">
-                🖼️ 여러 장 한번에
-              </div>
-            </label>
-            <Button
-              onClick={() => {
-                resetForm();
-                setShowForm(!showForm);
-              }}
-              variant="primary"
-              size="lg"
-              className="whitespace-nowrap"
-            >
-              📷 사진 올리기
-            </Button>
+      <div className="mb-8 flex flex-col gap-4">
+        <div className="flex justify-between items-center">
+          <div>
+            <h1 className="text-4xl md:text-5xl font-display font-bold gradient-text mb-2">
+              갤러리
+            </h1>
+            <p className="text-lg text-gray-600 dark:text-white">
+              일상의 순간을 원본 화질로 공유하세요
+            </p>
           </div>
-        )}
+          {isAdmin && (
+            <div className="flex gap-2">
+              <input
+                type="file"
+                multiple
+                accept="image/*"
+                onChange={handleFileSelect}
+                className="hidden"
+                id="multipleFileInput"
+              />
+              <label htmlFor="multipleFileInput" className="inline-block">
+                <div className="px-6 py-3 bg-white/10 dark:bg-white/5 backdrop-blur-md border border-white/20 rounded-lg font-medium text-gray-900 dark:text-white hover:bg-white/20 dark:hover:bg-white/10 cursor-pointer transition-all duration-200 whitespace-nowrap">
+                  🖼️ 여러 장 한번에
+                </div>
+              </label>
+              <Button
+                onClick={() => {
+                  resetForm();
+                  setShowForm(!showForm);
+                }}
+                variant="primary"
+                size="lg"
+                className="whitespace-nowrap"
+              >
+                📷 사진 올리기
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {/* 필터 및 정렬 */}
+        <Card variant="elevated" padding="md">
+          <div className="flex flex-col md:flex-row gap-4">
+            {/* 검색 */}
+            <div className="flex-1">
+              <input
+                type="text"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                placeholder="🔍 제목 또는 설명으로 검색..."
+                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+              />
+            </div>
+
+            {/* 정렬 기준 */}
+            <div className="flex gap-2">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value as any)}
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+              >
+                <option value="date">날짜순</option>
+                <option value="title">제목순</option>
+                <option value="views">조회수순</option>
+              </select>
+
+              {/* 정렬 방향 */}
+              <button
+                onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
+                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                title={sortOrder === 'asc' ? '오름차순' : '내림차순'}
+              >
+                {sortOrder === 'asc' ? '↑' : '↓'}
+              </button>
+            </div>
+          </div>
+
+          {/* 결과 카운트 */}
+          <div className="mt-3 text-sm text-gray-600 dark:text-gray-400">
+            총 {filteredPhotos.length}장의 사진
+            {searchQuery && ` (검색: "${searchQuery}")`}
+          </div>
+        </Card>
       </div>
 
       {/* 업로드 진행 상황 */}
@@ -400,15 +484,15 @@ export default function GalleryPage() {
       )}
 
       {/* Photos Grid */}
-      {photos.length === 0 ? (
+      {filteredPhotos.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-gray-600 dark:text-white mb-4">
-            아직 사진이 없습니다
+            {searchQuery ? '검색 결과가 없습니다' : '아직 사진이 없습니다'}
           </p>
         </div>
       ) : (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {photos.map((photo) => (
+          {filteredPhotos.map((photo) => (
             <div key={photo.id} className="relative">
               <Link href={`/gallery/${photo.id}`}>
                 <Card
