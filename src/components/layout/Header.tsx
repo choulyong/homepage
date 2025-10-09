@@ -10,11 +10,13 @@ import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { Button } from '@/components/ui/Button';
 import { DarkModeToggle } from '@/components/DarkModeToggle';
+import { SearchModal } from '@/components/SearchModal';
 import { cn } from '@/lib/utils';
 
 export function Header() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   const navLinks = [
     { href: '/about', label: 'About' },
@@ -63,6 +65,27 @@ export function Header() {
 
           {/* Right side actions */}
           <div className="flex items-center gap-3">
+            {/* Search Button */}
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="p-2 rounded-md text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+              aria-label="Search"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
+                />
+              </svg>
+            </button>
+
             <DarkModeToggle />
 
             <div className="hidden sm:flex items-center gap-2">
@@ -139,6 +162,9 @@ export function Header() {
           </div>
         )}
       </nav>
+
+      {/* Search Modal */}
+      <SearchModal isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
     </header>
   );
 }

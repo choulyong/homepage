@@ -309,6 +309,18 @@ export default function AdminDashboard() {
             </p>
           </Link>
 
+          <Link
+            href="/admin/analytics"
+            className="block p-5 bg-white/50 dark:bg-gray-800/50 backdrop-blur-md border border-gray-200 dark:border-gray-700 rounded-lg transition-all duration-200 hover:-translate-y-1 hover:border-teal-500 hover:shadow-lg hover:shadow-teal-500/20"
+          >
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              📊 방문자 통계
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-white">
+              사이트 방문자 데이터와 트래픽 분석을 확인하세요
+            </p>
+          </Link>
+
           {/* 🚀 Deploy Button */}
           <div className="p-5 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 backdrop-blur-md border-2 border-blue-300 dark:border-blue-700 rounded-lg">
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
