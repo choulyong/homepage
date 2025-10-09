@@ -11,6 +11,7 @@ import { createClient } from '@/lib/supabase/client';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { LikeButton } from '@/components/LikeButton';
+import { CommentsSection } from '@/components/CommentsSection';
 import Image from 'next/image';
 
 interface Photo {
@@ -203,6 +204,9 @@ export default function GalleryDetailPage() {
                 </Button>
               </div>
             )}
+
+            {/* Comments Section */}
+            <CommentsSection targetType="gallery" targetId={parseInt(photo.id)} />
           </Card>
         </div>
       </div>

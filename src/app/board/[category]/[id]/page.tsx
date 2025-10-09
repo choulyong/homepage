@@ -7,6 +7,7 @@ import { createClient } from '@/lib/supabase/server';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import { PostLikeButton } from '@/components/PostLikeButton';
+import { CommentsSection } from '@/components/CommentsSection';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { cn } from '@/lib/utils';
@@ -111,6 +112,9 @@ export default async function PostDetailPage({ params }: PageProps) {
             <Button variant="outline">삭제</Button>
           </div>
         )}
+
+        {/* Comments Section */}
+        <CommentsSection targetType="post" targetId={parseInt(id)} />
       </Card>
     </div>
   );
