@@ -151,11 +151,11 @@ export default async function Home() {
               지금 바로 시작하세요
             </h2>
             <p className="text-xl text-white/90 mb-8">
-              커뮤니티에 참여하고 함께 성장해요
+              자유롭게 댓글을 남기고 소통해보세요
             </p>
-            <Link href="/signup">
+            <Link href="/board/ai_study">
               <Button variant="secondary" size="lg">
-                무료로 가입하기
+                게시판 둘러보기
               </Button>
             </Link>
           </div>
