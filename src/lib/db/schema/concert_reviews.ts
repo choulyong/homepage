@@ -4,7 +4,7 @@ import { concerts } from './concerts';
 
 export const concertReviews = pgTable('concert_reviews', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id')
+  userId: text('user_id')
     .notNull()
     .references(() => users.id),
   concertId: uuid('concert_id')

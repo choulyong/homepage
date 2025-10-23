@@ -4,7 +4,7 @@ import { albums } from './albums';
 
 export const reviews = pgTable('reviews', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id')
+  userId: text('user_id')
     .notNull()
     .references(() => users.id),
   albumId: uuid('album_id')

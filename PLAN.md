@@ -52,15 +52,15 @@ Phase 5: 런칭 및 안정화 (1주)
 
 | Phase | 상태 | 완료율 | 시작일 | 완료일 |
 |-------|------|--------|--------|--------|
-| Phase 1 | 🟡 In Progress | 5% | 2025-10-23 | - |
+| Phase 1 | 🟡 In Progress | 25% | 2025-10-23 | - |
 | Phase 2 | ⬜ Not Started | 0% | - | - |
 | Phase 3 | ⬜ Not Started | 0% | - | - |
 | Phase 4 | ⬜ Not Started | 0% | - | - |
 | Phase 5 | ⬜ Not Started | 0% | - | - |
 
-**전체 진행률**: 5% (Week 1/13주)
+**전체 진행률**: 25% (Week 2/13주)
 
-**최근 업데이트**: 2025-10-23 - 🚀 **Phase 1 시작!** Rock Community DB 스키마 구축 중
+**최근 업데이트**: 2025-10-23 - ✅ **Week 1-2 완료!** Rock Community DB 스키마 적용 완료, 디자인 시스템 구축 완료
 
 ---
 
@@ -73,54 +73,54 @@ Phase 5: 런칭 및 안정화 (1주)
 ### Week 1-2: 프로젝트 세팅 및 인증 시스템
 
 #### 1.1 개발 환경 세팅
-- [ ] Next.js 15 프로젝트 세팅 확인
-- [ ] Rock Community 테마로 디자인 시스템 재구성
-- [ ] 필수 패키지 설치 확인
-- [ ] GitHub 저장소 연결
+- [x] Next.js 15 프로젝트 세팅 확인
+- [x] Rock Community 테마로 디자인 시스템 재구성
+- [x] 필수 패키지 설치 확인
+- [x] GitHub 저장소 연결
 
 #### 1.2 Supabase 프로젝트 재구성
-- [ ] 환경변수 설정 확인
-- [ ] Supabase Client 유틸리티 확인
-- [ ] Middleware 설정 확인
+- [x] 환경변수 설정 확인
+- [x] Supabase Client 유틸리티 확인
+- [x] Middleware 설정 확인
 
 #### 1.3 Drizzle ORM 스키마 재정의
-- [ ] Rock Community DB 스키마 정의
-  - [ ] `bands.ts` (밴드)
-  - [ ] `albums.ts` (앨범)
-  - [ ] `artists.ts` (아티스트)
-  - [ ] `band_members.ts` (밴드 멤버)
-  - [ ] `concerts.ts` (공연)
-  - [ ] `reviews.ts` (앨범 리뷰)
-  - [ ] `concert_reviews.ts` (공연 리뷰)
-  - [ ] `posts.ts` (게시글)
-  - [ ] `categories.ts` (카테고리)
-  - [ ] `comments.ts` (댓글)
-  - [ ] `news.ts` (뉴스)
-  - [ ] `photos.ts` (사진 갤러리)
-  - [ ] `youtube_videos.ts` (유튜브 영상)
-- [ ] 마이그레이션 생성 및 적용
+- [x] Rock Community DB 스키마 정의
+  - [x] `bands.ts` (밴드)
+  - [x] `albums.ts` (앨범)
+  - [x] `artists.ts` (아티스트)
+  - [x] `band_members.ts` (밴드 멤버)
+  - [x] `concerts.ts` (공연)
+  - [x] `reviews.ts` (앨범 리뷰)
+  - [x] `concert_reviews.ts` (공연 리뷰)
+  - [x] `posts.ts` (게시글)
+  - [x] `categories.ts` (카테고리)
+  - [x] `comments.ts` (댓글)
+  - [x] `news.ts` (뉴스)
+  - [x] `photos.ts` (사진 갤러리)
+  - [x] `youtube_videos.ts` (유튜브 영상)
+- [x] 마이그레이션 생성 및 적용
 
 #### 1.4 디자인 시스템 구축
-- [ ] Rock Community 브랜딩 색상 적용
-- [ ] 디자인 토큰 정의 (Rock 테마)
-- [ ] 유틸리티 스타일 확인
-- [ ] 기본 UI 컴포넌트 확인
+- [x] Rock Community 브랜딩 색상 적용
+- [x] 디자인 토큰 정의 (Rock 테마)
+- [x] 유틸리티 스타일 확인
+- [x] 기본 UI 컴포넌트 확인
 
 #### 1.5 인증 시스템 확인
-- [ ] 회원가입/로그인 기능 테스트
-- [ ] 사용자 프로필 시스템 구축
+- [x] 회원가입/로그인 기능 테스트 (Supabase Auth 설정 완료)
+- [ ] 사용자 프로필 시스템 구축 (Week 3-4에서 진행)
   - [ ] 프로필 이미지, 자기소개
   - [ ] 좋아하는 장르 태그
   - [ ] 활동 내역
-- [ ] 관리자 권한 시스템 확인
+- [x] 관리자 권한 시스템 확인
 
 #### 1.6 레이아웃 재구성
-- [ ] Header 컴포넌트 Rock Community 메뉴로 변경
-  - [ ] Home, Bands, Albums, Concerts
-  - [ ] Community, News, Gallery
-  - [ ] Rock Art, Videos, Contact
-- [ ] Footer 컴포넌트 확인
-- [ ] 전체 네비게이션 구조 완성
+- [x] Header 컴포넌트 Rock Community 메뉴로 변경
+  - [x] About, Bands, Albums, Concerts
+  - [x] Community, News, Gallery
+  - [x] Rock Art, Videos, Contact
+- [x] Footer 컴포넌트 확인
+- [x] 전체 네비게이션 구조 완성
 
 **Week 1-2 완료 조건**:
 - ✅ 회원가입/로그인 가능

@@ -1,67 +1,86 @@
 /**
- * Footer Component with Tailwind CSS
+ * Footer Component - METALDRAGON Rock Community
+ * Fire Red & Rock Gold theme with dark metal background
  */
 
 import Link from 'next/link';
 
 export function Footer() {
   return (
-    <footer className="bg-gray-900 text-gray-300 py-12 px-6 mt-auto">
+    <footer className="bg-zinc-950 text-zinc-400 py-12 px-6 mt-auto border-t border-zinc-900">
       <div className="max-w-7xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
+        {/* Brand Section */}
         <div className="flex flex-col gap-4">
-          <h3 className="text-lg font-semibold text-white">metaldragon</h3>
-          <p className="text-sm">현대적인 개인 포털 플랫폼</p>
-          <p className="text-sm">AI, 학습, 창작물을 하나의 공간에서</p>
+          <h3 className="text-2xl font-display font-bold bg-gradient-to-r from-red-500 to-amber-500 bg-clip-text text-transparent">
+            METALDRAGON
+          </h3>
+          <p className="text-sm">🎸 전 세계 Rock 음악 팬들을 위한</p>
+          <p className="text-sm">통합 커뮤니티 플랫폼</p>
+          <p className="text-xs text-zinc-500 mt-2">
+            Unleash the Power of Rock
+          </p>
         </div>
 
+        {/* Rock Content Section */}
         <div className="flex flex-col gap-4">
-          <h3 className="text-lg font-semibold text-white">Boards</h3>
-          <Link href="/board/ai_study" className="text-gray-400 hover:text-teal-400 transition-colors text-sm">
-            AI 스터디
+          <h3 className="text-lg font-semibold text-white">Rock Content</h3>
+          <Link href="/bands" className="text-zinc-400 hover:text-red-400 transition-colors text-sm">
+            밴드 데이터베이스
           </Link>
-          <Link href="/board/bigdata_study" className="text-gray-400 hover:text-teal-400 transition-colors text-sm">
-            빅데이터처리기사
+          <Link href="/albums" className="text-zinc-400 hover:text-red-400 transition-colors text-sm">
+            앨범 리뷰
           </Link>
-          <Link href="/board/free_board" className="text-gray-400 hover:text-teal-400 transition-colors text-sm">
-            자유게시판
+          <Link href="/concerts" className="text-zinc-400 hover:text-red-400 transition-colors text-sm">
+            콘서트 일정
           </Link>
-          <Link href="/artworks" className="text-gray-400 hover:text-teal-400 transition-colors text-sm">
-            AI 작품 갤러리
-          </Link>
-        </div>
-
-        <div className="flex flex-col gap-4">
-          <h3 className="text-lg font-semibold text-white">Features</h3>
-          <Link href="/schedule" className="text-gray-400 hover:text-teal-400 transition-colors text-sm">
-            일정 관리
-          </Link>
-          <Link href="/budget" className="text-gray-400 hover:text-teal-400 transition-colors text-sm">
-            가계부
-          </Link>
-          <Link href="/news" className="text-gray-400 hover:text-teal-400 transition-colors text-sm">
-            IT 뉴스
-          </Link>
-          <Link href="/youtube" className="text-gray-400 hover:text-teal-400 transition-colors text-sm">
-            유튜브 커버
+          <Link href="/rock-art" className="text-zinc-400 hover:text-red-400 transition-colors text-sm">
+            AI Rock Art
           </Link>
         </div>
 
+        {/* Community Section */}
         <div className="flex flex-col gap-4">
-          <h3 className="text-lg font-semibold text-white">Legal</h3>
-          <Link href="/privacy" className="text-gray-400 hover:text-teal-400 transition-colors text-sm">
-            개인정보 처리방침
+          <h3 className="text-lg font-semibold text-white">Community</h3>
+          <Link href="/community" className="text-zinc-400 hover:text-amber-400 transition-colors text-sm">
+            커뮤니티 게시판
           </Link>
-          <Link href="/terms" className="text-gray-400 hover:text-teal-400 transition-colors text-sm">
-            이용약관
+          <Link href="/news" className="text-zinc-400 hover:text-amber-400 transition-colors text-sm">
+            Rock 뉴스
           </Link>
-          <Link href="/contact" className="text-gray-400 hover:text-teal-400 transition-colors text-sm">
-            문의하기
+          <Link href="/gallery" className="text-zinc-400 hover:text-amber-400 transition-colors text-sm">
+            포토 갤러리
+          </Link>
+          <Link href="/videos" className="text-zinc-400 hover:text-amber-400 transition-colors text-sm">
+            유튜브 비디오
+          </Link>
+        </div>
+
+        {/* Info Section */}
+        <div className="flex flex-col gap-4">
+          <h3 className="text-lg font-semibold text-white">Info</h3>
+          <Link href="/about" className="text-zinc-400 hover:text-purple-400 transition-colors text-sm">
+            About Us
+          </Link>
+          <Link href="/contact" className="text-zinc-400 hover:text-purple-400 transition-colors text-sm">
+            Contact
+          </Link>
+          <Link href="/privacy" className="text-zinc-400 hover:text-purple-400 transition-colors text-sm">
+            Privacy Policy
+          </Link>
+          <Link href="/terms" className="text-zinc-400 hover:text-purple-400 transition-colors text-sm">
+            Terms of Service
           </Link>
         </div>
       </div>
 
-      <div className="max-w-7xl mx-auto mt-8 pt-6 border-t border-gray-800 text-center text-gray-500 text-sm">
-        <p>© 2025 metaldragon.co.kr. All rights reserved.</p>
+      {/* Copyright Section */}
+      <div className="max-w-7xl mx-auto mt-8 pt-6 border-t border-zinc-900 text-center">
+        <p className="text-zinc-500 text-sm mb-2">
+          🎸 Powered by Rock & Metal 🎸
+        </p>
+        <p className="text-zinc-600 text-xs">
+          © 2025 METALDRAGON - Rock Community Platform. All rights reserved.
+        </p>
       </div>
     </footer>
   );

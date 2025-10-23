@@ -12,7 +12,7 @@ export const comments = pgTable('comments', {
   postId: uuid('post_id')
     .notNull()
     .references(() => posts.id, { onDelete: 'cascade' }),
-  userId: uuid('user_id')
+  userId: text('user_id')
     .notNull()
     .references(() => users.id),
   content: text('content').notNull(),

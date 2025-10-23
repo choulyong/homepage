@@ -7,7 +7,7 @@ export const concerts = pgTable('concerts', {
   bandId: uuid('band_id')
     .notNull()
     .references(() => bands.id),
-  createdByUserId: uuid('created_by_user_id')
+  createdByUserId: text('created_by_user_id')
     .notNull()
     .references(() => users.id),
   title: varchar('title', { length: 255 }).notNull(),

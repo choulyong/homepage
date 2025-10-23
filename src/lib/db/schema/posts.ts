@@ -10,7 +10,7 @@ import { bands } from './bands';
 
 export const posts = pgTable('posts', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id')
+  userId: text('user_id')
     .notNull()
     .references(() => users.id),
   categoryId: uuid('category_id')

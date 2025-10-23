@@ -1,6 +1,7 @@
 /**
  * Header Component with Tailwind CSS
- * Modern navigation with teal-indigo gradient and dark mode support
+ * METALDRAGON - Rock Community Navigation
+ * Fire Red & Rock Gold gradient with dark mode support
  */
 
 'use client';
@@ -82,11 +83,11 @@ export function Header() {
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  'relative font-medium text-sm xl:text-base text-gray-700 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-200 whitespace-nowrap',
-                  'after:content-[""] after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-0.5 after:bg-gradient-to-r after:from-teal-500 after:to-indigo-500 after:transition-all after:duration-200',
+                  'relative font-medium text-sm xl:text-base text-gray-700 dark:text-gray-300 hover:text-red-600 dark:hover:text-red-400 transition-colors duration-200 whitespace-nowrap',
+                  'after:content-[""] after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-0.5 after:bg-gradient-to-r after:from-red-500 after:to-amber-500 after:transition-all after:duration-200',
                   'hover:after:w-full',
                   pathname === link.href &&
-                    'text-teal-600 dark:text-teal-400 after:w-full'
+                    'text-red-600 dark:text-red-400 after:w-full'
                 )}
               >
                 {link.label}
@@ -124,14 +125,14 @@ export function Header() {
             {!isMounted ? (
               // SSR: 항상 로그인 버튼 표시 (hydration mismatch 방지)
               <Link href="/admin/login" className="hidden sm:block">
-                <button className="px-3 py-1.5 text-sm rounded-md bg-gradient-to-r from-teal-500 to-indigo-500 hover:from-teal-600 hover:to-indigo-600 text-white shadow-md transition-all whitespace-nowrap">
+                <button className="px-3 py-1.5 text-sm rounded-md bg-gradient-to-r from-red-500 to-amber-500 hover:from-red-600 hover:to-amber-600 text-white shadow-md transition-all whitespace-nowrap">
                   관리자
                 </button>
               </Link>
             ) : user ? (
               <div className="hidden sm:flex items-center gap-2 whitespace-nowrap">
                 <Link href="/admin">
-                  <button className="px-3 py-1.5 text-sm rounded-md bg-indigo-500 hover:bg-indigo-600 text-white shadow-md transition-colors">
+                  <button className="px-3 py-1.5 text-sm rounded-md bg-amber-500 hover:bg-amber-600 text-white shadow-md transition-colors">
                     관리자
                   </button>
                 </Link>
@@ -142,14 +143,14 @@ export function Header() {
                     setUser(null);
                     router.push('/');
                   }}
-                  className="px-3 py-1.5 text-sm rounded-md border-2 border-teal-500 text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-950 transition-colors"
+                  className="px-3 py-1.5 text-sm rounded-md border-2 border-red-500 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 transition-colors"
                 >
                   로그아웃
                 </button>
               </div>
             ) : (
               <Link href="/admin/login" className="hidden sm:block">
-                <button className="px-3 py-1.5 text-sm rounded-md bg-gradient-to-r from-teal-500 to-indigo-500 hover:from-teal-600 hover:to-indigo-600 text-white shadow-md transition-all whitespace-nowrap">
+                <button className="px-3 py-1.5 text-sm rounded-md bg-gradient-to-r from-red-500 to-amber-500 hover:from-red-600 hover:to-amber-600 text-white shadow-md transition-all whitespace-nowrap">
                   관리자
                 </button>
               </Link>
@@ -199,9 +200,9 @@ export function Header() {
                   href={link.href}
                   onClick={() => setMobileMenuOpen(false)}
                   className={cn(
-                    'px-3 py-2 rounded-md font-medium text-gray-700 dark:text-gray-300 hover:bg-teal-50 dark:hover:bg-teal-950 hover:text-teal-600 dark:hover:text-teal-400 transition-colors',
+                    'px-3 py-2 rounded-md font-medium text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-950 hover:text-red-600 dark:hover:text-red-400 transition-colors',
                     pathname === link.href &&
-                      'bg-teal-50 dark:bg-teal-950 text-teal-600 dark:text-teal-400'
+                      'bg-red-50 dark:bg-red-950 text-red-600 dark:text-red-400'
                   )}
                 >
                   {link.label}
@@ -213,14 +214,14 @@ export function Header() {
                 {!isMounted ? (
                   // SSR: 항상 로그인 버튼 표시 (hydration mismatch 방지)
                   <Link href="/admin/login" onClick={() => setMobileMenuOpen(false)}>
-                    <button className="w-full px-4 py-2 text-base rounded-lg bg-gradient-to-r from-teal-500 to-indigo-500 hover:from-teal-600 hover:to-indigo-600 text-white shadow-md">
+                    <button className="w-full px-4 py-2 text-base rounded-lg bg-gradient-to-r from-red-500 to-amber-500 hover:from-red-600 hover:to-amber-600 text-white shadow-md">
                       관리자 로그인
                     </button>
                   </Link>
                 ) : user ? (
                   <>
                     <Link href="/admin" onClick={() => setMobileMenuOpen(false)}>
-                      <button className="w-full px-4 py-2 text-base rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white shadow-md">
+                      <button className="w-full px-4 py-2 text-base rounded-lg bg-amber-500 hover:bg-amber-600 text-white shadow-md">
                         관리자
                       </button>
                     </Link>
@@ -232,14 +233,14 @@ export function Header() {
                         setMobileMenuOpen(false);
                         router.push('/');
                       }}
-                      className="w-full px-4 py-2 text-base rounded-lg border-2 border-teal-500 text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-950"
+                      className="w-full px-4 py-2 text-base rounded-lg border-2 border-red-500 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950"
                     >
                       로그아웃
                     </button>
                   </>
                 ) : (
                   <Link href="/admin/login" onClick={() => setMobileMenuOpen(false)}>
-                    <button className="w-full px-4 py-2 text-base rounded-lg bg-gradient-to-r from-teal-500 to-indigo-500 hover:from-teal-600 hover:to-indigo-600 text-white shadow-md">
+                    <button className="w-full px-4 py-2 text-base rounded-lg bg-gradient-to-r from-red-500 to-amber-500 hover:from-red-600 hover:to-amber-600 text-white shadow-md">
                       관리자 로그인
                     </button>
                   </Link>

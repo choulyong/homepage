@@ -5,7 +5,7 @@ import { concerts } from './concerts';
 
 export const photos = pgTable('photos', {
   id: uuid('id').primaryKey().defaultRandom(),
-  userId: uuid('user_id')
+  userId: text('user_id')
     .notNull()
     .references(() => users.id),
   bandId: uuid('band_id').references(() => bands.id),

@@ -1,52 +1,67 @@
 /**
- * Global Styles for metaldragon
- * Tailwind CSS v3 with custom design tokens
+ * Global Styles for METALDRAGON - Rock Community
+ * Tailwind CSS v3 with Rock-themed design tokens
  */
 
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Custom CSS Variables */
+/* Custom CSS Variables - Rock Community Theme */
 :root {
-  /* Color Palette - Teal & Indigo Gradient System */
-  --color-teal-50: #f0fdfa;
-  --color-teal-100: #ccfbf1;
-  --color-teal-200: #99f6e4;
-  --color-teal-300: #5eead4;
-  --color-teal-400: #2dd4bf;
-  --color-teal-500: #14b8a6;
-  --color-teal-600: #0d9488;
-  --color-teal-700: #0f766e;
-  --color-teal-800: #115e59;
-  --color-teal-900: #134e4a;
+  /* Rock Fire Palette - Red & Orange */
+  --color-fire-50: #fef2f2;
+  --color-fire-100: #fee2e2;
+  --color-fire-200: #fecaca;
+  --color-fire-300: #fca5a5;
+  --color-fire-400: #f87171;
+  --color-fire-500: #ef4444;
+  --color-fire-600: #dc2626;
+  --color-fire-700: #b91c1c;
+  --color-fire-800: #991b1b;
+  --color-fire-900: #7f1d1d;
 
-  --color-indigo-50: #eef2ff;
-  --color-indigo-100: #e0e7ff;
-  --color-indigo-200: #c7d2fe;
-  --color-indigo-300: #a5b4fc;
-  --color-indigo-400: #818cf8;
-  --color-indigo-500: #6366f1;
-  --color-indigo-600: #4f46e5;
-  --color-indigo-700: #4338ca;
-  --color-indigo-800: #3730a3;
-  --color-indigo-900: #312e81;
+  /* Rock Gold Palette - Amber & Gold */
+  --color-gold-50: #fffbeb;
+  --color-gold-100: #fef3c7;
+  --color-gold-200: #fde68a;
+  --color-gold-300: #fcd34d;
+  --color-gold-400: #fbbf24;
+  --color-gold-500: #f59e0b;
+  --color-gold-600: #d97706;
+  --color-gold-700: #b45309;
+  --color-gold-800: #92400e;
+  --color-gold-900: #78350f;
 
-  /* Grayscale */
-  --color-gray-50: #f9fafb;
-  --color-gray-100: #f3f4f6;
-  --color-gray-200: #e5e7eb;
-  --color-gray-300: #d1d5db;
-  --color-gray-400: #9ca3af;
-  --color-gray-500: #6b7280;
-  --color-gray-600: #4b5563;
-  --color-gray-700: #374151;
-  --color-gray-800: #1f2937;
-  --color-gray-900: #111827;
+  /* Electric Purple Palette */
+  --color-electric-50: #faf5ff;
+  --color-electric-100: #f3e8ff;
+  --color-electric-200: #e9d5ff;
+  --color-electric-300: #d8b4fe;
+  --color-electric-400: #c084fc;
+  --color-electric-500: #a855f7;
+  --color-electric-600: #9333ea;
+  --color-electric-700: #7e22ce;
+  --color-electric-800: #6b21a8;
+  --color-electric-900: #581c87;
 
-  /* Brand Colors */
-  --color-primary: #3ABAB4;
-  --color-secondary: #7F9CF5;
+  /* Dark Metal Grayscale */
+  --color-metal-50: #fafafa;
+  --color-metal-100: #f4f4f5;
+  --color-metal-200: #e4e4e7;
+  --color-metal-300: #d4d4d8;
+  --color-metal-400: #a1a1aa;
+  --color-metal-500: #71717a;
+  --color-metal-600: #52525b;
+  --color-metal-700: #3f3f46;
+  --color-metal-800: #27272a;
+  --color-metal-900: #18181b;
+  --color-metal-950: #0a0a0a;
+
+  /* Brand Colors - Rock Community */
+  --color-primary: #ef4444;        /* Fire Red */
+  --color-secondary: #f59e0b;      /* Rock Gold */
+  --color-accent: #a855f7;         /* Electric Purple */
 
   /* Font Families */
   --font-family-display: 'Red Hat Display', -apple-system, BlinkMacSystemFont, sans-serif;
@@ -123,16 +138,16 @@ body {
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
-/* Light mode default */
+/* Light mode default - Rock Community */
 body {
-  background: #ffffff;
-  color: #171717;
+  background: #fafafa;
+  color: #18181b;
 }
 
-/* Dark mode */
+/* Dark mode - Deep Metal Stage */
 body.dark {
-  background: #0f172a;
-  color: #f1f5f9;
+  background: #0a0a0a;
+  color: #fafafa;
 }
 
 a {
@@ -154,22 +169,24 @@ a {
 }
 
 ::-webkit-scrollbar-thumb {
-  background: linear-gradient(135deg, #3ABAB4 0%, #7F9CF5 100%);
+  background: linear-gradient(135deg, #ef4444 0%, #f59e0b 100%);
   border-radius: 5px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: linear-gradient(135deg, #2dd4bf 0%, #818cf8 100%);
+  background: linear-gradient(135deg, #dc2626 0%, #d97706 100%);
 }
 
-/* Focus Visible */
+/* Focus Visible - Rock Fire Glow */
 *:focus-visible {
-  outline: 2px solid #3ABAB4;
+  outline: 2px solid #ef4444;
   outline-offset: 2px;
+  box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
 }
 
 .dark *:focus-visible {
-  outline: 2px solid #5eead4;
+  outline: 2px solid #f87171;
+  box-shadow: 0 0 0 4px rgba(248, 113, 113, 0.2);
 }
 
 /* Reduced Motion */
@@ -183,16 +200,44 @@ a {
   }
 }
 
-/* Gradient Utilities */
-.gradient-teal-indigo {
-  background: linear-gradient(135deg, #3ABAB4 0%, #7F9CF5 100%);
+/* Rock Gradient Utilities */
+.gradient-fire {
+  background: linear-gradient(135deg, #ef4444 0%, #f59e0b 100%);
 }
 
+.gradient-electric {
+  background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);
+}
+
+.gradient-metal {
+  background: linear-gradient(135deg, #52525b 0%, #a1a1aa 100%);
+}
+
+/* Rock Gradient Text */
 .gradient-text {
-  background: linear-gradient(135deg, #3ABAB4 0%, #7F9CF5 100%);
+  background: linear-gradient(135deg, #ef4444 0%, #f59e0b 50%, #a855f7 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
+}
+
+/* Dark mode gradient text - 더 밝고 강렬하게 */
+.dark .gradient-text {
+  background: linear-gradient(135deg, #f87171 0%, #fbbf24 50%, #c084fc 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Hero Section Text Contrast Enhancement */
+.hero-subtitle {
+  text-shadow: 0 2px 4px rgba(255, 255, 255, 0.8),
+               0 1px 2px rgba(255, 255, 255, 0.9);
+}
+
+.dark .hero-subtitle {
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.9),
+               0 1px 3px rgba(0, 0, 0, 1);
 }
 
 /* Custom Animations */
@@ -232,4 +277,82 @@ a {
 .animation-delay-400 {
   animation-delay: 0.4s;
   animation-fill-mode: both;
+}
+
+/* Page Background Styles */
+/* 적응형 오버레이: 라이트모드에서 가독성을 위한 어두운 오버레이 */
+.bg-overlay {
+  background: rgba(0, 0, 0, 0.35);
+  z-index: -1;
+}
+
+.dark .bg-overlay {
+  background: rgba(0, 0, 0, 0.25);
+}
+
+/* 배경이 설정된 페이지에서 컨텐츠를 반투명하게 */
+body[data-has-background] main {
+  background: transparent !important;
+}
+
+/* 배경이 있을 때 페이지 wrapper의 배경 제거 */
+body[data-has-background] main > div {
+  background: transparent !important;
+}
+
+/* 배경이 있을 때도 Card 배경색을 원래대로 유지 */
+
+/* 그라데이션 배경 제거 */
+body[data-has-background] .bg-gradient-to-br {
+  background: transparent !important;
+}
+
+/* 배경이 있을 때는 텍스트 색상을 강제로 변경하지 않음 - 기존 색상 유지 */
+
+/* 배경이 없을 때 기본 텍스트 색상 보장 - 라이트 모드 */
+body:not([data-has-background]):not(.dark) h1,
+body:not([data-has-background]):not(.dark) h2,
+body:not([data-has-background]):not(.dark) h3,
+body:not([data-has-background]):not(.dark) p {
+  color: #171717;
+}
+
+body:not([data-has-background]):not(.dark) .text-gray-900 {
+  color: #111827 !important;
+}
+
+body:not([data-has-background]):not(.dark) .text-gray-700 {
+  color: #374151 !important;
+}
+
+body:not([data-has-background]):not(.dark) .text-gray-600 {
+  color: #4b5563 !important;
+}
+
+/* 배경이 없을 때 기본 텍스트 색상 보장 - 다크 모드 */
+body:not([data-has-background]).dark h1,
+body:not([data-has-background]).dark h2,
+body:not([data-has-background]).dark h3,
+body:not([data-has-background]).dark p {
+  color: #f1f5f9 !important;
+}
+
+body:not([data-has-background]).dark .text-white {
+  color: #ffffff !important;
+}
+
+body:not([data-has-background]).dark .text-gray-300 {
+  color: #d1d5db !important;
+}
+
+body:not([data-has-background]).dark .text-gray-900 {
+  color: #f9fafb !important;
+}
+
+body:not([data-has-background]).dark .text-gray-700 {
+  color: #e5e7eb !important;
+}
+
+body:not([data-has-background]).dark .text-gray-600 {
+  color: #d1d5db !important;
 }
