@@ -6,30 +6,60 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { usePathname, useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/Button';
 import { DarkModeToggle } from '@/components/DarkModeToggle';
 import { SearchModal } from '@/components/SearchModal';
 import { NotificationDropdown } from '@/components/NotificationDropdown';
+import { createClient } from '@/lib/supabase/client';
 import { cn } from '@/lib/utils';
 
 export function Header() {
   const pathname = usePathname();
+  const router = useRouter();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchOpen, setSearchOpen] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [isMounted, setIsMounted] = useState(false);
+
+  useEffect(() => {
+    setIsMounted(true);
+    const loadUser = async () => {
+      try {
+        const supabase = createClient();
+        const {
+          data: { user },
+          error,
+        } = await supabase.auth.getUser();
+
+        // If refresh token is invalid, clear the session silently
+        if (error?.message?.includes('refresh_token_not_found') ||
+            error?.message?.includes('Invalid Refresh Token')) {
+          await supabase.auth.signOut();
+          setUser(null);
+          return;
+        }
+
+        setUser(user);
+      } catch (err) {
+        console.error('Error loading user:', err);
+        setUser(null);
+      }
+    };
+    loadUser();
+  }, []);
 
   const navLinks = [
     { href: '/about', label: 'About' },
-    { href: '/schedule', label: '일정' },
-    { href: '/free-board', label: '자유게시판' },
-    { href: '/gallery', label: '갤러리' },
-    { href: '/movies', label: '영화' },
-    { href: '/board/ai_study', label: 'AI 스터디' },
-    { href: '/board/bigdata_study', label: '빅데이터' },
+    { href: '/bands', label: 'Bands' },
+    { href: '/albums', label: 'Albums' },
+    { href: '/concerts', label: 'Concerts' },
+    { href: '/community', label: 'Community' },
     { href: '/news', label: 'News' },
-    { href: '/artworks', label: 'AI 작품' },
-    { href: '/youtube', label: 'YouTube' },
+    { href: '/gallery', label: 'Gallery' },
+    { href: '/rock-art', label: 'Rock Art' },
+    { href: '/videos', label: 'Videos' },
     { href: '/contact', label: 'Contact' },
   ];
 
@@ -40,19 +70,19 @@ export function Header() {
           {/* Logo */}
           <Link
             href="/"
-            className="text-2xl font-display font-bold gradient-text hover:scale-105 transition-transform duration-200"
+            className="text-2xl font-display font-bold gradient-text hover:scale-105 transition-transform duration-200 mr-12"
           >
-            metaldragon
+            METALDRAGON
           </Link>
 
           {/* Desktop Navigation */}
-          <div className="hidden lg:flex items-center gap-6">
+          <div className="hidden lg:flex items-center gap-6 xl:gap-8">
             {navLinks.map((link) => (
               <Link
                 key={link.href}
                 href={link.href}
                 className={cn(
-                  'relative font-medium text-gray-700 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-200',
+                  'relative font-medium text-sm xl:text-base text-gray-700 dark:text-gray-300 hover:text-teal-600 dark:hover:text-teal-400 transition-colors duration-200 whitespace-nowrap',
                   'after:content-[""] after:absolute after:bottom-[-4px] after:left-0 after:w-0 after:h-0.5 after:bg-gradient-to-r after:from-teal-500 after:to-indigo-500 after:transition-all after:duration-200',
                   'hover:after:w-full',
                   pathname === link.href &&
@@ -89,6 +119,41 @@ export function Header() {
 
             {/* Notification Bell */}
             <NotificationDropdown />
+
+            {/* Admin / Logout Button */}
+            {!isMounted ? (
+              // SSR: 항상 로그인 버튼 표시 (hydration mismatch 방지)
+              <Link href="/admin/login" className="hidden sm:block">
+                <button className="px-3 py-1.5 text-sm rounded-md bg-gradient-to-r from-teal-500 to-indigo-500 hover:from-teal-600 hover:to-indigo-600 text-white shadow-md transition-all whitespace-nowrap">
+                  관리자
+                </button>
+              </Link>
+            ) : user ? (
+              <div className="hidden sm:flex items-center gap-2 whitespace-nowrap">
+                <Link href="/admin">
+                  <button className="px-3 py-1.5 text-sm rounded-md bg-indigo-500 hover:bg-indigo-600 text-white shadow-md transition-colors">
+                    관리자
+                  </button>
+                </Link>
+                <button
+                  onClick={async () => {
+                    const supabase = createClient();
+                    await supabase.auth.signOut();
+                    setUser(null);
+                    router.push('/');
+                  }}
+                  className="px-3 py-1.5 text-sm rounded-md border-2 border-teal-500 text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-950 transition-colors"
+                >
+                  로그아웃
+                </button>
+              </div>
+            ) : (
+              <Link href="/admin/login" className="hidden sm:block">
+                <button className="px-3 py-1.5 text-sm rounded-md bg-gradient-to-r from-teal-500 to-indigo-500 hover:from-teal-600 hover:to-indigo-600 text-white shadow-md transition-all whitespace-nowrap">
+                  관리자
+                </button>
+              </Link>
+            )}
 
             <DarkModeToggle />
 
@@ -142,6 +207,44 @@ export function Header() {
                   {link.label}
                 </Link>
               ))}
+
+              {/* Mobile Admin Button */}
+              <div className="mt-4 pt-4 border-t border-gray-200 dark:border-gray-800 space-y-2">
+                {!isMounted ? (
+                  // SSR: 항상 로그인 버튼 표시 (hydration mismatch 방지)
+                  <Link href="/admin/login" onClick={() => setMobileMenuOpen(false)}>
+                    <button className="w-full px-4 py-2 text-base rounded-lg bg-gradient-to-r from-teal-500 to-indigo-500 hover:from-teal-600 hover:to-indigo-600 text-white shadow-md">
+                      관리자 로그인
+                    </button>
+                  </Link>
+                ) : user ? (
+                  <>
+                    <Link href="/admin" onClick={() => setMobileMenuOpen(false)}>
+                      <button className="w-full px-4 py-2 text-base rounded-lg bg-indigo-500 hover:bg-indigo-600 text-white shadow-md">
+                        관리자
+                      </button>
+                    </Link>
+                    <button
+                      onClick={async () => {
+                        const supabase = createClient();
+                        await supabase.auth.signOut();
+                        setUser(null);
+                        setMobileMenuOpen(false);
+                        router.push('/');
+                      }}
+                      className="w-full px-4 py-2 text-base rounded-lg border-2 border-teal-500 text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-950"
+                    >
+                      로그아웃
+                    </button>
+                  </>
+                ) : (
+                  <Link href="/admin/login" onClick={() => setMobileMenuOpen(false)}>
+                    <button className="w-full px-4 py-2 text-base rounded-lg bg-gradient-to-r from-teal-500 to-indigo-500 hover:from-teal-600 hover:to-indigo-600 text-white shadow-md">
+                      관리자 로그인
+                    </button>
+                  </Link>
+                )}
+              </div>
             </div>
           </div>
         )}
