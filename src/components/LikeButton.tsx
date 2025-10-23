@@ -6,7 +6,7 @@ import { cn } from '@/lib/utils';
 
 interface LikeButtonProps {
   targetType: 'post' | 'gallery' | 'movie' | 'news';
-  targetId: number;
+  targetId: number | string;
   size?: 'sm' | 'md' | 'lg';
   showCount?: boolean;
 }

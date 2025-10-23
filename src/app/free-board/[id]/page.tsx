@@ -15,11 +15,12 @@ interface Post {
   id: string;
   title: string;
   content: string;
+  nickname: string | null;
   image_url: string | null;
   image_urls: string[] | null;
   view_count: number;
   created_at: string;
-  user_id: string;
+  user_id: string | null;
 }
 
 export default function FreeBoardDetailPage() {
@@ -28,6 +29,9 @@ export default function FreeBoardDetailPage() {
   const [post, setPost] = useState<Post | null>(null);
   const [loading, setLoading] = useState(true);
   const [currentUser, setCurrentUser] = useState<any>(null);
+  const [showPasswordModal, setShowPasswordModal] = useState(false);
+  const [password, setPassword] = useState('');
+  const [actionType, setActionType] = useState<'edit' | 'delete' | null>(null);
 
   useEffect(() => {
     const loadPost = async () => {
@@ -64,16 +68,60 @@ export default function FreeBoardDetailPage() {
     loadPost();
   }, [params.id, router]);
 
-  const handleDelete = async () => {
-    if (!confirm('정말 삭제하시겠습니까?')) return;
+  const handleActionClick = (type: 'edit' | 'delete') => {
+    setActionType(type);
+    setShowPasswordModal(true);
+  };
 
-    const supabase = createClient();
-    const { error } = await supabase.from('free_board').delete().eq('id', params.id);
+  const handlePasswordSubmit = async () => {
+    if (!password.trim()) {
+      alert('비밀번호를 입력해주세요.');
+      return;
+    }
 
-    if (error) {
-      alert('삭제 실패: ' + error.message);
-    } else {
-      router.push('/free-board');
+    try {
+      // 비밀번호 확인 API 호출
+      const response = await fetch('/api/free-board/verify', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          post_id: params.id,
+          password: password,
+        }),
+      });
+
+      const result = await response.json();
+
+      if (!result.success) {
+        alert('비밀번호가 일치하지 않습니다.');
+        return;
+      }
+
+      // 비밀번호 확인 성공
+      if (actionType === 'delete') {
+        if (!confirm('정말 삭제하시겠습니까?')) return;
+
+        const supabase = createClient();
+        const { error } = await supabase.from('free_board').delete().eq('id', params.id);
+
+        if (error) {
+          alert('삭제 실패: ' + error.message);
+        } else {
+          alert('삭제되었습니다.');
+          router.push('/free-board');
+        }
+      } else if (actionType === 'edit') {
+        // 수정 페이지로 이동 (비밀번호를 쿼리로 전달)
+        router.push(`/free-board/${params.id}/edit?pwd=${encodeURIComponent(password)}`);
+      }
+
+      setShowPasswordModal(false);
+      setPassword('');
+    } catch (error) {
+      console.error('Error verifying password:', error);
+      alert('비밀번호 확인 중 오류가 발생했습니다.');
     }
   };
 
@@ -117,7 +165,7 @@ export default function FreeBoardDetailPage() {
 
         {/* Meta Info */}
         <div className="flex justify-between items-center text-sm text-gray-600 dark:text-white mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
-          <span>{new Date(post.created_at).toLocaleString('ko-KR')}</span>
+          <span>{post.nickname || '익명'} • {new Date(post.created_at).toLocaleString('ko-KR')}</span>
           <span>조회 {post.view_count}</span>
         </div>
 
@@ -156,21 +204,61 @@ export default function FreeBoardDetailPage() {
           </p>
         </div>
 
-        {/* Action Buttons (Author Only) */}
-        {isAuthor && (
-          <div className="flex gap-4 pt-6 border-t border-gray-200 dark:border-gray-700">
-            <Button
-              variant="primary"
-              onClick={() => router.push(`/admin/free-board?edit=${post.id}`)}
-            >
-              수정
-            </Button>
-            <Button variant="secondary" onClick={handleDelete}>
-              삭제
-            </Button>
-          </div>
-        )}
+        {/* Action Buttons */}
+        <div className="flex gap-4 pt-6 border-t border-gray-200 dark:border-gray-700">
+          <Button
+            variant="primary"
+            onClick={() => handleActionClick('edit')}
+          >
+            수정
+          </Button>
+          <Button variant="secondary" onClick={() => handleActionClick('delete')}>
+            삭제
+          </Button>
+        </div>
       </Card>
+
+      {/* Password Modal */}
+      {showPasswordModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+          <div className="bg-white dark:bg-gray-800 rounded-lg p-6 max-w-md w-full mx-4">
+            <h3 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+              비밀번호 입력
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-gray-300 mb-4">
+              게시글 작성 시 입력한 비밀번호를 입력해주세요.
+            </p>
+            <input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              onKeyPress={(e) => e.key === 'Enter' && handlePasswordSubmit()}
+              placeholder="비밀번호"
+              className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-700 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500 mb-4"
+            />
+            <div className="flex gap-3">
+              <Button
+                variant="primary"
+                onClick={handlePasswordSubmit}
+                className="flex-1"
+              >
+                확인
+              </Button>
+              <Button
+                variant="secondary"
+                onClick={() => {
+                  setShowPasswordModal(false);
+                  setPassword('');
+                  setActionType(null);
+                }}
+                className="flex-1"
+              >
+                취소
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

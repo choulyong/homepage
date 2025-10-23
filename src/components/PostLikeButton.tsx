@@ -3,7 +3,7 @@
 import { LikeButton } from './LikeButton';
 
 interface PostLikeButtonProps {
-  postId: number;
+  postId: number | string;
 }
 
 export function PostLikeButton({ postId }: PostLikeButtonProps) {

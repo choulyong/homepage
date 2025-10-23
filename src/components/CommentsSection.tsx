@@ -4,6 +4,12 @@ import { useState, useEffect } from 'react';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from './ui/Button';
 import { Card } from './ui/Card';
+import { sanitizeComment } from '@/lib/sanitize';
+import {
+  validateContent,
+  validateGuestName,
+  validateGuestPassword,
+} from '@/lib/validation';
 
 interface Comment {
   id: string;
@@ -13,7 +19,7 @@ interface Comment {
   parent_id: string | null;
   created_at: string;
   updated_at: string;
-  users: {
+  user: {
     username: string;
     avatar_url: string | null;
   } | null;
@@ -21,7 +27,7 @@ interface Comment {
 
 interface CommentsSectionProps {
   targetType: 'post' | 'gallery' | 'movie' | 'news';
-  targetId: number;
+  targetId: number | string;
 }
 
 export function CommentsSection({ targetType, targetId }: CommentsSectionProps) {
@@ -66,12 +72,34 @@ export function CommentsSection({ targetType, targetId }: CommentsSectionProps) 
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newComment.trim()) return;
+
+    // Validate content
+    const contentValidation = validateContent(newComment);
+    if (!contentValidation.valid) {
+      alert(contentValidation.error);
+      return;
+    }
 
     // Validation for guest comments
-    if (!currentUser && (!guestName.trim() || !guestPassword.trim())) {
-      alert('이름과 비밀번호를 입력해주세요');
-      return;
+    if (!currentUser) {
+      if (!guestName.trim() || !guestPassword.trim()) {
+        alert('이름과 비밀번호를 입력해주세요');
+        return;
+      }
+
+      // Validate guest name
+      const nameValidation = validateGuestName(guestName);
+      if (!nameValidation.valid) {
+        alert(nameValidation.error);
+        return;
+      }
+
+      // Validate guest password
+      const passwordValidation = validateGuestPassword(guestPassword);
+      if (!passwordValidation.valid) {
+        alert(passwordValidation.error);
+        return;
+      }
     }
 
     setSubmitting(true);
@@ -165,13 +193,18 @@ export function CommentsSection({ targetType, targetId }: CommentsSectionProps) 
 
     if (!confirm('댓글을 삭제하시겠습니까?')) return;
 
+    setSubmitting(true);
     try {
-      const url = isGuest
-        ? `/api/comments?commentId=${commentId}&password=${encodeURIComponent(password)}`
-        : `/api/comments?commentId=${commentId}`;
-
-      const response = await fetch(url, {
+      // SECURITY FIX: Send password in request body, NOT in URL
+      const response = await fetch('/api/comments', {
         method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          commentId,
+          password: isGuest ? password : undefined,
+        }),
       });
 
       if (response.ok) {
@@ -183,12 +216,14 @@ export function CommentsSection({ targetType, targetId }: CommentsSectionProps) 
     } catch (error) {
       console.error('Error deleting comment:', error);
       alert('댓글 삭제 중 오류가 발생했습니다');
+    } finally {
+      setSubmitting(false);
     }
   };
 
   const getCommentAuthorName = (comment: Comment) => {
-    if (comment.user_id && comment.users) {
-      return comment.users.username || '익명';
+    if (comment.user_id && comment.user) {
+      return comment.user.username || '익명';
     }
     return comment.author_name || '손님';
   };
@@ -281,7 +316,7 @@ export function CommentsSection({ targetType, targetId }: CommentsSectionProps) 
               ) : (
                 <>
                   <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap break-words">
-                    {comment.content}
+                    {sanitizeComment(comment.content)}
                   </p>
 
                   {/* Actions */}

@@ -20,7 +20,7 @@ export function ImageUpload({
   onUploadComplete,
   currentImageUrl,
   bucket = 'avatars',
-  maxSizeMB = 5,
+  maxSizeMB = 1024, // 기본 1GB (실질적 무제한)
 }: ImageUploadProps) {
   const [isDragging, setIsDragging] = useState(false);
   const [preview, setPreview] = useState<string | null>(currentImageUrl || null);
@@ -73,10 +73,10 @@ export function ImageUpload({
       return;
     }
 
-    // 파일 크기 체크
+    // 파일 크기 체크 (기본 50MB로 증가)
     const fileSizeMB = file.size / (1024 * 1024);
     if (fileSizeMB > maxSizeMB) {
-      setError(`파일 크기는 ${maxSizeMB}MB 이하여야 합니다.`);
+      setError(`파일 크기는 최대 ${maxSizeMB}MB까지 업로드 가능합니다.`);
       return;
     }
 
@@ -165,10 +165,10 @@ export function ImageUpload({
           onClick={handleClick}
         >
           <p className="text-gray-400 text-sm mb-2">
-            {isDragging ? '여기에 드롭하세요' : '클릭하거나 이미지를 드래그 앤 드롭하세요'}
+            {isDragging ? '여기에 드롭하세요' : '클릭하거나 파일을 드래그 앤 드롭하세요'}
           </p>
           <p className="text-gray-500 text-xs">
-            최대 {maxSizeMB}MB, JPG/PNG/GIF/WEBP
+            파일 크기 제한 없음
           </p>
         </div>
       )}

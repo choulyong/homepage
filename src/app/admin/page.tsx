@@ -310,6 +310,18 @@ export default function AdminDashboard() {
           </Link>
 
           <Link
+            href="/admin/backgrounds"
+            className="block p-5 bg-white/50 dark:bg-gray-800/50 backdrop-blur-md border border-gray-200 dark:border-gray-700 rounded-lg transition-all duration-200 hover:-translate-y-1 hover:border-teal-500 hover:shadow-lg hover:shadow-teal-500/20"
+          >
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              🎨 배경화면 설정
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-white">
+              페이지별 배경화면과 투명도를 조절하세요
+            </p>
+          </Link>
+
+          <Link
             href="/admin/analytics"
             className="block p-5 bg-white/50 dark:bg-gray-800/50 backdrop-blur-md border border-gray-200 dark:border-gray-700 rounded-lg transition-all duration-200 hover:-translate-y-1 hover:border-teal-500 hover:shadow-lg hover:shadow-teal-500/20"
           >

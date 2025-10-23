@@ -1,6 +1,6 @@
 /**
- * Running Tracker Page
- * AI-powered running records tracking with Gemini Vision API
+ * 러닝 트래커 페이지
+ * Gemini Vision API를 활용한 AI 기반 러닝 기록 추적
  */
 
 'use client';
@@ -15,13 +15,17 @@ import {
   getRunningStats,
   getAICoaching,
   deleteRunningRecord,
+  addAICoachingToRecord,
 } from '@/app/actions/running';
+import { createClient } from '@/lib/supabase/client';
 import type {
   RunningRecord,
   RunningStats,
   AICoachingAdvice,
   GeminiAnalysisResult,
 } from '@/types/running';
+
+const ADMIN_EMAIL = process.env.NEXT_PUBLIC_ADMIN_EMAIL || 'admin@metaldragon.co.kr';
 
 export default function RunningPage() {
   const [records, setRecords] = useState<RunningRecord[]>([]);
@@ -40,38 +44,61 @@ export default function RunningPage() {
   const [editingData, setEditingData] = useState<Partial<GeminiAnalysisResult> | null>(
     null
   );
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [addingCoaching, setAddingCoaching] = useState<string | null>(null); // 기록 ID
 
-  // Load data on mount
+  // Check admin status
   useEffect(() => {
+    const checkAdmin = async () => {
+      const supabase = createClient();
+      const { data: { user }, error } = await supabase.auth.getUser();
+      setIsAdmin(user?.email === ADMIN_EMAIL);
+    };
+    checkAdmin();
     loadData();
   }, []);
 
-  const loadData = async () => {
+  const loadData = async (skipCoaching = true) => {
     setLoading(true);
     setError(null);
 
+    console.log(`🔄 loadData called with skipCoaching=${skipCoaching}`);
+
     try {
-      const [recordsResult, statsResult, coachingResult] = await Promise.all([
+      // AI 코칭은 기본적으로 건너뛰기 (토큰 절약)
+      const promises = [
         getRunningRecords(),
         getRunningStats(),
-        getAICoaching(),
-      ]);
+      ];
+
+      // 명시적으로 요청할 때만 AI 코칭 호출
+      if (!skipCoaching) {
+        console.log('🤖 AI 코칭 호출 시작...');
+        promises.push(getAICoaching());
+      } else {
+        console.log('⏭️ AI 코칭 건너뛰기 (토큰 절약)');
+      }
+
+      const results = await Promise.all(promises);
+      const [recordsResult, statsResult, coachingResult] = results;
 
       if (recordsResult.success && recordsResult.records) {
         setRecords(recordsResult.records);
+        console.log(`✅ 기록 ${recordsResult.records.length}개 로드됨`);
       } else {
-        setError(recordsResult.error || 'Failed to load records');
+        setError(recordsResult.error || '기록을 불러오는데 실패했습니다');
       }
 
       if (statsResult.success && statsResult.stats) {
         setStats(statsResult.stats);
       }
 
-      if (coachingResult.success && coachingResult.advice) {
+      if (coachingResult && coachingResult.success && coachingResult.advice) {
         setCoaching(coachingResult.advice);
+        console.log('✅ AI 코칭 조언 로드됨');
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to load data');
+      setError(err.message || '데이터를 불러오는데 실패했습니다');
     } finally {
       setLoading(false);
     }
@@ -91,7 +118,7 @@ export default function RunningPage() {
 
   const handleAnalyzeImage = async () => {
     if (!selectedImage) {
-      setError('Please select an image first');
+      setError('먼저 이미지를 선택해주세요');
       return;
     }
 
@@ -104,12 +131,12 @@ export default function RunningPage() {
       if (result.success && result.data) {
         setExtractedData(result.data);
         setEditingData(result.data);
-        setSuccess('Image analyzed successfully! Review and save the data below.');
+        setSuccess('이미지 분석이 완료되었습니다! 아래 데이터를 확인하고 저장하세요.');
       } else {
-        setError(result.error || 'Failed to analyze image');
+        setError(result.error || '이미지 분석에 실패했습니다');
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to analyze image');
+      setError(err.message || '이미지 분석에 실패했습니다');
     } finally {
       setAnalyzing(false);
     }
@@ -117,7 +144,7 @@ export default function RunningPage() {
 
   const handleSaveRecord = async () => {
     if (!editingData) {
-      setError('No data to save');
+      setError('저장할 데이터가 없습니다');
       return;
     }
 
@@ -131,35 +158,55 @@ export default function RunningPage() {
       } as any);
 
       if (result.success) {
-        setSuccess('Running record saved successfully!');
+        setSuccess('러닝 기록이 성공적으로 저장되었습니다!');
         setSelectedImage(null);
         setPreviewUrl(null);
         setExtractedData(null);
         setEditingData(null);
         loadData();
       } else {
-        setError(result.error || 'Failed to save record');
+        setError(result.error || '기록 저장에 실패했습니다');
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to save record');
+      setError(err.message || '기록 저장에 실패했습니다');
     } finally {
       setUploading(false);
     }
   };
 
   const handleDeleteRecord = async (id: string) => {
-    if (!confirm('Are you sure you want to delete this record?')) return;
+    if (!confirm('정말로 이 기록을 삭제하시겠습니까?')) return;
 
     try {
       const result = await deleteRunningRecord(id);
       if (result.success) {
-        setSuccess('Record deleted successfully');
+        setSuccess('기록이 성공적으로 삭제되었습니다');
         loadData();
       } else {
-        setError(result.error || 'Failed to delete record');
+        setError(result.error || '기록 삭제에 실패했습니다');
       }
     } catch (err: any) {
-      setError(err.message || 'Failed to delete record');
+      setError(err.message || '기록 삭제에 실패했습니다');
+    }
+  };
+
+  const handleAddCoaching = async (recordId: string) => {
+    setAddingCoaching(recordId);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const result = await addAICoachingToRecord(recordId);
+      if (result.success) {
+        setSuccess('AI 코칭이 성공적으로 추가되었습니다!');
+        loadData();
+      } else {
+        setError(result.error || 'AI 코칭 추가에 실패했습니다');
+      }
+    } catch (err: any) {
+      setError(err.message || 'AI 코칭 추가에 실패했습니다');
+    } finally {
+      setAddingCoaching(null);
     }
   };
 
@@ -185,7 +232,7 @@ export default function RunningPage() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <div className="inline-block animate-spin rounded-full h-12 w-12 border-b-2 border-teal-600"></div>
-            <p className="mt-4 text-gray-600 dark:text-gray-400">Loading...</p>
+            <p className="mt-4 text-gray-600 dark:text-gray-400">로딩 중...</p>
           </div>
         </div>
       </div>
@@ -198,10 +245,10 @@ export default function RunningPage() {
         {/* Header */}
         <div className="text-center mb-12">
           <h1 className="text-4xl font-display font-bold text-gray-900 dark:text-white mb-4">
-            Running Tracker
+            러닝 트래커
           </h1>
           <p className="text-lg text-gray-600 dark:text-gray-400">
-            AI-powered running records with personalized coaching
+            AI 기반 러닝 기록 및 개인 맞춤 코칭
           </p>
         </div>
 
@@ -217,12 +264,13 @@ export default function RunningPage() {
           </div>
         )}
 
-        {/* Upload Section */}
-        <Card className="mb-8">
-          <CardHeader>
-            <CardTitle>Upload Running Screenshot</CardTitle>
-          </CardHeader>
-          <CardContent>
+        {/* Upload Section - 관리자만 */}
+        {isAdmin && (
+          <Card className="mb-8">
+            <CardHeader>
+              <CardTitle>러닝 스크린샷 업로드 (관리자 전용)</CardTitle>
+            </CardHeader>
+            <CardContent>
             <div className="space-y-4">
               {/* File Input */}
               <div>
@@ -230,7 +278,7 @@ export default function RunningPage() {
                   htmlFor="running-image"
                   className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2"
                 >
-                  Select Image
+                  이미지 선택
                 </label>
                 <input
                   id="running-image"
@@ -248,7 +296,7 @@ export default function RunningPage() {
                 <div className="mt-4">
                   <img
                     src={previewUrl}
-                    alt="Preview"
+                    alt="미리보기"
                     className="max-w-full h-auto max-h-96 rounded-lg border border-gray-300 dark:border-gray-700"
                   />
                 </div>
@@ -256,33 +304,87 @@ export default function RunningPage() {
 
               {/* Analyze Button */}
               {selectedImage && !extractedData && (
+                <div className="flex gap-2">
+                  <Button
+                    onClick={handleAnalyzeImage}
+                    disabled={analyzing}
+                    className="flex-1"
+                  >
+                    {analyzing ? (
+                      <>
+                        <span className="inline-block animate-spin mr-2">⚙️</span>
+                        AI로 분석 중...
+                      </>
+                    ) : (
+                      <>AI로 이미지 분석하기</>
+                    )}
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      // 수동 입력 모드
+                      setEditingData({
+                        date: new Date().toISOString().split('T')[0],
+                        distance: null,
+                        duration_seconds: null,
+                        pace_minutes: null,
+                        calories: null,
+                        course: '',
+                        notes: '',
+                      });
+                    }}
+                    variant="outline"
+                    className="flex-1"
+                  >
+                    수동 입력
+                  </Button>
+                </div>
+              )}
+
+              {/* 이미지 없이도 수동 입력 가능 */}
+              {!selectedImage && !editingData && (
                 <Button
-                  onClick={handleAnalyzeImage}
-                  disabled={analyzing}
+                  onClick={() => {
+                    setEditingData({
+                      date: new Date().toISOString().split('T')[0],
+                      distance: null,
+                      duration_seconds: null,
+                      pace_minutes: null,
+                      calories: null,
+                      course: '',
+                      notes: '',
+                    });
+                  }}
+                  variant="outline"
                   className="w-full"
                 >
-                  {analyzing ? (
-                    <>
-                      <span className="inline-block animate-spin mr-2">⚙️</span>
-                      Analyzing with AI...
-                    </>
-                  ) : (
-                    <>Analyze Image with AI</>
-                  )}
+                  ✍️ 직접 입력하기
                 </Button>
               )}
 
               {/* Extracted Data Form */}
               {editingData && (
                 <div className="mt-6 p-6 bg-gray-50 dark:bg-gray-800 rounded-lg space-y-4">
+                  <div className="mb-4 p-4 bg-teal-50 dark:bg-teal-900/20 rounded-lg border border-teal-200 dark:border-teal-700">
+                    <h4 className="font-semibold text-teal-900 dark:text-teal-100 mb-2 flex items-center gap-2">
+                      <span>🤖</span>
+                      <span>AI 분석 완료!</span>
+                    </h4>
+                    <p className="text-sm text-teal-800 dark:text-teal-200">
+                      이미지에서 다음 정보를 자동으로 추출했습니다.
+                      {extractedData?.notes && (
+                        <span className="block mt-2 italic">💡 {extractedData.notes}</span>
+                      )}
+                    </p>
+                  </div>
+
                   <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-                    Review Extracted Data
+                    추출된 데이터 확인 및 수정
                   </h3>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Date
+                        날짜
                       </label>
                       <input
                         type="date"
@@ -297,7 +399,7 @@ export default function RunningPage() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Distance (km)
+                        거리 (km)
                       </label>
                       <input
                         type="number"
@@ -316,7 +418,7 @@ export default function RunningPage() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Duration (seconds)
+                        시간 (초)
                       </label>
                       <input
                         type="number"
@@ -334,7 +436,7 @@ export default function RunningPage() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Avg Pace (min/km)
+                        평균 페이스 (분/km)
                       </label>
                       <input
                         type="number"
@@ -353,7 +455,7 @@ export default function RunningPage() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Calories
+                        칼로리
                       </label>
                       <input
                         type="number"
@@ -371,7 +473,7 @@ export default function RunningPage() {
 
                     <div>
                       <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                        Course
+                        코스
                       </label>
                       <input
                         type="text"
@@ -381,14 +483,14 @@ export default function RunningPage() {
                         }
                         className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
                                  bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                        placeholder="Optional"
+                        placeholder="코스명을 입력하세요"
                       />
                     </div>
                   </div>
 
                   <div>
                     <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
-                      Notes
+                      메모
                     </label>
                     <textarea
                       value={editingData.notes || ''}
@@ -398,7 +500,7 @@ export default function RunningPage() {
                       rows={3}
                       className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 rounded-lg
                                bg-white dark:bg-gray-700 text-gray-900 dark:text-white"
-                      placeholder="Optional notes..."
+                      placeholder="러닝 중 느낀 점이나 특이사항을 입력하세요..."
                     />
                   </div>
 
@@ -407,13 +509,14 @@ export default function RunningPage() {
                     disabled={uploading}
                     className="w-full"
                   >
-                    {uploading ? 'Saving...' : 'Save Record'}
+                    {uploading ? '저장 중...' : '기록 저장'}
                   </Button>
                 </div>
               )}
             </div>
           </CardContent>
         </Card>
+        )}
 
         {/* Statistics Dashboard */}
         {stats && (
@@ -424,7 +527,7 @@ export default function RunningPage() {
                   {stats.total_distance.toFixed(1)} km
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
-                  Total Distance
+                  총 거리
                 </div>
               </CardContent>
             </Card>
@@ -435,7 +538,7 @@ export default function RunningPage() {
                   {stats.total_runs}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
-                  Total Runs
+                  총 달리기 횟수
                 </div>
               </CardContent>
             </Card>
@@ -446,7 +549,7 @@ export default function RunningPage() {
                   {formatPace(stats.average_pace)}
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
-                  Avg Pace
+                  평균 페이스
                 </div>
               </CardContent>
             </Card>
@@ -454,10 +557,10 @@ export default function RunningPage() {
             <Card variant="featured">
               <CardContent className="text-center py-6">
                 <div className="text-3xl font-bold text-pink-600 dark:text-pink-400 mb-2">
-                  {stats.this_week.distance.toFixed(1)} km
+                  {stats.longest_run.toFixed(1)} km
                 </div>
                 <div className="text-sm text-gray-600 dark:text-gray-400">
-                  This Week
+                  최장거리
                 </div>
               </CardContent>
             </Card>
@@ -466,56 +569,103 @@ export default function RunningPage() {
 
         {/* AI Coaching Panel */}
         {coaching && (
-          <Card className="mb-8 border-l-4 border-teal-500">
+          <Card className="mb-8 border-l-4 border-teal-500 bg-gradient-to-r from-teal-50 to-transparent dark:from-teal-900/10">
             <CardHeader>
-              <CardTitle>AI Coaching Advice</CardTitle>
+              <div className="flex items-center justify-between">
+                <CardTitle className="flex items-center gap-2">
+                  <span>🎯</span>
+                  <span>AI 코칭 조언</span>
+                </CardTitle>
+                {isAdmin && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => loadData(false)}
+                    disabled={loading}
+                    className="text-xs"
+                  >
+                    {loading ? '로딩 중...' : '🔄 AI 코칭 새로고침'}
+                  </Button>
+                )}
+              </div>
             </CardHeader>
             <CardContent>
-              <div className="space-y-4">
-                <p className="text-gray-700 dark:text-gray-300">
-                  {coaching.overall_assessment}
-                </p>
-
-                <div>
-                  <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
-                    Strengths:
+              <div className="space-y-6">
+                <div className="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-sm">
+                  <h4 className="font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                    <span>📊</span>
+                    <span>종합 평가</span>
                   </h4>
-                  <ul className="list-disc list-inside space-y-1 text-gray-700 dark:text-gray-300">
-                    {coaching.strengths.map((strength, i) => (
-                      <li key={i}>{strength}</li>
-                    ))}
-                  </ul>
+                  <p className="text-gray-700 dark:text-gray-300 leading-relaxed">
+                    {coaching.overall_assessment}
+                  </p>
                 </div>
 
-                <div>
-                  <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
-                    Areas for Improvement:
-                  </h4>
-                  <ul className="list-disc list-inside space-y-1 text-gray-700 dark:text-gray-300">
-                    {coaching.areas_for_improvement.map((area, i) => (
-                      <li key={i}>{area}</li>
-                    ))}
-                  </ul>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                    <h4 className="font-semibold text-green-900 dark:text-green-100 mb-3 flex items-center gap-2">
+                      <span>💪</span>
+                      <span>강점</span>
+                    </h4>
+                    <ul className="space-y-2 text-green-800 dark:text-green-200">
+                      {coaching.strengths.map((strength, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <span className="text-green-600 dark:text-green-400 mt-1">✓</span>
+                          <span>{strength}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+
+                  <div className="p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
+                    <h4 className="font-semibold text-orange-900 dark:text-orange-100 mb-3 flex items-center gap-2">
+                      <span>🎯</span>
+                      <span>개선 포인트</span>
+                    </h4>
+                    <ul className="space-y-2 text-orange-800 dark:text-orange-200">
+                      {coaching.areas_for_improvement.map((area, i) => (
+                        <li key={i} className="flex items-start gap-2">
+                          <span className="text-orange-600 dark:text-orange-400 mt-1">→</span>
+                          <span>{area}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
 
-                <div className="p-4 bg-teal-50 dark:bg-teal-900/20 rounded-lg">
-                  <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
-                    Weekly Goal:
+                <div className="p-5 bg-gradient-to-r from-teal-100 to-cyan-100 dark:from-teal-900/30 dark:to-cyan-900/30 rounded-lg border-2 border-teal-300 dark:border-teal-700">
+                  <h4 className="font-semibold text-teal-900 dark:text-teal-100 mb-3 flex items-center gap-2 text-lg">
+                    <span>🎪</span>
+                    <span>이번 주 목표</span>
                   </h4>
-                  <p className="text-gray-700 dark:text-gray-300">
+                  <p className="text-teal-800 dark:text-teal-200 leading-relaxed text-lg">
                     {coaching.weekly_goal_suggestion}
                   </p>
                 </div>
 
-                <div>
-                  <h4 className="font-semibold text-gray-900 dark:text-white mb-2">
-                    Training Tips:
+                <div className="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg border border-purple-200 dark:border-purple-800">
+                  <h4 className="font-semibold text-purple-900 dark:text-purple-100 mb-3 flex items-center gap-2">
+                    <span>💡</span>
+                    <span>훈련 팁</span>
                   </h4>
-                  <ul className="list-disc list-inside space-y-1 text-gray-700 dark:text-gray-300">
+                  <ul className="space-y-2 text-purple-800 dark:text-purple-200">
                     {coaching.training_tips.map((tip, i) => (
-                      <li key={i}>{tip}</li>
+                      <li key={i} className="flex items-start gap-2">
+                        <span className="text-purple-600 dark:text-purple-400 font-bold mt-1">{i + 1}.</span>
+                        <span>{tip}</span>
+                      </li>
                     ))}
                   </ul>
+                </div>
+
+                <div className="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg border border-blue-200 dark:border-blue-800">
+                  <h4 className="font-semibold text-blue-900 dark:text-blue-100 mb-3 flex items-center gap-2">
+                    <span>😴</span>
+                    <span>휴식 권장사항</span>
+                  </h4>
+                  <p className="text-blue-800 dark:text-blue-200 leading-relaxed">
+                    {coaching.rest_recommendation}
+                  </p>
                 </div>
               </div>
             </CardContent>
@@ -525,12 +675,12 @@ export default function RunningPage() {
         {/* Records List */}
         <Card>
           <CardHeader>
-            <CardTitle>Running History</CardTitle>
+            <CardTitle>러닝 기록</CardTitle>
           </CardHeader>
           <CardContent>
             {records.length === 0 ? (
               <p className="text-center text-gray-500 dark:text-gray-400 py-8">
-                No running records yet. Upload your first screenshot to get started!
+                아직 러닝 기록이 없습니다. 첫 스크린샷을 업로드하여 시작하세요!
               </p>
             ) : (
               <div className="space-y-4">
@@ -556,13 +706,106 @@ export default function RunningPage() {
                       </div>
                       {record.course && (
                         <p className="text-sm text-gray-600 dark:text-gray-400">
-                          Course: {record.course}
+                          코스: {record.course}
                         </p>
                       )}
                       {record.notes && (
                         <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">
                           {record.notes}
                         </p>
+                      )}
+                      {record.ai_analysis && (
+                        <div className="mt-2 p-3 bg-blue-50 dark:bg-blue-900/20 rounded border border-blue-200 dark:border-blue-800">
+                          <p className="text-xs font-semibold text-blue-900 dark:text-blue-100 mb-1">
+                            🤖 AI 분석
+                          </p>
+                          <p className="text-xs text-blue-800 dark:text-blue-200">
+                            {record.ai_analysis}
+                          </p>
+                        </div>
+                      )}
+                      {record.ai_advice && (() => {
+                        try {
+                          // Parse JSONB ai_advice
+                          const advice = typeof record.ai_advice === 'string'
+                            ? JSON.parse(record.ai_advice)
+                            : record.ai_advice;
+
+                          return (
+                            <div className="mt-3 p-4 bg-gradient-to-br from-purple-50 to-pink-50 dark:from-purple-900/20 dark:to-pink-900/20 rounded-lg border border-purple-200 dark:border-purple-700 space-y-3">
+                              <div className="flex items-center gap-2 mb-2">
+                                <span className="text-lg">🎯</span>
+                                <p className="text-sm font-bold text-purple-900 dark:text-purple-100">
+                                  이 날짜의 AI 코칭 조언
+                                </p>
+                              </div>
+
+                              <div className="text-xs text-purple-900 dark:text-purple-100 leading-relaxed">
+                                <p className="font-semibold mb-2">📊 종합 평가:</p>
+                                <p className="mb-3 pl-3 border-l-2 border-purple-300 dark:border-purple-600">
+                                  {advice.overall_assessment}
+                                </p>
+
+                                {advice.strengths && advice.strengths.length > 0 && (
+                                  <div className="mb-2">
+                                    <p className="font-semibold mb-1">💪 강점:</p>
+                                    <ul className="pl-3 space-y-1">
+                                      {advice.strengths.map((s: string, i: number) => (
+                                        <li key={i} className="text-green-700 dark:text-green-300">• {s}</li>
+                                      ))}
+                                    </ul>
+                                  </div>
+                                )}
+
+                                {advice.weekly_goal_suggestion && (
+                                  <div className="mt-2 p-2 bg-teal-100 dark:bg-teal-900/30 rounded">
+                                    <p className="font-semibold">🎪 목표: {advice.weekly_goal_suggestion}</p>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                          );
+                        } catch (e) {
+                          // Fallback for old string format
+                          return (
+                            <div className="mt-2 p-3 bg-purple-50 dark:bg-purple-900/20 rounded border border-purple-200 dark:border-purple-800">
+                              <p className="text-xs font-semibold text-purple-900 dark:text-purple-100 mb-1">
+                                💡 AI 조언
+                              </p>
+                              <p className="text-xs text-purple-800 dark:text-purple-200">
+                                {record.ai_advice as any}
+                              </p>
+                            </div>
+                          );
+                        }
+                      })()}
+                      {/* AI 코칭이 없는 경우 추가 버튼 표시 */}
+                      {!record.ai_advice && isAdmin && (
+                        <div className="mt-3 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600">
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-center gap-2">
+                              <span className="text-gray-600 dark:text-gray-400">🤖</span>
+                              <span className="text-sm text-gray-600 dark:text-gray-400">
+                                이 기록에 AI 코칭을 추가하시겠습니까?
+                              </span>
+                            </div>
+                            <Button
+                              onClick={() => handleAddCoaching(record.id)}
+                              disabled={addingCoaching === record.id}
+                              size="sm"
+                              variant="outline"
+                            >
+                              {addingCoaching === record.id ? (
+                                <>
+                                  <span className="inline-block animate-spin mr-2">⚙️</span>
+                                  생성 중...
+                                </>
+                              ) : (
+                                '✨ AI 코칭 추가'
+                              )}
+                            </Button>
+                          </div>
+                        </div>
                       )}
                       {record.image_url && (
                         <a
@@ -571,18 +814,20 @@ export default function RunningPage() {
                           rel="noopener noreferrer"
                           className="text-sm text-teal-600 dark:text-teal-400 hover:underline mt-2 inline-block"
                         >
-                          View Screenshot
+                          📷 스크린샷 보기
                         </a>
                       )}
                     </div>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => handleDeleteRecord(record.id)}
-                      className="text-red-600 hover:text-red-700"
-                    >
-                      Delete
-                    </Button>
+                    {isAdmin && (
+                      <Button
+                        variant="ghost"
+                        size="sm"
+                        onClick={() => handleDeleteRecord(record.id)}
+                        className="text-red-600 hover:text-red-700"
+                      >
+                        삭제
+                      </Button>
+                    )}
                   </div>
                 ))}
               </div>

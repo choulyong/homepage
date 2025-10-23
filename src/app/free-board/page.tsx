@@ -16,6 +16,7 @@ interface Post {
   id: string;
   title: string;
   content: string;
+  nickname: string | null;
   image_url: string | null;
   image_urls: string[] | null;
   view_count: number;
@@ -30,6 +31,8 @@ export default function FreeBoardPage() {
   const [showForm, setShowForm] = useState(false);
   const [title, setTitle] = useState('');
   const [content, setContent] = useState('');
+  const [nickname, setNickname] = useState('');
+  const [password, setPassword] = useState('');
   const [imageUrls, setImageUrls] = useState<string[]>([]);
   const [saving, setSaving] = useState(false);
 
@@ -59,40 +62,48 @@ export default function FreeBoardPage() {
   }, []);
 
   const handleWriteClick = () => {
-    if (!user) {
-      // 로그인하지 않은 경우 로그인 페이지로
-      if (confirm('로그인이 필요합니다. 로그인 페이지로 이동하시겠습니까?')) {
-        router.push('/login');
-      }
-      return;
-    }
     setShowForm(!showForm);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!user || !title.trim() || !content.trim()) return;
+
+    // 닉네임과 비밀번호 필수 입력
+    if (!title.trim() || !content.trim() || !nickname.trim() || !password.trim()) {
+      alert('제목, 내용, 닉네임, 비밀번호를 모두 입력해주세요.');
+      return;
+    }
+
+    if (password.length < 4) {
+      alert('비밀번호는 4자 이상 입력해주세요.');
+      return;
+    }
 
     setSaving(true);
 
-    const supabase = createClient();
+    try {
+      // 비밀번호 해싱을 위한 API 호출
+      const response = await fetch('/api/free-board', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: title.trim(),
+          content: content.trim(),
+          nickname: nickname.trim(),
+          password: password,
+          image_urls: imageUrls.length > 0 ? imageUrls : null,
+          user_id: user?.id || null,
+        }),
+      });
 
-    const { data, error } = await supabase
-      .from('free_board')
-      .insert({
-        user_id: user.id,
-        title: title.trim(),
-        content: content.trim(),
-        image_urls: imageUrls.length > 0 ? imageUrls : null,
-      })
-      .select()
-      .single();
+      if (!response.ok) {
+        throw new Error('게시글 작성에 실패했습니다.');
+      }
 
-    if (error) {
-      console.error('Error creating post:', error);
-      alert('게시글 작성에 실패했습니다.');
-    } else {
       // 목록 새로고침
+      const supabase = createClient();
       const { data: newPosts } = await supabase
         .from('free_board')
         .select('*')
@@ -103,9 +114,14 @@ export default function FreeBoardPage() {
       // 폼 초기화
       setTitle('');
       setContent('');
+      setNickname('');
+      setPassword('');
       setImageUrls([]);
       setShowForm(false);
       alert('게시글이 작성되었습니다!');
+    } catch (error) {
+      console.error('Error creating post:', error);
+      alert('게시글 작성에 실패했습니다.');
     }
 
     setSaving(false);
@@ -150,6 +166,38 @@ export default function FreeBoardPage() {
             새 게시글 작성
           </h2>
           <form onSubmit={handleSubmit} className="space-y-6">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                  닉네임 *
+                </label>
+                <input
+                  type="text"
+                  value={nickname}
+                  onChange={(e) => setNickname(e.target.value)}
+                  required
+                  maxLength={20}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  placeholder="닉네임 (최대 20자)"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
+                  비밀번호 * (수정/삭제 시 필요)
+                </label>
+                <input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  required
+                  minLength={4}
+                  maxLength={20}
+                  className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+                  placeholder="비밀번호 (4~20자)"
+                />
+              </div>
+            </div>
+
             <div>
               <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
                 제목 *
@@ -296,7 +344,7 @@ export default function FreeBoardPage() {
                   </p>
                   <div className="flex justify-between items-center text-xs text-gray-500 dark:text-gray-100">
                     <span>
-                      {new Date(post.created_at).toLocaleDateString('ko-KR')}
+                      {post.nickname || '익명'} • {new Date(post.created_at).toLocaleDateString('ko-KR')}
                     </span>
                     <span>조회 {post.view_count}</span>
                   </div>

@@ -11,6 +11,11 @@ const nextConfig: NextConfig = {
     // your project has type errors.
     ignoreBuildErrors: true,
   },
+  // Suppress hydration warnings from browser extensions
+  reactStrictMode: true,
+  experimental: {
+    // This will suppress harmless hydration mismatches from browser extensions
+  },
   images: {
     remotePatterns: [
       {

@@ -7,7 +7,7 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { createClient } from '@/lib/supabase/client';
-import { crawlYouTubeVideos } from '@/app/actions/crawl';
+import { crawlYouTubeVideos, fixYouTubeThumbnails } from '@/app/actions/crawl';
 import { Card } from '@/components/ui/Card';
 import { Button } from '@/components/ui/Button';
 import Image from 'next/image';
@@ -19,6 +19,7 @@ export default function YouTubePage() {
   const [videos, setVideos] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [crawling, setCrawling] = useState(false);
+  const [fixing, setFixing] = useState(false);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
   const [sortOrder, setSortOrder] = useState<SortOrder>('newest');
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null);
@@ -47,10 +48,15 @@ export default function YouTubePage() {
   const loadVideos = useCallback(async () => {
     const supabase = createClient();
 
-    const { data: videosData } = await supabase
+    const { data: videosData, error } = await supabase
       .from('youtube_videos')
       .select('*')
-      .order('published_at', { ascending: sortOrder === 'oldest' });
+      .order('published_at', { ascending: sortOrder === 'oldest', nullsFirst: false });
+
+    console.log('🔍 loadVideos - Total videos fetched:', videosData?.length || 0);
+    if (error) {
+      console.error('❌ loadVideos error:', error);
+    }
 
     setVideos(videosData || []);
     setLoading(false);
@@ -73,6 +79,26 @@ export default function YouTubePage() {
       setMessage({ type: 'error', text: error.message || '크롤링에 실패했습니다.' });
     } finally {
       setCrawling(false);
+    }
+  };
+
+  const handleFixThumbnails = async () => {
+    setFixing(true);
+    setMessage(null);
+
+    try {
+      const result = await fixYouTubeThumbnails();
+
+      if (result.success) {
+        setMessage({ type: 'success', text: result.message });
+        await loadVideos();
+      } else {
+        setMessage({ type: 'error', text: result.message });
+      }
+    } catch (error: any) {
+      setMessage({ type: 'error', text: error.message || '썸네일 수정에 실패했습니다.' });
+    } finally {
+      setFixing(false);
     }
   };
 
@@ -121,9 +147,14 @@ export default function YouTubePage() {
               노래 커버와 연주 영상을 공유합니다
             </p>
           </div>
-          <Button variant="primary" onClick={handleRefresh} disabled={crawling}>
-            {crawling ? '🔄 새로고침 중...' : '🔄 새로고침'}
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="secondary" onClick={handleFixThumbnails} disabled={fixing}>
+              {fixing ? '🔧 수정 중...' : '🔧 썸네일 수정'}
+            </Button>
+            <Button variant="primary" onClick={handleRefresh} disabled={crawling}>
+              {crawling ? '🔄 새로고침 중...' : '🔄 새로고침'}
+            </Button>
+          </div>
         </div>
 
         {/* 정렬 옵션 */}

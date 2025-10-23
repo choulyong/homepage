@@ -11,14 +11,20 @@ import { Card } from '@/components/ui/Card';
 import Image from 'next/image';
 import { cn } from '@/lib/utils';
 
-type CategoryFilter = 'all' | 'tech' | 'business' | 'world' | 'science' | 'ai' | 'korea';
+type CategoryFilter = 'all' | 'tech' | 'business' | 'world' | 'science' | 'ai' | 'korea' | 'entertainment' | 'movie' | 'economy' | 'sports' | 'health' | 'culture';
 
 const CATEGORY_TABS = [
   { value: 'all', label: '전체', color: 'teal' },
   { value: 'tech', label: '기술', color: 'blue' },
   { value: 'business', label: '비즈니스', color: 'green' },
+  { value: 'economy', label: '경제', color: 'emerald' },
+  { value: 'entertainment', label: '연예', color: 'rose' },
+  { value: 'movie', label: '영화', color: 'amber' },
+  { value: 'sports', label: '스포츠', color: 'orange' },
   { value: 'world', label: '세계', color: 'purple' },
   { value: 'science', label: '과학', color: 'pink' },
+  { value: 'health', label: '건강', color: 'cyan' },
+  { value: 'culture', label: '문화', color: 'violet' },
   { value: 'ai', label: 'AI', color: 'teal' },
   { value: 'korea', label: '한국', color: 'red' },
 ] as const;
@@ -36,12 +42,46 @@ export default function NewsPage() {
     loadNews();
   }, [selectedCategory]);
 
-  // 자동 새로고침 (5분마다)
+  // 페이지로 돌아왔을 때 자동 새로고침
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible' && autoRefresh) {
+        // 마지막 업데이트로부터 3분 이상 지났으면 새로고침
+        const timeSinceUpdate = Date.now() - lastUpdated.getTime();
+        if (timeSinceUpdate > 3 * 60 * 1000) {
+          loadNews();
+        }
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => document.removeEventListener('visibilitychange', handleVisibilityChange);
+  }, [autoRefresh, lastUpdated]);
+
+  // 자동 새로고침 (5분마다) - 페이지를 벗어나도 계속 실행
   useEffect(() => {
     if (!autoRefresh) return;
 
     const interval = setInterval(() => {
-      loadNews();
+      // 백그라운드에서도 계속 새로고침
+      const supabase = createClient();
+
+      let query = supabase
+        .from('news')
+        .select('*')
+        .order('published_at', { ascending: false })
+        .limit(50);
+
+      if (selectedCategory !== 'all') {
+        query = query.eq('category', selectedCategory);
+      }
+
+      query.then(({ data }) => {
+        if (data) {
+          setNews(data);
+          setLastUpdated(new Date());
+        }
+      });
     }, 5 * 60 * 1000); // 5분
 
     return () => clearInterval(interval);
@@ -113,10 +153,22 @@ export default function NewsPage() {
         return 'bg-blue-500 text-white';
       case 'business':
         return 'bg-green-500 text-white';
+      case 'economy':
+        return 'bg-emerald-500 text-white';
+      case 'entertainment':
+        return 'bg-rose-500 text-white';
+      case 'movie':
+        return 'bg-amber-500 text-white';
+      case 'sports':
+        return 'bg-orange-500 text-white';
       case 'world':
         return 'bg-purple-500 text-white';
       case 'science':
         return 'bg-pink-500 text-white';
+      case 'health':
+        return 'bg-cyan-500 text-white';
+      case 'culture':
+        return 'bg-violet-500 text-white';
       case 'ai':
         return 'bg-teal-500 text-white';
       case 'korea':
@@ -132,10 +184,22 @@ export default function NewsPage() {
         return '기술';
       case 'business':
         return '비즈니스';
+      case 'economy':
+        return '경제';
+      case 'entertainment':
+        return '연예';
+      case 'movie':
+        return '영화';
+      case 'sports':
+        return '스포츠';
       case 'world':
         return '세계';
       case 'science':
         return '과학';
+      case 'health':
+        return '건강';
+      case 'culture':
+        return '문화';
       case 'ai':
         return 'AI';
       case 'korea':
@@ -165,7 +229,7 @@ export default function NewsPage() {
               뉴스
             </h1>
             <p className="text-lg text-gray-600 dark:text-gray-300">
-              기술, 비즈니스, 세계, 과학, AI 등 다양한 분야의 최신 뉴스
+              기술, 경제, 연예, 영화, 스포츠, 세계, 과학, 건강, 문화, AI 등 다양한 분야의 최신 뉴스
             </p>
           </div>
 

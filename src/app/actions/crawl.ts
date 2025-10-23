@@ -5,7 +5,7 @@
 
 'use server';
 
-import { createClient } from '@/lib/supabase/server';
+import { createServiceClient } from '@/lib/supabase/server';
 
 // YouTube Channel ID
 // Channel ID를 사용하는 것이 가장 안정적입니다
@@ -21,24 +21,32 @@ const YOUTUBE_CHANNEL_ID = 'UCs2Tc_WvHSbqTf_qGAWNaqw'; // Metaldragon YouTube Ch
  */
 export async function crawlYouTubeVideos() {
   try {
+    console.log('\n🎬 ========== YouTube 크롤링 시작 ==========');
     // Channel ID가 설정되지 않은 경우
     if (YOUTUBE_CHANNEL_ID === 'UCYour_Channel_ID_Here') {
       throw new Error('YouTube Channel ID를 설정해주세요. crawl.ts 파일의 YOUTUBE_CHANNEL_ID 변수를 수정하세요.');
     }
 
     const API_KEY = process.env.YOUTUBE_API_KEY;
+    console.log(`🔑 API KEY 존재 여부: ${API_KEY ? '✅ 있음' : '❌ 없음 (RSS 사용)'}`);
 
     // API KEY가 없으면 RSS Feed 사용 (최근 15개만)
     if (!API_KEY) {
+      console.log('📡 RSS Feed로 크롤링합니다...');
       return await crawlYouTubeVideosRSS();
     }
 
-    const supabase = await createClient();
+    const supabase = createServiceClient();
     let addedCount = 0;
+    let duplicateCount = 0;
+    let errorCount = 0;
     let pageToken = '';
     let totalFetched = 0;
     const MAX_RESULTS = 50; // 한 번에 가져올 영상 수 (최대 50)
     const MAX_PAGES = 10; // 최대 페이지 수 (총 500개까지)
+
+    console.log(`📺 채널 ID: ${YOUTUBE_CHANNEL_ID}`);
+    console.log(`📊 최대 ${MAX_PAGES}페이지 (페이지당 ${MAX_RESULTS}개) 크롤링 예정\n`);
 
     // 여러 페이지에 걸쳐 영상 가져오기
     for (let page = 0; page < MAX_PAGES; page++) {
@@ -53,6 +61,7 @@ export async function crawlYouTubeVideos() {
         url.searchParams.set('pageToken', pageToken);
       }
 
+      console.log(`📄 페이지 ${page + 1} 요청 중...`);
       const response = await fetch(url.toString(), { cache: 'no-store' });
 
       if (!response.ok) {
@@ -60,6 +69,20 @@ export async function crawlYouTubeVideos() {
       }
 
       const data = await response.json();
+      const itemCount = data.items?.length || 0;
+      console.log(`   ✓ ${itemCount}개 영상 받음`);
+
+      // 첫 5개 영상만 상세 로그
+      if (page === 0 && itemCount > 0) {
+        console.log('\n📋 최신 영상 5개:');
+        for (let i = 0; i < Math.min(5, itemCount); i++) {
+          const item = data.items[i];
+          console.log(`   ${i + 1}. ${item.snippet.title}`);
+          console.log(`      ID: ${item.id.videoId}`);
+          console.log(`      게시일: ${new Date(item.snippet.publishedAt).toLocaleString('ko-KR')}`);
+        }
+        console.log('');
+      }
 
       // 영상 처리
       for (const item of data.items || []) {
@@ -67,25 +90,37 @@ export async function crawlYouTubeVideos() {
         const title = item.snippet.title;
         const publishedAt = item.snippet.publishedAt;
 
-        // 중복 확인
-        const { data: existing } = await supabase
+        // 중복 확인 (maybeSingle 사용)
+        const { data: existing, error: checkError } = await supabase
           .from('youtube_videos')
           .select('id')
           .eq('video_id', videoId)
-          .single();
+          .maybeSingle();
+
+        if (checkError) {
+          console.error(`❌ 중복 체크 에러 (${videoId}):`, checkError);
+          errorCount++;
+          continue;
+        }
 
         if (!existing) {
-          const { error } = await supabase.from('youtube_videos').insert({
+          const { error: insertError } = await supabase.from('youtube_videos').insert({
             video_id: videoId,
             title: title,
             youtube_url: `https://www.youtube.com/watch?v=${videoId}`,
-            thumbnail_url: `https://i.ytimg.com/vi/${videoId}/maxresdefault.jpg`,
+            thumbnail_url: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
             published_at: publishedAt,
           });
 
-          if (!error) {
+          if (!insertError) {
             addedCount++;
+            console.log(`✅ 새 영상 추가: ${title}`);
+          } else {
+            console.error(`❌ 영상 추가 실패 (${videoId}):`, insertError);
+            errorCount++;
           }
+        } else {
+          duplicateCount++;
         }
       }
 
@@ -93,11 +128,19 @@ export async function crawlYouTubeVideos() {
 
       // 다음 페이지가 없으면 종료
       if (!data.nextPageToken) {
+        console.log(`\n⏹️  마지막 페이지 (페이지 ${page + 1})`);
         break;
       }
 
       pageToken = data.nextPageToken;
     }
+
+    console.log('\n📊 ========== 크롤링 완료 ==========');
+    console.log(`   ✅ 새로 추가: ${addedCount}개`);
+    console.log(`   ⏭️  중복 스킵: ${duplicateCount}개`);
+    console.log(`   ❌ 에러: ${errorCount}개`);
+    console.log(`   📊 총 확인: ${totalFetched}개`);
+    console.log('========================================\n');
 
     return {
       success: true,
@@ -138,31 +181,50 @@ async function crawlYouTubeVideosRSS() {
       /<entry>[\s\S]*?<yt:videoId>(.*?)<\/yt:videoId>[\s\S]*?<title>(.*?)<\/title>[\s\S]*?<published>(.*?)<\/published>[\s\S]*?<\/entry>/g
     );
 
-    const supabase = await createClient();
+    const supabase = createServiceClient();
     let addedCount = 0;
+    let duplicateCount = 0;
+    const videos = Array.from(videoMatches);
 
-    for (const match of videoMatches) {
+    console.log(`📺 RSS에서 ${videos.length}개 영상 발견\n`);
+
+    for (const match of videos) {
       const [, videoId, title, published] = match;
+      const cleanTitle = title.replace(/<!\[CDATA\[|\]\]>/g, '');
 
-      const { data: existing } = await supabase
+      const { data: existing, error: checkError } = await supabase
         .from('youtube_videos')
         .select('id')
         .eq('video_id', videoId)
-        .single();
+        .maybeSingle();
+
+      if (checkError) {
+        console.error(`❌ 중복 체크 에러 (${videoId}):`, checkError);
+        continue;
+      }
 
       if (!existing) {
-        const { error } = await supabase.from('youtube_videos').insert({
+        const { error: insertError } = await supabase.from('youtube_videos').insert({
           video_id: videoId,
-          title: title.replace(/<!\[CDATA\[|\]\]>/g, ''),
+          title: cleanTitle,
           youtube_url: `https://www.youtube.com/watch?v=${videoId}`,
-          thumbnail_url: `https://i.ytimg.com/vi/${videoId}/mqdefault.jpg`,
+          thumbnail_url: `https://i.ytimg.com/vi/${videoId}/hqdefault.jpg`,
+          published_at: published,
         });
 
-        if (!error) {
+        if (!insertError) {
           addedCount++;
+          console.log(`✅ 새 영상 추가 (RSS): ${cleanTitle}`);
+        } else {
+          console.error(`❌ 영상 추가 실패 (${videoId}):`, insertError);
         }
+      } else {
+        duplicateCount++;
+        console.log(`⏭️  중복 스킵: ${cleanTitle.substring(0, 60)}...`);
       }
     }
+
+    console.log(`\n📊 RSS 크롤링 완료: 추가 ${addedCount}개 / 중복 ${duplicateCount}개`)
 
     return {
       success: true,
@@ -179,33 +241,53 @@ async function crawlYouTubeVideosRSS() {
  */
 const RSS_FEEDS = {
   technology: [
-    { name: '네이버 IT/과학', url: 'https://news.naver.com/rss/digital.xml', category: 'tech' },
     { name: 'TechCrunch', url: 'https://techcrunch.com/feed/', category: 'tech' },
     { name: 'The Verge', url: 'https://www.theverge.com/rss/index.xml', category: 'tech' },
     { name: 'Ars Technica', url: 'https://feeds.arstechnica.com/arstechnica/index', category: 'tech' },
   ],
   business: [
-    { name: '네이버 경제', url: 'https://news.naver.com/rss/economy.xml', category: 'business' },
     { name: 'CNBC Business', url: 'https://www.cnbc.com/id/10001147/device/rss/rss.html', category: 'business' },
     { name: 'MarketWatch', url: 'https://feeds.marketwatch.com/marketwatch/topstories/', category: 'business' },
     { name: 'Google News Business', url: 'https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx6TVdZU0FtdHZHZ0pMVWlnQVAB?hl=ko&gl=KR&ceid=KR:ko', category: 'business' },
   ],
+  economy: [
+    { name: 'Google News 경제', url: 'https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx6TVdZU0FtdHZHZ0pMVWlnQVAB?hl=ko&gl=KR&ceid=KR:ko', category: 'economy' },
+    { name: 'Bloomberg', url: 'https://www.bloomberg.com/feed/podcast/bloomberg-markets.xml', category: 'economy' },
+  ],
+  entertainment: [
+    { name: 'Google News 연예', url: 'https://news.google.com/rss/search?q=연예+OR+연예인+OR+아이돌&hl=ko&gl=KR&ceid=KR:ko', category: 'entertainment' },
+    { name: 'Variety', url: 'https://variety.com/feed/', category: 'entertainment' },
+  ],
+  movie: [
+    { name: 'Google News 영화', url: 'https://news.google.com/rss/search?q=영화+OR+극장+OR+박스오피스&hl=ko&gl=KR&ceid=KR:ko', category: 'movie' },
+    { name: 'IMDb News', url: 'https://www.imdb.com/news/rss/', category: 'movie' },
+    { name: 'Hollywood Reporter', url: 'https://www.hollywoodreporter.com/feed/', category: 'movie' },
+  ],
+  sports: [
+    { name: 'Google News 스포츠', url: 'https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRFp1ZEdvU0FtdHZHZ0pMVWlnQVAB?hl=ko&gl=KR&ceid=KR:ko', category: 'sports' },
+    { name: 'ESPN', url: 'https://www.espn.com/espn/rss/news', category: 'sports' },
+  ],
   world: [
-    { name: '네이버 세계', url: 'https://news.naver.com/rss/world.xml', category: 'world' },
     { name: 'BBC World', url: 'http://feeds.bbci.co.uk/news/world/rss.xml', category: 'world' },
     { name: 'CNN World', url: 'http://rss.cnn.com/rss/edition_world.rss', category: 'world' },
     { name: 'Google News World', url: 'https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx1YlY4U0FtdHZHZ0pMVWlnQVAB?hl=ko&gl=KR&ceid=KR:ko', category: 'world' },
   ],
   science: [
     { name: 'Science Daily', url: 'https://www.sciencedaily.com/rss/all.xml', category: 'science' },
+    { name: 'Google News 과학', url: 'https://news.google.com/rss/search?q=과학+OR+연구&hl=ko&gl=KR&ceid=KR:ko', category: 'science' },
+  ],
+  health: [
+    { name: 'Google News 건강', url: 'https://news.google.com/rss/search?q=건강+OR+의학+OR+질병&hl=ko&gl=KR&ceid=KR:ko', category: 'health' },
+    { name: 'WebMD Health', url: 'https://www.webmd.com/rss/rss.aspx?RSSSource=RSS_PUBLIC', category: 'health' },
+    { name: 'NIH News', url: 'https://www.nih.gov/news-events/news-releases/rss', category: 'health' },
+  ],
+  culture: [
+    { name: 'Google News 문화', url: 'https://news.google.com/rss/search?q=문화+OR+예술+OR+전시&hl=ko&gl=KR&ceid=KR:ko', category: 'culture' },
   ],
   ai: [
     { name: 'Google News AI', url: 'https://news.google.com/rss/search?q=artificial+intelligence+OR+AI+OR+machine+learning&hl=ko&gl=KR&ceid=KR:ko', category: 'ai' },
   ],
   korea: [
-    { name: '네이버 뉴스 메인', url: 'https://news.naver.com/rss/index.xml', category: 'korea' },
-    { name: '네이버 정치', url: 'https://news.naver.com/rss/politics.xml', category: 'korea' },
-    { name: '네이버 사회', url: 'https://news.naver.com/rss/society.xml', category: 'korea' },
     { name: 'Google News Korea', url: 'https://news.google.com/rss?hl=ko&gl=KR&ceid=KR:ko', category: 'korea' },
   ],
 };
@@ -215,6 +297,9 @@ const RSS_FEEDS = {
  */
 async function crawlSingleFeed(feedUrl: string, feedName: string, category: string, limit: number = 5) {
   try {
+    console.log(`\n🔍 크롤링 시작: ${feedName} (${category})`);
+    console.log(`📡 URL: ${feedUrl}`);
+
     const response = await fetch(feedUrl, {
       cache: 'no-store',
       headers: {
@@ -223,12 +308,14 @@ async function crawlSingleFeed(feedUrl: string, feedName: string, category: stri
     });
 
     if (!response.ok) {
-      console.warn(`Failed to fetch ${feedName}: ${response.status}`);
+      console.warn(`❌ Fetch 실패 ${feedName}: ${response.status}`);
       return { added: 0, errors: 1 };
     }
 
     const xmlText = await response.text();
-    const supabase = await createClient();
+    console.log(`📄 XML 길이: ${xmlText.length} bytes`);
+
+    const supabase = createServiceClient();
     let addedCount = 0;
 
     // RSS 2.0 형식 파싱
@@ -236,17 +323,25 @@ async function crawlSingleFeed(feedUrl: string, feedName: string, category: stri
       /<item>[\s\S]*?<title>(.*?)<\/title>[\s\S]*?<link>(.*?)<\/link>[\s\S]*?(?:<pubDate>(.*?)<\/pubDate>)?[\s\S]*?(?:<description>(.*?)<\/description>)?[\s\S]*?<\/item>/g
     );
 
-    for (const match of itemMatches) {
+    const items = Array.from(itemMatches);
+    console.log(`📰 발견된 아이템 수: ${items.length}`);
+
+    for (const match of items) {
       if (addedCount >= limit) break;
 
       const [, title, link, pubDate, description] = match;
 
-      // 중복 확인
-      const { data: existing } = await supabase
+      // 중복 확인 (maybeSingle 사용)
+      const { data: existing, error: checkError } = await supabase
         .from('news')
         .select('id')
         .eq('url', link)
-        .single();
+        .maybeSingle();
+
+      if (checkError) {
+        console.error(`❌ 중복 체크 에러:`, checkError);
+        continue;
+      }
 
       if (!existing) {
         const cleanTitle = title.replace(/<!\[CDATA\[|\]\]>|<[^>]*>/g, '').trim();
@@ -254,7 +349,7 @@ async function crawlSingleFeed(feedUrl: string, feedName: string, category: stri
           ? description.replace(/<!\[CDATA\[|\]\]>|<[^>]*>/g, '').trim().substring(0, 500)
           : '';
 
-        const { error } = await supabase.from('news').insert({
+        const { error: insertError } = await supabase.from('news').insert({
           title: cleanTitle,
           description: cleanDescription,
           url: link,
@@ -263,15 +358,21 @@ async function crawlSingleFeed(feedUrl: string, feedName: string, category: stri
           published_at: pubDate ? new Date(pubDate).toISOString() : new Date().toISOString(),
         });
 
-        if (!error) {
+        if (!insertError) {
           addedCount++;
+          console.log(`✅ 추가: ${cleanTitle.substring(0, 50)}...`);
+        } else {
+          console.error(`❌ 추가 실패:`, insertError);
         }
+      } else {
+        console.log(`⏭️  중복: ${title.replace(/<!\[CDATA\[|\]\]>|<[^>]*>/g, '').trim().substring(0, 50)}...`);
       }
     }
 
+    console.log(`✨ ${feedName} 완료: ${addedCount}개 추가\n`);
     return { added: addedCount, errors: 0 };
   } catch (error: any) {
-    console.error(`RSS 크롤링 에러 (${feedName}):`, error.message);
+    console.error(`❌ RSS 크롤링 에러 (${feedName}):`, error.message);
     return { added: 0, errors: 1 };
   }
 }
@@ -400,6 +501,81 @@ export async function getYouTubeChannelId(usernameOrUrl: string) {
       success: false,
       message: error.message,
       channelId: null,
+    };
+  }
+}
+
+/**
+ * 모든 YouTube 썸네일 URL을 hqdefault.jpg로 업데이트
+ * maxresdefault.jpg는 일부 영상에서 404 오류 발생
+ */
+export async function fixYouTubeThumbnails() {
+  try {
+    console.log('\n🔧 ========== 썸네일 URL 수정 시작 ==========');
+
+    const supabase = createServiceClient();
+
+    // maxresdefault.jpg 사용하는 영상 개수 확인
+    const { count: beforeCount } = await supabase
+      .from('youtube_videos')
+      .select('*', { count: 'exact', head: true })
+      .like('thumbnail_url', '%maxresdefault.jpg%');
+
+    console.log(`📊 수정 대상: ${beforeCount}개`);
+
+    if (beforeCount === 0) {
+      return {
+        success: true,
+        message: '수정할 썸네일이 없습니다. 모든 썸네일이 이미 hqdefault.jpg를 사용 중입니다.',
+        count: 0,
+      };
+    }
+
+    // maxresdefault.jpg 사용하는 모든 영상 가져오기
+    const { data: videos, error: fetchError } = await supabase
+      .from('youtube_videos')
+      .select('id, video_id, thumbnail_url')
+      .like('thumbnail_url', '%maxresdefault.jpg%');
+
+    if (fetchError) {
+      console.error('❌ 데이터 가져오기 실패:', fetchError);
+      throw fetchError;
+    }
+
+    let updatedCount = 0;
+
+    // 각 영상의 썸네일 URL 업데이트
+    for (const video of videos || []) {
+      const newUrl = video.thumbnail_url.replace('maxresdefault.jpg', 'hqdefault.jpg');
+
+      const { error: updateError } = await supabase
+        .from('youtube_videos')
+        .update({ thumbnail_url: newUrl })
+        .eq('id', video.id);
+
+      if (!updateError) {
+        updatedCount++;
+        if (updatedCount % 50 === 0) {
+          console.log(`   진행 중... ${updatedCount}/${videos.length}`);
+        }
+      } else {
+        console.error(`❌ 업데이트 실패 (${video.video_id}):`, updateError);
+      }
+    }
+
+    console.log(`✅ ${updatedCount}개 썸네일 URL 업데이트 완료`);
+    console.log('========================================\n');
+
+    return {
+      success: true,
+      message: `${updatedCount}개의 썸네일 URL을 hqdefault.jpg로 수정했습니다.`,
+      count: updatedCount,
+    };
+  } catch (error: any) {
+    console.error('썸네일 수정 에러:', error);
+    return {
+      success: false,
+      message: error.message || '썸네일 URL 수정에 실패했습니다.',
     };
   }
 }

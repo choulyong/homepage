@@ -209,7 +209,7 @@ export default function MovieDetailPage() {
 
             {/* Like Button */}
             <div className="mt-8 pt-6 border-t border-gray-200 dark:border-gray-700">
-              <LikeButton targetType="movie" targetId={parseInt(movie.id)} />
+              <LikeButton targetType="movie" targetId={movie.id} />
             </div>
 
             {/* Action Buttons (Author Only) */}
@@ -228,7 +228,7 @@ export default function MovieDetailPage() {
             )}
 
             {/* Comments Section */}
-            <CommentsSection targetType="movie" targetId={parseInt(movie.id)} />
+            <CommentsSection targetType="movie" targetId={movie.id} />
           </Card>
         </div>
       </div>

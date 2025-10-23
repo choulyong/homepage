@@ -78,7 +78,7 @@ const DateCellWrapper: React.FC<{
   return (
     <div className="relative w-full h-full">
       {isFirstDayOfWeek && (
-        <div className="absolute top-0 left-0 md:top-1 md:left-1 text-[7px] md:text-[10px] font-bold text-teal-600 dark:text-teal-400 bg-teal-50 dark:bg-teal-900/30 px-0.5 py-0 md:px-1.5 md:py-0.5 rounded z-10">
+        <div className="absolute top-0 left-0 md:top-1 md:left-1 text-[7px] md:text-[10px] font-bold text-teal-600 dark:text-white bg-teal-50 dark:bg-teal-600 px-0.5 py-0 md:px-1.5 md:py-0.5 rounded z-10">
           W{weekNumber}
         </div>
       )}
@@ -110,9 +110,21 @@ export default function SchedulePage() {
 
   const loadEvents = useCallback(async () => {
     const supabase = createClient();
+
+    // 현재 로그인한 사용자 확인
+    const { data: { user } } = await supabase.auth.getUser();
+
+    if (!user) {
+      // 로그인하지 않은 경우 공휴일만 표시
+      setEvents([...KOREAN_HOLIDAYS_2025]);
+      return;
+    }
+
+    // 현재 사용자의 일정만 가져오기
     const { data } = await supabase
       .from('schedules')
       .select('*')
+      .eq('user_id', user.id)
       .order('start_time', { ascending: true });
 
     const userEvents = data
@@ -129,13 +141,47 @@ export default function SchedulePage() {
         }))
       : [];
 
+    console.log('📅 일정 로드:', {
+      userId: user.id,
+      eventCount: userEvents.length,
+      events: userEvents.map(e => ({ title: e.title, start: e.start, end: e.end }))
+    });
+
     // 사용자 일정 + 공휴일 데이터 병합
     setEvents([...userEvents, ...KOREAN_HOLIDAYS_2025]);
   }, []);
 
   const loadPublicEvents = useCallback(async () => {
-    // Google Calendar 기능 제거 - 공휴일만 표시
-    setPublicEvents([...KOREAN_HOLIDAYS_2025]);
+    const supabase = createClient();
+
+    // 모든 공개 일정 조회 (is_public = true)
+    const { data } = await supabase
+      .from('schedules')
+      .select('*')
+      .eq('is_public', true)
+      .order('start_time', { ascending: true });
+
+    const publicUserEvents = data
+      ? data.map((event) => ({
+          id: event.id,
+          title: event.title,
+          description: event.description,
+          start: new Date(event.start_time),
+          end: new Date(event.end_time),
+          color: event.color,
+          isPublic: event.is_public,
+          isAllDay: event.is_all_day,
+          repeatType: event.repeat_type,
+        }))
+      : [];
+
+    console.log('📅 공개 일정 로드:', {
+      publicEventCount: publicUserEvents.length,
+      events: publicUserEvents.map(e => ({ title: e.title, start: e.start, end: e.end }))
+    });
+
+    // 공개 일정 + 공휴일 데이터 병합
+    setPublicEvents([...publicUserEvents, ...KOREAN_HOLIDAYS_2025]);
   }, []);
 
   useEffect(() => {
@@ -353,9 +399,10 @@ export default function SchedulePage() {
           }
 
           .dark .calendar-container .rbc-header {
-            color: #e5e7eb;
+            color: #ffffff;
+            font-weight: 800;
             border-bottom-color: #374151;
-            background: #1f2937;
+            background: #111827;
           }
 
           /* 오늘 날짜 배경 */
@@ -530,7 +577,8 @@ export default function SchedulePage() {
           }
 
           .dark .calendar-container .rbc-button-link {
-            color: #f3f4f6;
+            color: #ffffff;
+            font-weight: 700;
           }
 
           /* 일요일 (빨간색) */
@@ -547,12 +595,14 @@ export default function SchedulePage() {
 
           .dark .calendar-container .rbc-row .rbc-date-cell:first-child .rbc-button-link,
           .dark .calendar-container .rbc-header:first-child {
-            color: #f87171 !important;
+            color: #fca5a5 !important;
+            font-weight: 900 !important;
           }
 
           .dark .calendar-container .rbc-row .rbc-date-cell:nth-child(7) .rbc-button-link,
           .dark .calendar-container .rbc-header:nth-child(7) {
-            color: #60a5fa !important;
+            color: #93c5fd !important;
+            font-weight: 900 !important;
           }
 
           /* 툴바 - 모바일 최적화 */
@@ -578,7 +628,7 @@ export default function SchedulePage() {
           }
 
           .dark .calendar-container .rbc-toolbar {
-            background: #1f2937;
+            background: #111827;
             border-color: #374151;
           }
 
@@ -603,9 +653,10 @@ export default function SchedulePage() {
           }
 
           .dark .calendar-container .rbc-toolbar button {
-            color: #f9fafb;
-            background: #374151;
-            border-color: #4b5563;
+            color: #ffffff;
+            background: #4b5563;
+            border-color: #6b7280;
+            font-weight: 700;
           }
 
           .calendar-container .rbc-toolbar button:hover {
@@ -615,7 +666,7 @@ export default function SchedulePage() {
           }
 
           .dark .calendar-container .rbc-toolbar button:hover {
-            background: #4b5563;
+            background: #6b7280;
             border-color: #14b8a6;
           }
 
@@ -648,7 +699,8 @@ export default function SchedulePage() {
           }
 
           .dark .calendar-container .rbc-toolbar .rbc-toolbar-label {
-            color: #f9fafb;
+            color: #ffffff;
+            font-weight: 900;
           }
 
           /* 툴바 버튼 그룹 */

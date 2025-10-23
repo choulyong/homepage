@@ -46,17 +46,32 @@ export function NotificationDropdown() {
   const loadNotifications = async () => {
     try {
       const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user }, error: authError } = await supabase.auth.getUser();
 
-      if (!user) return;
+      // 인증 에러나 로그인하지 않은 경우 조용히 종료
+      if (authError || !user) {
+        setNotifications([]);
+        setUnreadCount(0);
+        return;
+      }
 
       const response = await fetch('/api/notifications');
+
+      // API 응답이 실패한 경우
+      if (!response.ok) {
+        setNotifications([]);
+        setUnreadCount(0);
+        return;
+      }
+
       const data = await response.json();
 
       setNotifications(data.notifications || []);
       setUnreadCount(data.unreadCount || 0);
     } catch (error) {
-      console.error('Failed to load notifications:', error);
+      // 네트워크 에러나 기타 에러 시 조용히 실패
+      setNotifications([]);
+      setUnreadCount(0);
     }
   };
 

@@ -1,111 +1,130 @@
 /**
- * Home Page - metaldragon Landing Page
- * Modern hero section with teal-indigo gradient
+ * Home Page - METALDRAGON Rock Community
+ * Fire Red & Rock Gold gradient hero with Rock features
  */
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
-import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/Card';
-import { createClient } from '@/lib/supabase/server';
+import { FeatureCard } from '@/components/FeatureCard';
 
 export default async function Home() {
-  // DB에서 사이트 설정 가져오기
-  const supabase = await createClient();
-  const { data: settings } = await supabase
-    .from('site_settings')
-    .select('key, value');
-
-  const settingsMap: Record<string, string> = {};
-  settings?.forEach((s) => {
-    settingsMap[s.key] = s.value;
-  });
-
-  const heroTitle = settingsMap['hero_title'] || 'metaldragon';
-  const heroSubtitle = settingsMap['hero_subtitle'] || 'AI, 빅데이터 학습부터 개인 포트폴리오까지<br />모든 것을 하나의 플랫폼에서';
-  const featuresTitle = settingsMap['features_title'] || '다양한 기능을 탐험하세요';
-  const featuresDescription = settingsMap['features_description'] || '학습, 창작, 공유가 한곳에서';
-
   const features = [
     {
-      title: 'AI 스터디',
-      description: '최신 AI 기술을 함께 학습하고 토론하는 커뮤니티',
-      icon: '🤖',
-      link: '/board/ai_study',
+      title: 'Bands Database',
+      description: '전 세계 Rock 밴드들의 정보와 디스코그래피를 탐험하세요',
+      icon: '🎸',
+      link: '/bands',
     },
     {
-      title: '빅데이터 스터디',
-      description: '데이터 분석과 머신러닝을 실전으로 익히는 스터디',
-      icon: '📊',
-      link: '/board/bigdata_study',
+      title: 'Album Reviews',
+      description: '명반들에 대한 리뷰를 읽고 당신만의 평가를 남기세요',
+      icon: '💿',
+      link: '/albums',
     },
     {
-      title: '자유게시판',
-      description: '자유롭게 생각을 나누는 커뮤니티 공간',
+      title: 'Concerts',
+      description: '전 세계 Rock 콘서트 일정을 확인하고 후기를 공유하세요',
+      icon: '🎤',
+      link: '/concerts',
+    },
+    {
+      title: 'Community',
+      description: 'Rock 음악 팬들과 자유롭게 소통하는 커뮤니티',
       icon: '💬',
-      link: '/free-board',
+      link: '/community',
     },
     {
-      title: '갤러리',
-      description: '일상의 순간을 원본 화질로 공유하세요',
-      icon: '📷',
-      link: '/gallery',
-    },
-    {
-      title: '영화 리뷰',
-      description: '나만의 평점과 감상평을 기록하는 공간',
-      icon: '🎬',
-      link: '/movies',
-    },
-    {
-      title: 'IT 뉴스',
-      description: '최신 IT 트렌드와 기술 뉴스를 한눈에',
+      title: 'Rock News',
+      description: '최신 Rock 음악 뉴스와 트렌드를 실시간으로',
       icon: '📰',
       link: '/news',
     },
     {
-      title: 'AI 작품',
-      description: 'AI로 창작한 다양한 예술 작품들을 감상하세요',
+      title: 'Photo Gallery',
+      description: '콘서트 사진과 밴드 이미지를 감상하고 공유하세요',
+      icon: '📷',
+      link: '/gallery',
+    },
+    {
+      title: 'AI Rock Art',
+      description: 'AI로 창작한 Rock 테마 아트워크를 만나보세요',
       icon: '🎨',
-      link: '/artworks',
+      link: '/rock-art',
     },
     {
-      title: 'YouTube 채널',
-      description: '기술 튜토리얼과 프로젝트 영상',
+      title: 'YouTube Videos',
+      description: 'Rock 명곡들의 뮤직비디오와 라이브 공연 영상',
       icon: '📺',
-      link: '/youtube',
-    },
-    {
-      title: '일정 관리',
-      description: '스터디 일정과 이벤트를 확인하고 관리',
-      icon: '📅',
-      link: '/schedule',
+      link: '/videos',
     },
   ];
 
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-br from-teal-500/10 via-indigo-500/10 to-purple-500/10 dark:from-teal-900/20 dark:via-indigo-900/20 dark:to-purple-900/20 py-20 md:py-32">
+      <section className="relative bg-gradient-to-br from-red-500/10 via-amber-500/10 to-purple-500/10 dark:from-red-900/20 dark:via-amber-900/20 dark:to-purple-900/20 py-20 md:py-32">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
+            <div className="mb-6 inline-block">
+              <span className="text-6xl md:text-7xl lg:text-8xl">🎸</span>
+            </div>
             <h1 className="text-5xl md:text-6xl lg:text-7xl font-display font-bold mb-6">
-              <span className="gradient-text">{heroTitle}</span>
+              <span className="gradient-text">METALDRAGON</span>
             </h1>
-            <p
-              className="text-xl md:text-2xl text-gray-700 dark:text-gray-300 mb-8 max-w-3xl mx-auto"
-              dangerouslySetInnerHTML={{ __html: heroSubtitle }}
-            />
+            <p className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-4">
+              The Ultimate Rock Community
+            </p>
+            <p className="text-xl md:text-2xl text-gray-700 dark:text-gray-300 mb-8 max-w-3xl mx-auto">
+              전 세계 Rock 음악 팬들을 위한 통합 플랫폼<br />
+              밴드, 앨범, 콘서트, 그리고 열정적인 커뮤니티
+            </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-              <Link href="/board/ai_study">
-                <Button size="lg">
-                  시작하기
+              <Link href="/bands">
+                <Button size="lg" className="bg-gradient-to-r from-red-500 to-amber-500 hover:from-red-600 hover:to-amber-600 text-white font-bold px-8 py-3 rounded-lg shadow-lg transition-all">
+                  🎸 밴드 탐험하기
                 </Button>
               </Link>
-              <Link href="/about">
-                <Button variant="outline" size="lg">
-                  더 알아보기
+              <Link href="/community">
+                <Button variant="outline" size="lg" className="border-2 border-red-500 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-950 font-bold px-8 py-3 rounded-lg transition-all">
+                  💬 커뮤니티 참여
                 </Button>
               </Link>
+            </div>
+          </div>
+        </div>
+
+        {/* Decorative Elements */}
+        <div className="absolute top-10 left-10 text-6xl opacity-20 animate-pulse">🤘</div>
+        <div className="absolute bottom-10 right-10 text-6xl opacity-20 animate-pulse" style={{animationDelay: '1s'}}>🎵</div>
+      </section>
+
+      {/* Stats Section */}
+      <section className="py-16 bg-zinc-950 text-white">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
+            <div>
+              <div className="text-4xl font-bold bg-gradient-to-r from-red-500 to-amber-500 bg-clip-text text-transparent mb-2">
+                1000+
+              </div>
+              <div className="text-zinc-400">Rock Bands</div>
+            </div>
+            <div>
+              <div className="text-4xl font-bold bg-gradient-to-r from-amber-500 to-purple-500 bg-clip-text text-transparent mb-2">
+                5000+
+              </div>
+              <div className="text-zinc-400">Albums</div>
+            </div>
+            <div>
+              <div className="text-4xl font-bold bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent mb-2">
+                500+
+              </div>
+              <div className="text-zinc-400">Concerts</div>
+            </div>
+            <div>
+              <div className="text-4xl font-bold bg-gradient-to-r from-pink-500 to-red-500 bg-clip-text text-transparent mb-2">
+                10K+
+              </div>
+              <div className="text-zinc-400">Community Members</div>
             </div>
           </div>
         </div>
@@ -116,28 +135,22 @@ export default async function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-display font-bold text-gray-900 dark:text-white mb-4">
-              {featuresTitle}
+              🔥 Rock Community Features
             </h2>
-            <p className="text-lg text-gray-600 dark:text-white">
-              {featuresDescription}
+            <p className="text-lg text-gray-600 dark:text-gray-300">
+              Rock 음악의 모든 것을 한곳에서
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
             {features.map((feature) => (
-              <Link key={feature.title} href={feature.link}>
-                <Card hoverable className="h-full">
-                  <CardHeader>
-                    <div className="text-4xl mb-3">{feature.icon}</div>
-                    <CardTitle>{feature.title}</CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-gray-600 dark:text-white">
-                      {feature.description}
-                    </p>
-                  </CardContent>
-                </Card>
-              </Link>
+              <FeatureCard
+                key={feature.title}
+                title={feature.title}
+                description={feature.description}
+                icon={feature.icon}
+                link={feature.link}
+              />
             ))}
           </div>
         </div>
@@ -146,19 +159,38 @@ export default async function Home() {
       {/* CTA Section */}
       <section className="py-20">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
-          <div className="bg-gradient-to-r from-teal-500 to-indigo-500 rounded-2xl p-12 shadow-xl">
+          <div className="bg-gradient-to-r from-red-500 via-amber-500 to-purple-500 rounded-2xl p-12 shadow-xl">
+            <div className="text-6xl mb-6">🤘</div>
             <h2 className="text-3xl md:text-4xl font-display font-bold text-white mb-4">
-              지금 바로 시작하세요
+              Unleash the Power of Rock
             </h2>
             <p className="text-xl text-white/90 mb-8">
-              자유롭게 댓글을 남기고 소통해보세요
+              지금 바로 METALDRAGON 커뮤니티에 참여하세요<br />
+              전 세계 Rock 팬들과 함께 음악을 즐기고 소통하세요
             </p>
-            <Link href="/board/ai_study">
-              <Button variant="secondary" size="lg">
-                게시판 둘러보기
-              </Button>
-            </Link>
+            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+              <Link href="/bands">
+                <Button variant="secondary" size="lg" className="bg-white text-red-600 hover:bg-gray-100 font-bold px-8 py-3 rounded-lg shadow-md">
+                  밴드 데이터베이스 탐험
+                </Button>
+              </Link>
+              <Link href="/community">
+                <Button variant="outline" size="lg" className="border-2 border-white text-white hover:bg-white/10 font-bold px-8 py-3 rounded-lg">
+                  커뮤니티 게시판
+                </Button>
+              </Link>
+            </div>
           </div>
+        </div>
+      </section>
+
+      {/* Quote Section */}
+      <section className="py-16 bg-zinc-950 text-white">
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <blockquote className="text-2xl md:text-3xl font-display italic mb-4">
+            "Rock 'n' Roll is a way of life."
+          </blockquote>
+          <p className="text-zinc-400">- Rock Legends</p>
         </div>
       </section>
     </div>
