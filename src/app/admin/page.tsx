@@ -15,14 +15,14 @@ import DeployButton from '@/components/DeployButton';
 
 export default function AdminDashboard() {
   const [user, setUser] = useState<any>(null);
+  const [bandsCount, setBandsCount] = useState(0);
+  const [albumsCount, setAlbumsCount] = useState(0);
+  const [concertsCount, setConcertsCount] = useState(0);
   const [postsCount, setPostsCount] = useState(0);
-  const [usersCount, setUsersCount] = useState(0);
   const [newsCount, setNewsCount] = useState(0);
   const [videosCount, setVideosCount] = useState(0);
-  const [contactsCount, setContactsCount] = useState(0);
-  const [schedulesCount, setSchedulesCount] = useState(0);
-  const [recentPosts, setRecentPosts] = useState<any[]>([]);
-  const [popularPosts, setPopularPosts] = useState<any[]>([]);
+  const [recentBands, setRecentBands] = useState<any[]>([]);
+  const [recentAlbums, setRecentAlbums] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -35,16 +35,26 @@ export default function AdminDashboard() {
       } = await supabase.auth.getUser();
       setUser(currentUser);
 
-      // 통계 데이터 가져오기
+      // Rock Community 통계 데이터
+      const { count: bands } = await supabase
+        .from('bands')
+        .select('*', { count: 'exact', head: true });
+      setBandsCount(bands || 0);
+
+      const { count: albums } = await supabase
+        .from('albums')
+        .select('*', { count: 'exact', head: true });
+      setAlbumsCount(albums || 0);
+
+      const { count: concerts } = await supabase
+        .from('concerts')
+        .select('*', { count: 'exact', head: true });
+      setConcertsCount(concerts || 0);
+
       const { count: posts } = await supabase
         .from('posts')
         .select('*', { count: 'exact', head: true });
       setPostsCount(posts || 0);
-
-      const { count: users } = await supabase
-        .from('users')
-        .select('*', { count: 'exact', head: true });
-      setUsersCount(users || 0);
 
       const { count: news } = await supabase
         .from('news')
@@ -56,32 +66,21 @@ export default function AdminDashboard() {
         .select('*', { count: 'exact', head: true });
       setVideosCount(videos || 0);
 
-      const { count: contacts } = await supabase
-        .from('contact_messages')
-        .select('*', { count: 'exact', head: true })
-        .eq('status', 'unread');
-      setContactsCount(contacts || 0);
-
-      const { count: schedules } = await supabase
-        .from('schedules')
-        .select('*', { count: 'exact', head: true });
-      setSchedulesCount(schedules || 0);
-
-      // 최근 게시글
-      const { data: recent } = await supabase
-        .from('posts')
-        .select('id, title, created_at, view_count')
+      // 최근 밴드
+      const { data: recentBandsData } = await supabase
+        .from('bands')
+        .select('id, name, created_at')
         .order('created_at', { ascending: false })
         .limit(5);
-      setRecentPosts(recent || []);
+      setRecentBands(recentBandsData || []);
 
-      // 인기 게시글
-      const { data: popular } = await supabase
-        .from('posts')
-        .select('id, title, view_count')
-        .order('view_count', { ascending: false })
+      // 최근 앨범
+      const { data: recentAlbumsData } = await supabase
+        .from('albums')
+        .select('id, title, release_year, band:bands(name)')
+        .order('created_at', { ascending: false })
         .limit(5);
-      setPopularPosts(popular || []);
+      setRecentAlbums(recentAlbumsData || []);
 
       setLoading(false);
     };
@@ -102,68 +101,75 @@ export default function AdminDashboard() {
   return (
     <div className="max-w-7xl mx-auto">
       {/* Header */}
-      <div className="mb-8">
+      <div className="mb-8 text-center">
+        <div className="text-6xl mb-4">🎸</div>
         <h1 className="text-4xl md:text-5xl font-display font-bold gradient-text mb-2">
-          환영합니다, {user?.email}!
+          METALDRAGON Control Room
         </h1>
         <p className="text-lg text-gray-600 dark:text-white">
-          Metaldragon Control Room에서 모든 콘텐츠를 관리하세요
+          Rock Community 콘텐츠 관리 대시보드
         </p>
       </div>
 
       {/* Stats Grid */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
-        <Card variant="featured" padding="lg">
+        <Card variant="featured" padding="lg" className="bg-gradient-to-br from-red-500/10 to-amber-500/10">
+          <div className="text-5xl mb-2">🎸</div>
+          <div className="text-3xl font-bold gradient-text mb-2">
+            {bandsCount}
+          </div>
+          <div className="text-sm text-gray-600 dark:text-white">
+            Rock Bands
+          </div>
+        </Card>
+
+        <Card variant="featured" padding="lg" className="bg-gradient-to-br from-amber-500/10 to-purple-500/10">
+          <div className="text-5xl mb-2">💿</div>
+          <div className="text-3xl font-bold gradient-text mb-2">
+            {albumsCount}
+          </div>
+          <div className="text-sm text-gray-600 dark:text-white">
+            Albums
+          </div>
+        </Card>
+
+        <Card variant="featured" padding="lg" className="bg-gradient-to-br from-purple-500/10 to-pink-500/10">
+          <div className="text-5xl mb-2">🎤</div>
+          <div className="text-3xl font-bold gradient-text mb-2">
+            {concertsCount}
+          </div>
+          <div className="text-sm text-gray-600 dark:text-white">
+            Concerts
+          </div>
+        </Card>
+
+        <Card variant="featured" padding="lg" className="bg-gradient-to-br from-pink-500/10 to-red-500/10">
+          <div className="text-5xl mb-2">💬</div>
           <div className="text-3xl font-bold gradient-text mb-2">
             {postsCount}
           </div>
           <div className="text-sm text-gray-600 dark:text-white">
-            총 게시글
+            Community Posts
           </div>
         </Card>
 
-        <Card variant="featured" padding="lg">
-          <div className="text-3xl font-bold gradient-text mb-2">
-            {usersCount}
-          </div>
-          <div className="text-sm text-gray-600 dark:text-white">
-            등록된 사용자
-          </div>
-        </Card>
-
-        <Card variant="featured" padding="lg">
+        <Card variant="featured" padding="lg" className="bg-gradient-to-br from-red-500/10 to-amber-500/10">
+          <div className="text-5xl mb-2">📰</div>
           <div className="text-3xl font-bold gradient-text mb-2">
             {newsCount}
           </div>
           <div className="text-sm text-gray-600 dark:text-white">
-            IT 뉴스
+            Rock News
           </div>
         </Card>
 
-        <Card variant="featured" padding="lg">
+        <Card variant="featured" padding="lg" className="bg-gradient-to-br from-amber-500/10 to-purple-500/10">
+          <div className="text-5xl mb-2">📺</div>
           <div className="text-3xl font-bold gradient-text mb-2">
             {videosCount}
           </div>
           <div className="text-sm text-gray-600 dark:text-white">
-            YouTube 영상
-          </div>
-        </Card>
-
-        <Card variant="featured" padding="lg">
-          <div className="text-3xl font-bold gradient-text mb-2">
-            {schedulesCount}
-          </div>
-          <div className="text-sm text-gray-600 dark:text-white">
-            일정
-          </div>
-        </Card>
-
-        <Card variant="featured" padding="lg">
-          <div className="text-3xl font-bold gradient-text mb-2">
-            {contactsCount}
-          </div>
-          <div className="text-sm text-gray-600 dark:text-white">
-            읽지 않은 문의
+            Rock Videos
           </div>
         </Card>
       </div>
@@ -171,49 +177,54 @@ export default function AdminDashboard() {
       {/* Recent Activity Section */}
       <section className="mb-12">
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-          최근 활동
+          🎵 최근 추가된 콘텐츠
         </h2>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Recent Posts */}
-          <Card padding="lg" className="lg:col-span-2">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              최근 게시글
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Recent Bands */}
+          <Card padding="lg" className="bg-gradient-to-br from-red-500/5 to-amber-500/5">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <span>🎸</span> 최근 등록된 밴드
             </h3>
 
-            {recentPosts && recentPosts.map((post) => (
+            {recentBands && recentBands.length > 0 ? recentBands.map((band) => (
               <div
-                key={post.id}
+                key={band.id}
                 className="py-3 border-b border-gray-200 dark:border-gray-700 flex justify-between items-center text-gray-700 dark:text-gray-300 last:border-0"
               >
-                <span className="truncate flex-1">{post.title}</span>
+                <Link href={`/bands/${band.id}`} className="truncate flex-1 hover:text-red-600 dark:hover:text-red-400">
+                  {band.name}
+                </Link>
                 <span className="text-xs text-gray-500 dark:text-gray-100 ml-4">
-                  {new Date(post.created_at).toLocaleDateString('ko-KR')}
+                  {new Date(band.created_at).toLocaleDateString('ko-KR')}
                 </span>
               </div>
-            ))}
+            )) : (
+              <p className="text-gray-500 text-sm">등록된 밴드가 없습니다</p>
+            )}
           </Card>
 
-          {/* Popular Posts */}
-          <Card padding="lg">
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4">
-              인기 게시글 TOP 5
+          {/* Recent Albums */}
+          <Card padding="lg" className="bg-gradient-to-br from-amber-500/5 to-purple-500/5">
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+              <span>💿</span> 최근 등록된 앨범
             </h3>
 
-            {popularPosts && popularPosts.map((post, index) => (
+            {recentAlbums && recentAlbums.length > 0 ? recentAlbums.map((album) => (
               <div
-                key={post.id}
-                className="py-2 mb-2 text-gray-700 dark:text-gray-300 text-sm"
+                key={album.id}
+                className="py-3 border-b border-gray-200 dark:border-gray-700 text-gray-700 dark:text-gray-300 last:border-0"
               >
-                <span className="text-teal-600 dark:text-teal-400 font-semibold mr-2">
-                  #{index + 1}
-                </span>
-                {post.title}
-                <span className="float-right text-xs text-gray-500 dark:text-gray-100">
-                  조회 {post.view_count}
-                </span>
+                <Link href={`/albums/${album.id}`} className="block hover:text-amber-600 dark:hover:text-amber-400">
+                  <div className="font-medium">{album.title}</div>
+                  <div className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    {album.band?.name} • {album.release_year}
+                  </div>
+                </Link>
               </div>
-            ))}
+            )) : (
+              <p className="text-gray-500 text-sm">등록된 앨범이 없습니다</p>
+            )}
           </Card>
         </div>
       </section>
@@ -221,125 +232,135 @@ export default function AdminDashboard() {
       {/* Quick Actions */}
       <section>
         <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-          빠른 작업
+          ⚡ 빠른 작업
         </h2>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
           <Link
-            href="/admin/about"
-            className="block p-5 bg-white/50 dark:bg-gray-800/50 backdrop-blur-md border border-gray-200 dark:border-gray-700 rounded-lg transition-all duration-200 hover:-translate-y-1 hover:border-teal-500 hover:shadow-lg hover:shadow-teal-500/20"
+            href="/bands"
+            className="block p-5 bg-gradient-to-br from-red-500/10 to-amber-500/10 backdrop-blur-md border border-gray-200 dark:border-gray-700 rounded-lg transition-all duration-200 hover:-translate-y-1 hover:border-red-500 hover:shadow-lg hover:shadow-red-500/20"
           >
+            <div className="text-3xl mb-2">🎸</div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              프로필 편집
+              Bands 관리
             </h3>
             <p className="text-sm text-gray-600 dark:text-white">
-              자기소개, 사진, 포트폴리오 정보를 수정하세요
+              밴드 정보 추가, 수정, 삭제
             </p>
           </Link>
 
           <Link
-            href="/admin/posts"
-            className="block p-5 bg-white/50 dark:bg-gray-800/50 backdrop-blur-md border border-gray-200 dark:border-gray-700 rounded-lg transition-all duration-200 hover:-translate-y-1 hover:border-teal-500 hover:shadow-lg hover:shadow-teal-500/20"
+            href="/albums"
+            className="block p-5 bg-gradient-to-br from-amber-500/10 to-purple-500/10 backdrop-blur-md border border-gray-200 dark:border-gray-700 rounded-lg transition-all duration-200 hover:-translate-y-1 hover:border-amber-500 hover:shadow-lg hover:shadow-amber-500/20"
           >
+            <div className="text-3xl mb-2">💿</div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              새 게시글 작성
+              Albums 관리
             </h3>
             <p className="text-sm text-gray-600 dark:text-white">
-              AI 스터디, 빅데이터 스터디, 자유게시판에 글을 작성하세요
+              앨범 정보, 트랙리스트 관리
             </p>
           </Link>
 
           <Link
-            href="/admin/ai-artwork"
-            className="block p-5 bg-white/50 dark:bg-gray-800/50 backdrop-blur-md border border-gray-200 dark:border-gray-700 rounded-lg transition-all duration-200 hover:-translate-y-1 hover:border-teal-500 hover:shadow-lg hover:shadow-teal-500/20"
+            href="/concerts"
+            className="block p-5 bg-gradient-to-br from-purple-500/10 to-pink-500/10 backdrop-blur-md border border-gray-200 dark:border-gray-700 rounded-lg transition-all duration-200 hover:-translate-y-1 hover:border-purple-500 hover:shadow-lg hover:shadow-purple-500/20"
           >
+            <div className="text-3xl mb-2">🎤</div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              AI 작품 업로드
+              Concerts 등록
             </h3>
             <p className="text-sm text-gray-600 dark:text-white">
-              AI로 생성한 이미지, 영상, 음악을 업로드하세요
+              공연 일정 추가 및 관리
             </p>
           </Link>
 
           <Link
-            href="/admin/news"
-            className="block p-5 bg-white/50 dark:bg-gray-800/50 backdrop-blur-md border border-gray-200 dark:border-gray-700 rounded-lg transition-all duration-200 hover:-translate-y-1 hover:border-teal-500 hover:shadow-lg hover:shadow-teal-500/20"
+            href="/community"
+            className="block p-5 bg-gradient-to-br from-pink-500/10 to-red-500/10 backdrop-blur-md border border-gray-200 dark:border-gray-700 rounded-lg transition-all duration-200 hover:-translate-y-1 hover:border-pink-500 hover:shadow-lg hover:shadow-pink-500/20"
           >
+            <div className="text-3xl mb-2">💬</div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              IT 뉴스 관리
+              게시글 관리
             </h3>
             <p className="text-sm text-gray-600 dark:text-white">
-              AI, 암호화폐 관련 뉴스를 추가하거나 편집하세요
+              커뮤니티 게시글 작성 및 관리
             </p>
           </Link>
 
           <Link
-            href="/admin/finance"
-            className="block p-5 bg-white/50 dark:bg-gray-800/50 backdrop-blur-md border border-gray-200 dark:border-gray-700 rounded-lg transition-all duration-200 hover:-translate-y-1 hover:border-teal-500 hover:shadow-lg hover:shadow-teal-500/20"
+            href="/news"
+            className="block p-5 bg-gradient-to-br from-red-500/10 to-amber-500/10 backdrop-blur-md border border-gray-200 dark:border-gray-700 rounded-lg transition-all duration-200 hover:-translate-y-1 hover:border-red-500 hover:shadow-lg hover:shadow-red-500/20"
           >
+            <div className="text-3xl mb-2">📰</div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              가계부 입력
+              Rock News
             </h3>
             <p className="text-sm text-gray-600 dark:text-white">
-              수입/지출 내역을 기록하고 통계를 확인하세요
+              Rock 뉴스 크롤링 및 관리
             </p>
           </Link>
 
           <Link
-            href="/admin/youtube"
-            className="block p-5 bg-white/50 dark:bg-gray-800/50 backdrop-blur-md border border-gray-200 dark:border-gray-700 rounded-lg transition-all duration-200 hover:-translate-y-1 hover:border-teal-500 hover:shadow-lg hover:shadow-teal-500/20"
+            href="/videos"
+            className="block p-5 bg-gradient-to-br from-amber-500/10 to-purple-500/10 backdrop-blur-md border border-gray-200 dark:border-gray-700 rounded-lg transition-all duration-200 hover:-translate-y-1 hover:border-amber-500 hover:shadow-lg hover:shadow-amber-500/20"
           >
+            <div className="text-3xl mb-2">📺</div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              YouTube 링크
+              YouTube Videos
             </h3>
             <p className="text-sm text-gray-600 dark:text-white">
-              커버 영상 링크를 추가하거나 관리하세요
+              Rock 영상 추가 및 관리
             </p>
           </Link>
 
           <Link
-            href="/admin/site-settings"
-            className="block p-5 bg-white/50 dark:bg-gray-800/50 backdrop-blur-md border border-gray-200 dark:border-gray-700 rounded-lg transition-all duration-200 hover:-translate-y-1 hover:border-teal-500 hover:shadow-lg hover:shadow-teal-500/20"
+            href="/rock-art"
+            className="block p-5 bg-gradient-to-br from-purple-500/10 to-pink-500/10 backdrop-blur-md border border-gray-200 dark:border-gray-700 rounded-lg transition-all duration-200 hover:-translate-y-1 hover:border-purple-500 hover:shadow-lg hover:shadow-purple-500/20"
           >
+            <div className="text-3xl mb-2">🎨</div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              사이트 설정
+              AI Rock Art
             </h3>
             <p className="text-sm text-gray-600 dark:text-white">
-              홈페이지 메인 텍스트를 수정하세요
+              AI 생성 Rock 아트 업로드
+            </p>
+          </Link>
+
+          <Link
+            href="/gallery"
+            className="block p-5 bg-gradient-to-br from-pink-500/10 to-red-500/10 backdrop-blur-md border border-gray-200 dark:border-gray-700 rounded-lg transition-all duration-200 hover:-translate-y-1 hover:border-pink-500 hover:shadow-lg hover:shadow-pink-500/20"
+          >
+            <div className="text-3xl mb-2">📸</div>
+            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+              Photo Gallery
+            </h3>
+            <p className="text-sm text-gray-600 dark:text-white">
+              공연 및 밴드 사진 관리
             </p>
           </Link>
 
           <Link
             href="/admin/backgrounds"
-            className="block p-5 bg-white/50 dark:bg-gray-800/50 backdrop-blur-md border border-gray-200 dark:border-gray-700 rounded-lg transition-all duration-200 hover:-translate-y-1 hover:border-teal-500 hover:shadow-lg hover:shadow-teal-500/20"
+            className="block p-5 bg-gradient-to-br from-red-500/10 to-amber-500/10 backdrop-blur-md border border-gray-200 dark:border-gray-700 rounded-lg transition-all duration-200 hover:-translate-y-1 hover:border-red-500 hover:shadow-lg hover:shadow-red-500/20"
           >
+            <div className="text-3xl mb-2">🎨</div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              🎨 배경화면 설정
+              배경화면 설정
             </h3>
             <p className="text-sm text-gray-600 dark:text-white">
-              페이지별 배경화면과 투명도를 조절하세요
-            </p>
-          </Link>
-
-          <Link
-            href="/admin/analytics"
-            className="block p-5 bg-white/50 dark:bg-gray-800/50 backdrop-blur-md border border-gray-200 dark:border-gray-700 rounded-lg transition-all duration-200 hover:-translate-y-1 hover:border-teal-500 hover:shadow-lg hover:shadow-teal-500/20"
-          >
-            <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              📊 방문자 통계
-            </h3>
-            <p className="text-sm text-gray-600 dark:text-white">
-              사이트 방문자 데이터와 트래픽 분석을 확인하세요
+              페이지별 배경 이미지 설정
             </p>
           </Link>
 
           {/* 🚀 Deploy Button */}
           <div className="p-5 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-900/20 dark:to-indigo-900/20 backdrop-blur-md border-2 border-blue-300 dark:border-blue-700 rounded-lg">
+            <div className="text-3xl mb-2">🚀</div>
             <h3 className="text-lg font-semibold text-gray-900 dark:text-white mb-2">
-              🚀 프로덕션 배포
+              프로덕션 배포
             </h3>
             <p className="text-sm text-gray-600 dark:text-white mb-4">
-              코드 수정 후 원클릭으로 서버를 재배포하세요
+              서버 재배포 및 업데이트
             </p>
             <DeployButton />
           </div>

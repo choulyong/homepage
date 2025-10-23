@@ -27,17 +27,42 @@ const redHatDisplay = Red_Hat_Display({
 });
 
 export const metadata: Metadata = {
-  title: 'metaldragon - 현대적인 개인 포털',
-  description: '실시간 학습, 재무 관리, AI 창작물을 하나의 운영 패널에서',
-  keywords: ['AI', '스터디', '가계부', 'IT 뉴스', 'AI 작품', '개인 포털'],
-  authors: [{ name: 'metaldragon' }],
+  title: 'METALDRAGON - Rock Community | 전 세계 Rock 음악 커뮤니티',
+  description: '전 세계 Rock 밴드, 앨범, 콘서트 정보와 팬들의 커뮤니티. Classic Rock, Heavy Metal, Punk Rock, Alternative Rock 등 모든 Rock 장르를 탐험하세요.',
+  keywords: ['Rock', 'Heavy Metal', 'Rock Music', 'Rock Band', 'Album Review', 'Concert', 'Rock Community', 'Classic Rock', 'Metal', 'Punk Rock', '록', '록 음악', '헤비메탈', '밴드'],
+  authors: [{ name: 'METALDRAGON' }],
   openGraph: {
-    title: 'metaldragon - 현대적인 개인 포털',
-    description: '실시간 학습, 재무 관리, AI 창작물을 하나의 운영 패널에서',
+    title: 'METALDRAGON - Rock Community',
+    description: '전 세계 Rock 밴드, 앨범, 콘서트 정보와 팬들의 커뮤니티',
     url: 'https://metaldragon.co.kr',
-    siteName: 'metaldragon',
+    siteName: 'METALDRAGON',
     locale: 'ko_KR',
     type: 'website',
+    images: [
+      {
+        url: 'https://metaldragon.co.kr/og-image.jpg',
+        width: 1200,
+        height: 630,
+        alt: 'METALDRAGON Rock Community',
+      },
+    ],
+  },
+  twitter: {
+    card: 'summary_large_image',
+    title: 'METALDRAGON - Rock Community',
+    description: '전 세계 Rock 밴드, 앨범, 콘서트 정보와 팬들의 커뮤니티',
+    images: ['https://metaldragon.co.kr/og-image.jpg'],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      'max-video-preview': -1,
+      'max-image-preview': 'large',
+      'max-snippet': -1,
+    },
   },
 };
 

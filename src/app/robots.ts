@@ -1,3 +1,8 @@
+/**
+ * Robots.txt for METALDRAGON Rock Community
+ * Controls search engine crawling behavior
+ */
+
 import { MetadataRoute } from 'next';
 
 export default function robots(): MetadataRoute.Robots {
