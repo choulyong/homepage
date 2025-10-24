@@ -16,6 +16,8 @@ const nextConfig: NextConfig = {
   experimental: {
     // This will suppress harmless hydration mismatches from browser extensions
   },
+  // Allow external domain access to dev server
+  allowedDevOrigins: ['rock.metaldragon.co.kr'],
   images: {
     remotePatterns: [
       {
@@ -32,6 +34,11 @@ const nextConfig: NextConfig = {
         protocol: 'https',
         hostname: 'xhzqhvjkkfpeavdphoit.supabase.co',
         pathname: '/storage/v1/object/public/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'i.scdn.co',
+        pathname: '/**',
       },
     ],
   },

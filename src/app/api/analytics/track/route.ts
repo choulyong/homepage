@@ -51,7 +51,10 @@ export async function POST(request: NextRequest) {
 
     if (error) {
       console.error('Error logging visitor:', error);
-      return NextResponse.json({ error: 'Failed to log visit' }, { status: 500 });
+      // Continue even if table doesn't exist (graceful degradation)
+      if (error.code !== 'PGRST205') {
+        return NextResponse.json({ error: 'Failed to log visit' }, { status: 500 });
+      }
     }
 
     // 페이지뷰 카운트 업데이트

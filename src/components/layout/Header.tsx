@@ -54,7 +54,9 @@ export function Header() {
   const navLinks = [
     { href: '/about', label: 'About' },
     { href: '/bands', label: 'Bands' },
+    { href: '/bands/countries', label: 'By Country' },
     { href: '/albums', label: 'Albums' },
+    { href: '/albums/korean', label: 'K-Rock' },
     { href: '/concerts', label: 'Concerts' },
     { href: '/community', label: 'Community' },
     { href: '/news', label: 'News' },

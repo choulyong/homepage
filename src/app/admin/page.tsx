@@ -12,6 +12,7 @@ import { Card } from '@/components/ui/Card';
 import Link from 'next/link';
 import { cn } from '@/lib/utils';
 import DeployButton from '@/components/DeployButton';
+import RefreshDataButtons from '@/components/RefreshDataButtons';
 
 export default function AdminDashboard() {
   const [user, setUser] = useState<any>(null);
@@ -365,6 +366,14 @@ export default function AdminDashboard() {
             <DeployButton />
           </div>
         </div>
+      </section>
+
+      {/* Data Refresh Section */}
+      <section className="mt-12">
+        <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+          🔄 데이터 갱신
+        </h2>
+        <RefreshDataButtons />
       </section>
     </div>
   );

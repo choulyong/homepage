@@ -1,13 +1,33 @@
 /**
  * Concert Detail Page - METALDRAGON Rock Community
+ * YouTube video playback for concerts
  */
 
 import Link from 'next/link';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 
 interface ConcertDetailPageProps {
   params: Promise<{ id: string }>;
+}
+
+// Extract YouTube video ID from URL
+function getYouTubeVideoId(url: string): string | null {
+  if (!url) return null;
+
+  const patterns = [
+    /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/,
+    /youtube\.com\/embed\/([^&\n?#]+)/,
+  ];
+
+  for (const pattern of patterns) {
+    const match = url.match(pattern);
+    if (match && match[1]) {
+      return match[1];
+    }
+  }
+  return null;
 }
 
 export default async function ConcertDetailPage({ params }: ConcertDetailPageProps) {
@@ -22,6 +42,9 @@ export default async function ConcertDetailPage({ params }: ConcertDetailPagePro
 
   if (!concert) notFound();
 
+  // YouTube video ID extraction
+  const youtubeVideoId = concert.youtube_url ? getYouTubeVideoId(concert.youtube_url) : null;
+
   const { data: reviews } = await supabase
     .from('concert_reviews')
     .select('*')
@@ -30,11 +53,12 @@ export default async function ConcertDetailPage({ params }: ConcertDetailPagePro
 
   return (
     <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-5xl mx-auto">
+      <div className="max-w-6xl mx-auto">
         <Link href="/concerts" className="inline-flex items-center text-gray-600 dark:text-gray-400 hover:text-purple-500 mb-8">
           ← Back to Concerts
         </Link>
 
+        {/* Concert Header */}
         <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-2xl p-8 mb-8">
           <div className="text-6xl mb-6 text-center">🎤</div>
           <h1 className="text-4xl font-display font-bold mb-4 text-center">
@@ -44,6 +68,7 @@ export default async function ConcertDetailPage({ params }: ConcertDetailPagePro
             {concert.band?.name}
           </Link>
 
+          {/* Concert Details */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
             <div className="space-y-4">
               <div>
@@ -84,6 +109,49 @@ export default async function ConcertDetailPage({ params }: ConcertDetailPagePro
             </div>
           )}
         </div>
+
+        {/* YouTube Video Player */}
+        {youtubeVideoId && (
+          <div className="mb-8 bg-gradient-to-br from-red-500/10 to-purple-500/10 rounded-2xl p-6">
+            <h2 className="text-3xl font-bold mb-4 flex items-center gap-2">
+              <span>▶</span>
+              <span>Concert Video</span>
+            </h2>
+            <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
+              <iframe
+                className="absolute top-0 left-0 w-full h-full rounded-xl"
+                src={`https://www.youtube.com/embed/${youtubeVideoId}`}
+                title={concert.title}
+                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                allowFullScreen
+              />
+            </div>
+            {concert.youtube_playlist_url && (
+              <a
+                href={concert.youtube_playlist_url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-block mt-4 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition-colors"
+              >
+                📼 Full Concert Playlist
+              </a>
+            )}
+          </div>
+        )}
+
+        {/* Poster Image */}
+        {concert.poster_url && !youtubeVideoId && (
+          <div className="mb-8">
+            <div className="relative w-full aspect-video rounded-2xl overflow-hidden">
+              <Image
+                src={concert.poster_url}
+                alt={concert.title}
+                fill
+                className="object-cover"
+              />
+            </div>
+          </div>
+        )}
 
         <div className="bg-white dark:bg-zinc-900 rounded-lg p-6 shadow-md">
           <h2 className="text-2xl font-bold mb-4">Concert Reviews ({reviews?.length || 0})</h2>

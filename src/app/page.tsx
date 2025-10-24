@@ -5,7 +5,7 @@
 
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
-import { FeatureCard } from '@/components/FeatureCard';
+import RockFeatureCard from '@/components/RockFeatureCard';
 
 export default async function Home() {
   const features = [
@@ -144,7 +144,7 @@ export default async function Home() {
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 lg:gap-8">
             {features.map((feature) => (
-              <FeatureCard
+              <RockFeatureCard
                 key={feature.title}
                 title={feature.title}
                 description={feature.description}

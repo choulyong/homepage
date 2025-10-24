@@ -32,6 +32,13 @@ export async function GET(request: NextRequest) {
 
     if (error) {
       console.error('Error fetching notifications:', error);
+      // Return empty notifications if table doesn't exist
+      if (error.code === 'PGRST205') {
+        return NextResponse.json({
+          notifications: [],
+          unreadCount: 0,
+        });
+      }
       return NextResponse.json(
         { error: 'Failed to fetch notifications' },
         { status: 500 }

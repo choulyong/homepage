@@ -87,43 +87,41 @@ export function AdminSidebar() {
       )}>
       {/* Logo */}
       <div className="text-2xl font-display font-bold gradient-text text-center pb-4 border-b border-gray-200 dark:border-gray-800">
-        Metaldragon Admin
+        Rock Community Admin
       </div>
 
       {/* Dashboard */}
       <div className="flex flex-col gap-2">
-        <SectionTitle>대시보드</SectionTitle>
-        <NavItem href="/admin">홈</NavItem>
+        <SectionTitle>Dashboard</SectionTitle>
+        <NavItem href="/admin">Home</NavItem>
       </div>
 
-      {/* Content Management */}
+      {/* Rock Content Management */}
       <div className="flex flex-col gap-2">
-        <SectionTitle>콘텐츠 관리</SectionTitle>
-        <NavItem href="/admin/about">About 편집</NavItem>
-        <NavItem href="/admin/portfolio">포트폴리오 관리</NavItem>
-        <NavItem href="/admin/skills">스킬 관리</NavItem>
+        <SectionTitle>Rock Content</SectionTitle>
+        <NavItem href="/bands">Bands</NavItem>
+        <NavItem href="/albums">Albums</NavItem>
+        <NavItem href="/bands/countries">Bands by Country</NavItem>
+        <NavItem href="/albums/korean">Korean Albums</NavItem>
+        <NavItem href="/admin/concerts/new">Add Concert</NavItem>
+        <NavItem href="/concerts">Concerts</NavItem>
       </div>
 
-      {/* Board Management */}
+      {/* Community Management */}
       <div className="flex flex-col gap-2">
-        <SectionTitle>게시판 관리</SectionTitle>
-        <NavItem href="/admin/posts">게시글 관리</NavItem>
-        <NavItem href="/admin/free-board">자유게시판</NavItem>
-        <NavItem href="/admin/gallery">갤러리</NavItem>
-        <NavItem href="/admin/movies">영화 게시판</NavItem>
-        <NavItem href="/admin/ai-study">AI 스터디</NavItem>
-        <NavItem href="/admin/bigdata-study">빅데이터 스터디</NavItem>
-        <NavItem href="/admin/ai-artwork">AI 작품 갤러리</NavItem>
+        <SectionTitle>Community</SectionTitle>
+        <NavItem href="/community">Board</NavItem>
+        <NavItem href="/news">Rock News</NavItem>
+        <NavItem href="/videos">YouTube Videos</NavItem>
+        <NavItem href="/rock-art">AI Rock Art</NavItem>
+        <NavItem href="/gallery">Photo Gallery</NavItem>
       </div>
 
-      {/* Other */}
+      {/* Settings */}
       <div className="flex flex-col gap-2">
-        <SectionTitle>기타</SectionTitle>
-        <NavItem href="/admin/site-settings">사이트 설정</NavItem>
-        <NavItem href="/admin/news">IT 뉴스 관리</NavItem>
-        <NavItem href="/admin/youtube">YouTube 링크</NavItem>
-        <NavItem href="/admin/finance">가계부 관리</NavItem>
-        <NavItem href="/admin/contacts">문의 내역</NavItem>
+        <SectionTitle>Settings</SectionTitle>
+        <NavItem href="/admin/backgrounds">Backgrounds</NavItem>
+        <NavItem href="/admin/site-settings">Site Settings</NavItem>
       </div>
 
       {/* Logout Button */}

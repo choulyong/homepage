@@ -45,6 +45,11 @@ export async function getPageBackground(
         // 데이터 없음 (정상)
         return { success: true, background: undefined };
       }
+      if (error.code === 'PGRST205') {
+        // 테이블 없음 (graceful degradation)
+        console.error('Error fetching background:', error);
+        return { success: true, background: undefined };
+      }
       console.error('Error fetching background:', error);
       return { success: false, error: error.message };
     }
@@ -74,6 +79,10 @@ export async function getAllPageBackgrounds(): Promise<{
 
     if (error) {
       console.error('Error fetching backgrounds:', error);
+      // Return empty array if table doesn't exist
+      if (error.code === 'PGRST205') {
+        return { success: true, backgrounds: [] };
+      }
       return { success: false, error: error.message };
     }
 

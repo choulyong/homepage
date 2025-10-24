@@ -21,9 +21,16 @@ export default async function AlbumsPage() {
           <h1 className="text-4xl md:text-5xl font-display font-bold mb-4">
             <span className="gradient-text">💿 Album Reviews</span>
           </h1>
-          <p className="text-lg text-gray-600 dark:text-gray-300">
+          <p className="text-lg text-gray-600 dark:text-gray-300 mb-6">
             명반들에 대한 리뷰를 읽고 당신만의 평가를 남기세요
           </p>
+
+          <Link
+            href="/albums/genres"
+            className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-red-500 text-white px-6 py-3 rounded-full font-semibold hover:shadow-lg hover:scale-105 transition-all duration-300"
+          >
+            🎸 Browse by Genre
+          </Link>
         </div>
 
         {albums && albums.length > 0 ? (
