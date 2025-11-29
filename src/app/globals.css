@@ -356,3 +356,73 @@ body:not([data-has-background]).dark .text-gray-700 {
 body:not([data-has-background]).dark .text-gray-600 {
   color: #d1d5db !important;
 }
+
+
+/* ==========================================
+   Mobile Optimization - iOS Zoom Prevention & Touch
+   ========================================== */
+
+/* iOS zoom 방지 - 16px 이상 font-size 설정 */
+@layer base {
+  input,
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+  
+  /* 데스크톱에서는 기존 크기 유지 */
+  @screen sm {
+    input,
+    select,
+    textarea {
+      font-size: 0.875rem !important; /* 14px */
+    }
+  }
+}
+
+/* 터치 최적화 */
+@layer utilities {
+  .touch-manipulation {
+    touch-action: manipulation;
+    -webkit-tap-highlight-color: transparent;
+  }
+  
+  /* GPU 가속 (hover 애니메이션 최적화) */
+  .gpu-accelerated {
+    transform: translateZ(0);
+    will-change: transform;
+  }
+  
+  .group:hover .group-hover-gpu {
+    will-change: transform;
+  }
+}
+
+/* 포커스 스타일 강화 */
+@layer base {
+  *:focus-visible {
+    outline: 2px solid #ef4444;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.1);
+  }
+
+  .dark *:focus-visible {
+    outline: 2px solid #f87171;
+    box-shadow: 0 0 0 4px rgba(248, 113, 113, 0.2);
+  }
+
+  /* 링크 포커스 */
+  a:focus-visible {
+    outline: 2px solid #f59e0b;
+    outline-offset: 2px;
+    border-radius: 4px;
+  }
+
+  /* 버튼 포커스 */
+  button:focus-visible {
+    outline: 2px solid #ef4444;
+    outline-offset: 2px;
+    box-shadow: 0 0 0 4px rgba(239, 68, 68, 0.15);
+  }
+}
+

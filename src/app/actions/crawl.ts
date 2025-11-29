@@ -6,6 +6,7 @@
 'use server';
 
 import { createServiceClient } from '@/lib/supabase/server';
+import prisma from '@/lib/prisma';
 
 // YouTube Channel ID
 // Channel ID를 사용하는 것이 가장 안정적입니다
@@ -237,58 +238,44 @@ async function crawlYouTubeVideosRSS() {
 }
 
 /**
- * 다양한 분야의 공신력 있는 RSS Feed 목록
+ * Rock & Audio RSS Feed 목록
  */
 const RSS_FEEDS = {
-  technology: [
-    { name: 'TechCrunch', url: 'https://techcrunch.com/feed/', category: 'tech' },
-    { name: 'The Verge', url: 'https://www.theverge.com/rss/index.xml', category: 'tech' },
-    { name: 'Ars Technica', url: 'https://feeds.arstechnica.com/arstechnica/index', category: 'tech' },
+  rock: [
+    { name: 'Google News Rock', url: 'https://news.google.com/rss/search?q=rock+music+OR+rock+band+OR+록+음악+OR+록+밴드&hl=ko&gl=KR&ceid=KR:ko', category: 'rock' },
+    { name: 'Rolling Stone', url: 'https://www.rollingstone.com/music/feed/', category: 'rock' },
+    { name: 'Consequence', url: 'https://consequence.net/feed/', category: 'rock' },
   ],
-  business: [
-    { name: 'CNBC Business', url: 'https://www.cnbc.com/id/10001147/device/rss/rss.html', category: 'business' },
-    { name: 'MarketWatch', url: 'https://feeds.marketwatch.com/marketwatch/topstories/', category: 'business' },
-    { name: 'Google News Business', url: 'https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx6TVdZU0FtdHZHZ0pMVWlnQVAB?hl=ko&gl=KR&ceid=KR:ko', category: 'business' },
+  metal: [
+    { name: 'Google News Metal', url: 'https://news.google.com/rss/search?q=metal+music+OR+heavy+metal+OR+메탈+음악&hl=ko&gl=KR&ceid=KR:ko', category: 'metal' },
+    { name: 'Metal Injection', url: 'https://metalinjection.net/feed', category: 'metal' },
+    { name: 'Blabbermouth', url: 'http://feeds.feedburner.com/blabbermouth', category: 'metal' },
   ],
-  economy: [
-    { name: 'Google News 경제', url: 'https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx6TVdZU0FtdHZHZ0pMVWlnQVAB?hl=ko&gl=KR&ceid=KR:ko', category: 'economy' },
-    { name: 'Bloomberg', url: 'https://www.bloomberg.com/feed/podcast/bloomberg-markets.xml', category: 'economy' },
+  audio: [
+    { name: 'Google News Audio', url: 'https://news.google.com/rss/search?q=audio+equipment+OR+오디오+장비+OR+오디오+시스템&hl=ko&gl=KR&ceid=KR:ko', category: 'audio' },
+    { name: 'Sound on Sound', url: 'https://www.soundonsound.com/rss', category: 'audio' },
   ],
-  entertainment: [
-    { name: 'Google News 연예', url: 'https://news.google.com/rss/search?q=연예+OR+연예인+OR+아이돌&hl=ko&gl=KR&ceid=KR:ko', category: 'entertainment' },
-    { name: 'Variety', url: 'https://variety.com/feed/', category: 'entertainment' },
+  gear: [
+    { name: 'Google News Guitar Gear', url: 'https://news.google.com/rss/search?q=guitar+gear+OR+amplifier+OR+기타+장비+OR+앰프&hl=ko&gl=KR&ceid=KR:ko', category: 'gear' },
+    { name: 'Guitar World', url: 'https://www.guitarworld.com/feed', category: 'gear' },
+    { name: 'Premier Guitar', url: 'https://www.premierguitar.com/feed', category: 'gear' },
   ],
-  movie: [
-    { name: 'Google News 영화', url: 'https://news.google.com/rss/search?q=영화+OR+극장+OR+박스오피스&hl=ko&gl=KR&ceid=KR:ko', category: 'movie' },
-    { name: 'IMDb News', url: 'https://www.imdb.com/news/rss/', category: 'movie' },
-    { name: 'Hollywood Reporter', url: 'https://www.hollywoodreporter.com/feed/', category: 'movie' },
+  interface: [
+    { name: 'Google News Audio Interface', url: 'https://news.google.com/rss/search?q=audio+interface+OR+오디오+인터페이스+OR+DAW&hl=ko&gl=KR&ceid=KR:ko', category: 'interface' },
   ],
-  sports: [
-    { name: 'Google News 스포츠', url: 'https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRFp1ZEdvU0FtdHZHZ0pMVWlnQVAB?hl=ko&gl=KR&ceid=KR:ko', category: 'sports' },
-    { name: 'ESPN', url: 'https://www.espn.com/espn/rss/news', category: 'sports' },
+  guitar: [
+    { name: 'Google News Guitar', url: 'https://news.google.com/rss/search?q=guitar+review+OR+guitar+test+OR+기타+리뷰&hl=ko&gl=KR&ceid=KR:ko', category: 'guitar' },
   ],
-  world: [
-    { name: 'BBC World', url: 'http://feeds.bbci.co.uk/news/world/rss.xml', category: 'world' },
-    { name: 'CNN World', url: 'http://rss.cnn.com/rss/edition_world.rss', category: 'world' },
-    { name: 'Google News World', url: 'https://news.google.com/rss/topics/CAAqJggKIiBDQkFTRWdvSUwyMHZNRGx1YlY4U0FtdHZHZ0pMVWlnQVAB?hl=ko&gl=KR&ceid=KR:ko', category: 'world' },
+  concert: [
+    { name: 'Google News Concert', url: 'https://news.google.com/rss/search?q=rock+concert+OR+metal+concert+OR+록+콘서트+OR+메탈+공연&hl=ko&gl=KR&ceid=KR:ko', category: 'concert' },
+    { name: 'Live Nation Blog', url: 'https://blog.livenation.com/feed/', category: 'concert' },
   ],
-  science: [
-    { name: 'Science Daily', url: 'https://www.sciencedaily.com/rss/all.xml', category: 'science' },
-    { name: 'Google News 과학', url: 'https://news.google.com/rss/search?q=과학+OR+연구&hl=ko&gl=KR&ceid=KR:ko', category: 'science' },
+  album: [
+    { name: 'Google News Album Release', url: 'https://news.google.com/rss/search?q=album+release+OR+new+album+OR+앨범+발매+OR+신보&hl=ko&gl=KR&ceid=KR:ko', category: 'album' },
+    { name: 'Pitchfork', url: 'https://pitchfork.com/rss/reviews/albums/', category: 'album' },
   ],
-  health: [
-    { name: 'Google News 건강', url: 'https://news.google.com/rss/search?q=건강+OR+의학+OR+질병&hl=ko&gl=KR&ceid=KR:ko', category: 'health' },
-    { name: 'WebMD Health', url: 'https://www.webmd.com/rss/rss.aspx?RSSSource=RSS_PUBLIC', category: 'health' },
-    { name: 'NIH News', url: 'https://www.nih.gov/news-events/news-releases/rss', category: 'health' },
-  ],
-  culture: [
-    { name: 'Google News 문화', url: 'https://news.google.com/rss/search?q=문화+OR+예술+OR+전시&hl=ko&gl=KR&ceid=KR:ko', category: 'culture' },
-  ],
-  ai: [
-    { name: 'Google News AI', url: 'https://news.google.com/rss/search?q=artificial+intelligence+OR+AI+OR+machine+learning&hl=ko&gl=KR&ceid=KR:ko', category: 'ai' },
-  ],
-  korea: [
-    { name: 'Google News Korea', url: 'https://news.google.com/rss?hl=ko&gl=KR&ceid=KR:ko', category: 'korea' },
+  festival: [
+    { name: 'Google News Music Festival', url: 'https://news.google.com/rss/search?q=music+festival+OR+rock+festival+OR+음악+페스티벌&hl=ko&gl=KR&ceid=KR:ko', category: 'festival' },
   ],
 };
 
@@ -315,7 +302,6 @@ async function crawlSingleFeed(feedUrl: string, feedName: string, category: stri
     const xmlText = await response.text();
     console.log(`📄 XML 길이: ${xmlText.length} bytes`);
 
-    const supabase = createServiceClient();
     let addedCount = 0;
 
     // RSS 2.0 형식 파싱
@@ -331,41 +317,38 @@ async function crawlSingleFeed(feedUrl: string, feedName: string, category: stri
 
       const [, title, link, pubDate, description] = match;
 
-      // 중복 확인 (maybeSingle 사용)
-      const { data: existing, error: checkError } = await supabase
-        .from('news')
-        .select('id')
-        .eq('url', link)
-        .maybeSingle();
-
-      if (checkError) {
-        console.error(`❌ 중복 체크 에러:`, checkError);
-        continue;
-      }
-
-      if (!existing) {
-        const cleanTitle = title.replace(/<!\[CDATA\[|\]\]>|<[^>]*>/g, '').trim();
-        const cleanDescription = description
-          ? description.replace(/<!\[CDATA\[|\]\]>|<[^>]*>/g, '').trim().substring(0, 500)
-          : '';
-
-        const { error: insertError } = await supabase.from('news').insert({
-          title: cleanTitle,
-          description: cleanDescription,
-          url: link,
-          source: feedName,
-          category: category,
-          published_at: pubDate ? new Date(pubDate).toISOString() : new Date().toISOString(),
+      try {
+        // 중복 확인 (Prisma 사용)
+        const existing = await prisma.news.findUnique({
+          where: { url: link },
+          select: { id: true }
         });
 
-        if (!insertError) {
+        if (!existing) {
+          const cleanTitle = title.replace(/<!\[CDATA\[|\]\]>|<[^>]*>/g, '').trim();
+          const cleanDescription = description
+            ? description.replace(/<!\[CDATA\[|\]\]>|<[^>]*>/g, '').trim().substring(0, 500)
+            : '';
+
+          await prisma.news.create({
+            data: {
+              title: cleanTitle,
+              description: cleanDescription,
+              url: link,
+              source: feedName,
+              category: category,
+              published_at: pubDate ? new Date(pubDate) : new Date(),
+            }
+          });
+
           addedCount++;
           console.log(`✅ 추가: ${cleanTitle.substring(0, 50)}...`);
         } else {
-          console.error(`❌ 추가 실패:`, insertError);
+          console.log(`⏭️  중복: ${title.replace(/<!\[CDATA\[|\]\]>|<[^>]*>/g, '').trim().substring(0, 50)}...`);
         }
-      } else {
-        console.log(`⏭️  중복: ${title.replace(/<!\[CDATA\[|\]\]>|<[^>]*>/g, '').trim().substring(0, 50)}...`);
+      } catch (error: any) {
+        console.error(`❌ 에러:`, error.message);
+        continue;
       }
     }
 
@@ -389,7 +372,7 @@ export async function crawlAllNews() {
     // 모든 RSS Feed 크롤링
     for (const [categoryName, feeds] of Object.entries(RSS_FEEDS)) {
       for (const feed of feeds) {
-        const result = await crawlSingleFeed(feed.url, feed.name, feed.category, 5);
+        const result = await crawlSingleFeed(feed.url, feed.name, feed.category, 20);
         totalAdded += result.added;
         totalErrors += result.errors;
 

@@ -25,8 +25,8 @@ export function NotificationDropdown() {
   useEffect(() => {
     loadNotifications();
 
-    // 30초마다 알림 새로고침
-    const interval = setInterval(loadNotifications, 30000);
+    // 5분마다 알림 새로고침 (성능 최적화: 30초 → 5분)
+    const interval = setInterval(loadNotifications, 300000);
 
     // 클릭 외부 감지
     const handleClickOutside = (event: MouseEvent) => {

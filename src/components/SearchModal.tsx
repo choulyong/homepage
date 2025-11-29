@@ -5,8 +5,11 @@ import Link from 'next/link';
 import { cn } from '@/lib/utils';
 
 interface SearchResult {
+  bands: Array<{ id: string; name: string; country: string | null; image_url: string | null; logo_url: string | null }>;
+  albums: Array<{ id: string; title: string; cover_url: string | null; release_year: number | null; band_name: string | null }>;
   posts: Array<{ id: number; board_id: string; title: string; content: string; created_at: string }>;
-  news: Array<{ id: number; title: string; content: string; link: string; created_at: string }>;
+  news: Array<{ id: string; title: string; description: string | null; url: string; created_at: string }>;
+  videos: Array<{ id: string; video_id: string; title: string; thumbnail_url: string }>;
   gallery: Array<{ id: number; title: string; description: string; image_url: string; created_at: string }>;
   movies: Array<{ id: number; title: string; description: string; poster_url: string; created_at: string }>;
   total: number;
@@ -142,8 +145,113 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
           {!loading && results && results.total > 0 && (
             <div className="space-y-6">
+              {/* 밴드 */}
+              {results.bands && results.bands.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-bold text-gray-500 dark:text-gray-400 mb-2">밴드 ({results.bands.length})</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {results.bands.map((band) => (
+                      <Link
+                        key={band.id}
+                        href={`/bands/${band.id}`}
+                        onClick={handleLinkClick}
+                        className="block p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+                      >
+                        <div className="flex items-center gap-3">
+                          {(band.image_url || band.logo_url) ? (
+                            <img
+                              src={band.image_url || band.logo_url}
+                              alt={band.name}
+                              className="w-12 h-12 object-cover rounded"
+                            />
+                          ) : (
+                            <div className="w-12 h-12 bg-gray-200 dark:bg-gray-700 rounded flex items-center justify-center">
+                              🎸
+                            </div>
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <div className="font-medium text-gray-900 dark:text-white truncate">{band.name}</div>
+                            {band.country && (
+                              <div className="text-xs text-gray-500 dark:text-gray-400">{band.country}</div>
+                            )}
+                          </div>
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 앨범 */}
+              {results.albums && results.albums.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-bold text-gray-500 dark:text-gray-400 mb-2">앨범 ({results.albums.length})</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {results.albums.map((album) => (
+                      <Link
+                        key={album.id}
+                        href={`/albums/${album.id}`}
+                        onClick={handleLinkClick}
+                        className="block group"
+                      >
+                        <div className="aspect-square relative rounded-lg overflow-hidden mb-2">
+                          {album.cover_url ? (
+                            <img
+                              src={album.cover_url}
+                              alt={album.title}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gray-200 dark:bg-gray-700 flex items-center justify-center text-3xl">
+                              💿
+                            </div>
+                          )}
+                        </div>
+                        <div className="font-medium text-sm text-gray-900 dark:text-white line-clamp-1">{album.title}</div>
+                        <div className="text-xs text-gray-500 dark:text-gray-400 line-clamp-1">
+                          {album.band_name} {album.release_year && `• ${album.release_year}`}
+                        </div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 비디오 */}
+              {results.videos && results.videos.length > 0 && (
+                <div>
+                  <h3 className="text-sm font-bold text-gray-500 dark:text-gray-400 mb-2">비디오 ({results.videos.length})</h3>
+                  <div className="grid grid-cols-2 gap-2">
+                    {results.videos.map((video) => (
+                      <Link
+                        key={video.id}
+                        href={`/videos`}
+                        onClick={handleLinkClick}
+                        className="block group"
+                      >
+                        <div className="aspect-video relative rounded-lg overflow-hidden mb-2">
+                          <img
+                            src={video.thumbnail_url}
+                            alt={video.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+                          />
+                          <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/40 transition-colors">
+                            <div className="w-12 h-12 bg-red-600 rounded-full flex items-center justify-center">
+                              <svg className="w-6 h-6 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                                <path d="M8 5v14l11-7z" />
+                              </svg>
+                            </div>
+                          </div>
+                        </div>
+                        <div className="font-medium text-sm text-gray-900 dark:text-white line-clamp-2">{video.title}</div>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               {/* 게시글 */}
-              {results.posts.length > 0 && (
+              {results.posts && results.posts.length > 0 && (
                 <div>
                   <h3 className="text-sm font-bold text-gray-500 dark:text-gray-400 mb-2">게시글 ({results.posts.length})</h3>
                   <div className="space-y-2">
@@ -172,14 +280,18 @@ export function SearchModal({ isOpen, onClose }: SearchModalProps) {
                     {results.news.map((item) => (
                       <Link
                         key={item.id}
-                        href={`/news/${item.id}`}
+                        href={item.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
                         onClick={handleLinkClick}
                         className="block p-3 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
                       >
                         <div className="font-medium text-gray-900 dark:text-white">{item.title}</div>
-                        <div className="text-sm text-gray-500 dark:text-gray-400 line-clamp-1 mt-1">
-                          {item.content.substring(0, 100)}...
-                        </div>
+                        {item.description && (
+                          <div className="text-sm text-gray-500 dark:text-gray-400 line-clamp-1 mt-1">
+                            {item.description.substring(0, 100)}...
+                          </div>
+                        )}
                       </Link>
                     ))}
                   </div>

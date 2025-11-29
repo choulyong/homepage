@@ -7,10 +7,9 @@
 
 import { useState, useEffect, use } from 'react';
 import { useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
 import Link from 'next/link';
 
-// Rock Community 게시판 카테고리
+// Rock Community 게시판 카테고리 (Music Discovery, Rock Art Showcase 제거됨)
 const CATEGORIES: Record<string, { name: string; description: string; icon: string }> = {
   'general_discussion': {
     name: 'General Discussion',
@@ -32,11 +31,6 @@ const CATEGORIES: Record<string, { name: string; description: string; icon: stri
     description: '뜨거운 Rock 이슈',
     icon: '🔥',
   },
-  'rock_art': {
-    name: 'Rock Art Showcase',
-    description: 'Rock 테마 창작물 공유',
-    icon: '🎨',
-  },
 };
 
 interface PageProps {
@@ -57,18 +51,17 @@ export default function BoardNewPostPage({ params }: PageProps) {
 
   useEffect(() => {
     const checkAuth = async () => {
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
+      const response = await fetch('/api/auth/me');
+      const data = await response.json();
 
-      if (!user) {
-        alert('로그인이 필요합니다.');
+      if (!data.user) {
+        alert('로그인이 필요합니다. 우측 상단에서 로그인해주세요.');
         router.push(`/board/${category}`);
         return;
       }
 
       // 관리자 확인
-      const isAdminUser = user.id === process.env.NEXT_PUBLIC_ADMIN_USER_ID;
-      setIsAdmin(isAdminUser);
+      setIsAdmin(data.user.isAdmin || false);
       setLoading(false);
     };
 
@@ -114,31 +107,46 @@ export default function BoardNewPostPage({ params }: PageProps) {
     }
 
     setSaving(true);
-    const supabase = createClient();
 
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
-      alert('로그인이 필요합니다.');
-      setSaving(false);
-      return;
-    }
+    try {
+      // 현재 사용자 정보 가져오기
+      const userResponse = await fetch('/api/auth/me');
+      const userData = await userResponse.json();
 
-    const { error } = await supabase.from('posts').insert({
-      user_id: user.id,
-      category: category,
-      title: title.trim(),
-      content: content.trim(),
-      image_urls: imageUrls.length > 0 ? imageUrls : null,
-      is_pinned: isAdmin ? isPinned : false,
-    });
+      if (!userData.user) {
+        alert('로그인이 필요합니다.');
+        setSaving(false);
+        return;
+      }
 
-    if (error) {
+      const response = await fetch('/api/board/posts', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: title.trim(),
+          content: content.trim(),
+          category: category,
+          author: userData.user.username,
+          user_id: userData.user.id,
+          image_urls: imageUrls,
+          is_pinned: isAdmin ? isPinned : false,
+        }),
+      });
+
+      if (response.ok) {
+        alert('게시글이 작성되었습니다!');
+        router.push(`/board/${category}`);
+      } else {
+        const error = await response.json();
+        alert('게시글 작성에 실패했습니다: ' + error.message);
+        setSaving(false);
+      }
+    } catch (error) {
       console.error('Error creating post:', error);
-      alert('게시글 작성에 실패했습니다: ' + error.message);
+      alert('게시글 작성 중 오류가 발생했습니다.');
       setSaving(false);
-    } else {
-      alert('게시글이 작성되었습니다!');
-      router.push(`/board/${category}`);
     }
   };
 

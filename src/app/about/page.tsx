@@ -2,7 +2,16 @@
  * About METALDRAGON - Rock Community
  */
 
+import prisma from '@/lib/prisma';
+
 export default async function AboutPage() {
+  // 실제 데이터베이스에서 통계 가져오기
+  const [bandsCount, albumsCount, concertsCount, postsCount] = await Promise.all([
+    prisma.band.count(),
+    prisma.album.count(),
+    prisma.concert.count(),
+    prisma.boardPost.count(),
+  ]);
   return (
     <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto">
@@ -91,10 +100,10 @@ export default async function AboutPage() {
           </h2>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {[
-              { number: '1,000+', label: 'Rock Bands' },
-              { number: '5,000+', label: 'Albums' },
-              { number: '500+', label: 'Concert Reviews' },
-              { number: '10,000+', label: 'Community Members' },
+              { number: bandsCount.toLocaleString(), label: 'Rock Bands' },
+              { number: albumsCount.toLocaleString(), label: 'Albums' },
+              { number: concertsCount.toLocaleString(), label: 'Concerts' },
+              { number: postsCount.toLocaleString(), label: 'Community Posts' },
             ].map((stat, idx) => (
               <div key={idx} className="text-center">
                 <div className="text-4xl font-bold gradient-text mb-2">{stat.number}</div>

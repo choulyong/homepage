@@ -7,9 +7,9 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
 import { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { clearSession } from '@/lib/auth-client';
 
 export function AdminSidebar() {
   const pathname = usePathname();
@@ -20,12 +20,13 @@ export function AdminSidebar() {
   const handleLogout = async () => {
     setIsLoggingOut(true);
     try {
-      const supabase = createClient();
-      await supabase.auth.signOut();
+      // localStorage 세션 삭제
+      clearSession();
+      console.log('✅ User logged out');
       router.push('/');
       router.refresh();
     } catch (error) {
-      console.error('로그아웃 실패:', error);
+      console.error('❌ 로그아웃 실패:', error);
     } finally {
       setIsLoggingOut(false);
     }
@@ -99,29 +100,17 @@ export function AdminSidebar() {
       {/* Rock Content Management */}
       <div className="flex flex-col gap-2">
         <SectionTitle>Rock Content</SectionTitle>
-        <NavItem href="/bands">Bands</NavItem>
-        <NavItem href="/albums">Albums</NavItem>
-        <NavItem href="/bands/countries">Bands by Country</NavItem>
-        <NavItem href="/albums/korean">Korean Albums</NavItem>
-        <NavItem href="/admin/concerts/new">Add Concert</NavItem>
-        <NavItem href="/concerts">Concerts</NavItem>
+        <NavItem href="/admin/bands">Bands & Albums</NavItem>
       </div>
 
-      {/* Community Management */}
+      {/* Quick Links */}
       <div className="flex flex-col gap-2">
-        <SectionTitle>Community</SectionTitle>
-        <NavItem href="/community">Board</NavItem>
-        <NavItem href="/news">Rock News</NavItem>
-        <NavItem href="/videos">YouTube Videos</NavItem>
-        <NavItem href="/rock-art">AI Rock Art</NavItem>
-        <NavItem href="/gallery">Photo Gallery</NavItem>
-      </div>
-
-      {/* Settings */}
-      <div className="flex flex-col gap-2">
-        <SectionTitle>Settings</SectionTitle>
-        <NavItem href="/admin/backgrounds">Backgrounds</NavItem>
-        <NavItem href="/admin/site-settings">Site Settings</NavItem>
+        <SectionTitle>Quick Links</SectionTitle>
+        <NavItem href="/bands">View Bands</NavItem>
+        <NavItem href="/albums">View Albums</NavItem>
+        <NavItem href="/albums/legend">명반 100</NavItem>
+        <NavItem href="/community">Community</NavItem>
+        <NavItem href="/gallery">Gallery</NavItem>
       </div>
 
       {/* Logout Button */}

@@ -1,0 +1,339 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+// Rock bands from around the world
+model Band {
+  id                 String   @id @default(uuid()) @db.Uuid
+  name               String
+  bio                String?
+  logo_url           String?
+  country            String?
+  formed_year        Int?
+  genres             String[] @default([])
+  social_links       Json?
+  spotify_id         String?  @unique
+  spotify_followers  Int?
+  spotify_popularity Int?
+  origin             String?
+  image_url          String?
+  created_at         DateTime @default(now())
+  updated_at         DateTime @updatedAt
+
+  albums   Album[]
+  concerts Concert[]
+  reviews  Review[]
+
+  @@index([country])
+  @@index([spotify_followers])
+  @@index([name])
+  @@index([created_at])
+  @@map("bands")
+}
+
+// Albums by bands
+model Album {
+  id           String   @id @default(uuid()) @db.Uuid
+  band_id      String   @db.Uuid
+  title        String
+  cover_url    String?
+  release_year Int?
+  label        String?
+  genres       String[]
+  spotify_id   String?  @unique
+  spotify_url  String?
+  youtube_url  String?
+  is_legend    Boolean  @default(false) // 한국 대중음악 명반 100 포함 여부
+  legend_rank  Int?     // 명반 100 순위 (1-100)
+  created_at   DateTime @default(now())
+
+  band   Band    @relation(fields: [band_id], references: [id], onDelete: Cascade)
+  tracks Track[]
+
+  @@index([band_id])
+  @@index([release_year])
+  @@index([is_legend, legend_rank])
+  @@index([created_at])
+  @@map("albums")
+}
+
+// Tracks in albums
+model Track {
+  id               String  @id @default(uuid()) @db.Uuid
+  album_id         String  @db.Uuid
+  track_number     Int
+  title            String
+  duration_seconds Int?
+  spotify_id       String? @unique
+  preview_url      String?
+  youtube_url      String?
+
+  album Album @relation(fields: [album_id], references: [id], onDelete: Cascade)
+
+  @@map("tracks")
+}
+
+// User reviews for bands/albums
+model Review {
+  id         String   @id @default(uuid()) @db.Uuid
+  band_id    String   @db.Uuid
+  user_name  String
+  rating     Int
+  content    String
+  created_at DateTime @default(now())
+
+  band Band @relation(fields: [band_id], references: [id], onDelete: Cascade)
+
+  @@map("reviews")
+}
+
+// Concert information
+model Concert {
+  id          String   @id @default(uuid()) @db.Uuid
+  band_id     String   @db.Uuid
+  title       String
+  venue       String
+  location    String
+  city        String?
+  country     String?
+  date        DateTime
+  past_event  Boolean  @default(false)
+  ticket_url  String?
+  poster_url  String?
+  youtube_url String?
+  setlist     Json?
+  description String?
+  created_at  DateTime @default(now())
+
+  band Band @relation(fields: [band_id], references: [id], onDelete: Cascade)
+
+  @@index([band_id])
+  @@index([date])
+  @@index([past_event])
+  @@map("concerts")
+}
+
+// Community board posts
+model BoardPost {
+  id          String   @id @default(uuid()) @db.Uuid
+  title       String
+  content     String   @db.Text
+  author      String
+  user_id     String?
+  category    String   // general_discussion, album_reviews, concert_reviews, hot_topics
+  views       Int      @default(0)
+  is_pinned   Boolean  @default(false)
+  image_urls  String[] @default([])
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  comments BoardComment[]
+
+  @@index([category])
+  @@index([is_pinned, created_at])
+  @@map("board_posts")
+}
+
+// Comments on board posts
+model BoardComment {
+  id         String   @id @default(uuid()) @db.Uuid
+  post_id    String   @db.Uuid
+  author     String
+  content    String
+  created_at DateTime @default(now())
+
+  post BoardPost @relation(fields: [post_id], references: [id], onDelete: Cascade)
+
+  @@map("board_comments")
+}
+
+// Rock & Audio News
+model News {
+  id           String   @id @default(uuid()) @db.Uuid
+  title        String
+  description  String?
+  url          String   @unique
+  source       String
+  category     String
+  published_at DateTime
+  created_at   DateTime @default(now())
+
+  @@index([category])
+  @@index([published_at])
+  @@map("news")
+}
+
+// YouTube Videos (Metal & Rock Music Videos)
+model YoutubeVideo {
+  id            String   @id @default(uuid()) @db.Uuid
+  video_id      String   @unique
+  title         String
+  youtube_url   String
+  thumbnail_url String
+  published_at  DateTime
+  created_at    DateTime @default(now())
+
+  @@index([published_at])
+  @@map("youtube_videos")
+}
+
+// Gallery - Member Music Videos/Photos (회원동영상)
+model Gallery {
+  id      String  @id @default(uuid()) @db.Uuid
+  title   String
+  content String? @db.Text // 게시글 내용
+  author  String
+  user_id String?
+
+  // 동영상 정보
+  video_type  String? // 'youtube' | 'upload' | null
+  youtube_url String? // YouTube 링크
+  video_url   String? // 직접 업로드한 동영상 URL
+
+  // 이미지 정보 (다중)
+  image_urls String[] @default([]) // 다중 이미지 URLs
+
+  // 메타데이터
+  view_count Int @default(0)
+  like_count Int @default(0)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  comments GalleryComment[]
+
+  @@index([created_at])
+  @@index([user_id])
+  @@map("gallery")
+}
+
+// Gallery Comments
+model GalleryComment {
+  id         String   @id @default(uuid()) @db.Uuid
+  gallery_id String   @db.Uuid
+  author     String
+  user_id    String?
+  content    String   @db.Text
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  gallery Gallery @relation(fields: [gallery_id], references: [id], onDelete: Cascade)
+
+  @@index([gallery_id])
+  @@index([created_at])
+  @@map("gallery_comments")
+}
+
+// Rock Art - AI Generated Rock Art
+model RockArt {
+  id          String   @id @default(uuid()) @db.Uuid
+  title       String
+  description String?
+  image_url   String
+  author      String
+  user_id     String?
+  created_at  DateTime @default(now())
+  updated_at  DateTime @updatedAt
+
+  @@index([created_at])
+  @@map("rock_art")
+}
+
+// AshDish - Member Content Sharing (AshDish 콘텐츠)
+model AshDish {
+  id      String  @id @default(uuid()) @db.Uuid
+  title   String
+  content String? @db.Text // 게시글 내용
+  author  String
+  user_id String?
+
+  // 동영상 정보
+  video_type  String? // 'youtube' | 'upload' | null
+  youtube_url String? // YouTube 링크
+  video_url   String? // 직접 업로드한 동영상 URL
+
+  // 이미지 정보 (다중)
+  image_urls String[] @default([]) // 다중 이미지 URLs
+
+  // 메타데이터
+  view_count Int @default(0)
+  like_count Int @default(0)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  comments AshDishComment[]
+
+  @@index([created_at])
+  @@index([user_id])
+  @@map("ashdish")
+}
+
+// AshDish Comments
+model AshDishComment {
+  id         String   @id @default(uuid()) @db.Uuid
+  ashdish_id String   @db.Uuid
+  author     String
+  user_id    String?
+  content    String   @db.Text
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  ashdish AshDish @relation(fields: [ashdish_id], references: [id], onDelete: Cascade)
+
+  @@index([ashdish_id])
+  @@index([created_at])
+  @@map("ashdish_comments")
+}
+
+// Videos - Member Video Content (회원 동영상과 동일)
+model Video {
+  id      String  @id @default(uuid()) @db.Uuid
+  title   String
+  content String? @db.Text
+  author  String
+  user_id String?
+
+  video_type  String? // 'youtube' | 'upload' | null
+  youtube_url String?
+  video_url   String?
+  image_urls  String[] @default([])
+
+  view_count Int @default(0)
+  like_count Int @default(0)
+
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  comments VideoComment[]
+
+  @@index([created_at])
+  @@index([user_id])
+  @@map("videos")
+}
+
+// Video Comments
+model VideoComment {
+  id         String   @id @default(uuid()) @db.Uuid
+  video_id   String   @db.Uuid
+  author     String
+  user_id    String?
+  content    String   @db.Text
+  created_at DateTime @default(now())
+  updated_at DateTime @updatedAt
+
+  video Video @relation(fields: [video_id], references: [id], onDelete: Cascade)
+
+  @@index([video_id])
+  @@index([created_at])
+  @@map("video_comments")
+}

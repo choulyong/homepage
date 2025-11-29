@@ -245,7 +245,7 @@ export default function ConcertForm({ bands }: ConcertFormProps) {
           disabled={loading}
           className="flex-1 px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
         >
-          {loading ? 'Creating...' : '<¤ Create Concert'}
+          {loading ? 'Creating...' : 'Create Concert'}
         </button>
         <button
           type="button"

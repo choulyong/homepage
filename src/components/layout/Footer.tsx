@@ -33,6 +33,9 @@ export function Footer() {
           <Link href="/concerts" className="text-zinc-400 hover:text-red-400 transition-colors text-sm">
             콘서트 일정
           </Link>
+          <Link href="/gallery" className="text-zinc-400 hover:text-red-400 transition-colors text-sm">
+            회원동영상
+          </Link>
           <Link href="/rock-art" className="text-zinc-400 hover:text-red-400 transition-colors text-sm">
             AI Rock Art
           </Link>

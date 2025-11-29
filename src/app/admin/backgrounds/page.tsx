@@ -15,17 +15,20 @@ import {
   type PageBackground,
 } from '@/app/actions/backgrounds';
 
-// 사용 가능한 페이지 목록
+// 사용 가능한 페이지 목록 (실제 Rock Community 메뉴 구조)
 const AVAILABLE_PAGES = [
-  { path: '/', label: '홈' },
+  { path: '/', label: 'Home (홈)' },
   { path: '/about', label: 'About' },
-  { path: '/schedule', label: '일정' },
-  { path: '/running', label: '러닝 트래커' },
-  { path: '/free-board', label: '자유게시판' },
-  { path: '/gallery', label: '갤러리' },
-  { path: '/movies', label: '영화' },
-  { path: '/youtube', label: 'YouTube' },
-  { path: '/artworks', label: 'AI 작품' },
+  { path: '/bands', label: 'Bands' },
+  { path: '/bands/countries', label: 'By Country' },
+  { path: '/albums', label: 'Albums' },
+  { path: '/albums/korean', label: 'K-Rock' },
+  { path: '/concerts', label: 'Concerts' },
+  { path: '/community', label: 'Community' },
+  { path: '/news', label: 'News' },
+  { path: '/gallery', label: '회원동영상' },
+  { path: '/rock-art', label: 'Rock Art' },
+  { path: '/videos', label: 'Videos' },
   { path: '/contact', label: 'Contact' },
 ];
 

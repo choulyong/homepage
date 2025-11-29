@@ -1,7 +1,7 @@
 import Link from 'next/link';
-import Image from 'next/image';
-import { createClient } from '@/lib/supabase/server';
+import prisma from '@/lib/prisma';
 import { notFound } from 'next/navigation';
+import { isRockMetalBand } from '@/lib/genreFilter';
 
 interface PageProps {
   params: Promise<{
@@ -12,15 +12,21 @@ interface PageProps {
 export default async function CountryBandsPage({ params }: PageProps) {
   const { country } = await params;
   const decodedCountry = decodeURIComponent(country);
-  const supabase = await createClient();
 
-  const { data: bands, error } = await supabase
-    .from('bands')
-    .select('*')
-    .eq('country', decodedCountry)
-    .order('spotify_followers', { ascending: false });
+  // Fetch bands from specific country from local PostgreSQL via Prisma
+  const allBands = await prisma.band.findMany({
+    where: {
+      country: decodedCountry,
+    },
+    orderBy: {
+      spotify_followers: 'desc',
+    },
+  });
 
-  if (error || !bands || bands.length === 0) {
+  // Filter to only rock/metal bands (exclude pop, hip-hop, etc.)
+  const bands = allBands.filter(band => isRockMetalBand(band.genres as string[] | null));
+
+  if (!bands || bands.length === 0) {
     notFound();
   }
 
@@ -93,13 +99,12 @@ export default async function CountryBandsPage({ params }: PageProps) {
               href={`/bands/${band.id}`}
               className="group bg-gradient-to-br from-amber-500/10 to-purple-500/10 hover:from-amber-500/20 hover:to-purple-500/20 rounded-xl overflow-hidden transition-all duration-300 border border-transparent hover:border-amber-500/50"
             >
-              <div className="relative w-full aspect-square bg-gradient-to-br from-gray-800 to-gray-900">
+              <div className="relative w-full aspect-square bg-gradient-to-br from-gray-800 to-gray-900 overflow-hidden">
                 {band.image_url || band.logo_url ? (
-                  <Image
+                  <img
                     src={band.image_url || band.logo_url}
                     alt={band.name}
-                    fill
-                    className="object-cover group-hover:scale-105 transition-transform duration-300"
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
                   />
                 ) : (
                   <div className="absolute inset-0 flex items-center justify-center text-6xl">

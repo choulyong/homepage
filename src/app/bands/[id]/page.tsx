@@ -4,7 +4,8 @@
 
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import prisma from '@/lib/prisma';
+import AlbumGrid from './AlbumGrid';
 
 interface BandDetailPageProps {
   params: Promise<{ id: string }>;
@@ -12,34 +13,32 @@ interface BandDetailPageProps {
 
 export default async function BandDetailPage({ params }: BandDetailPageProps) {
   const { id } = await params;
-  const supabase = await createClient();
 
-  const { data: band, error } = await supabase
-    .from('bands')
-    .select('*')
-    .eq('id', id)
-    .single();
+  // Fetch band with albums from local PostgreSQL via Prisma
+  const band = await prisma.band.findUnique({
+    where: { id },
+    include: {
+      albums: {
+        orderBy: {
+          release_year: 'desc',
+        },
+      },
+    },
+  });
 
-  if (error || !band) {
+  if (!band) {
     notFound();
   }
 
-  // Fetch albums
-  const { data: albums } = await supabase
-    .from('albums')
-    .select('*')
-    .eq('band_id', id)
-    .order('release_year', { ascending: false });
+  const albums = band.albums;
 
-  // Fetch band members
-  const { data: members } = await supabase
-    .from('band_members')
-    .select(`
-      *,
-      artist:artists(*)
-    `)
-    .eq('band_id', id)
-    .order('join_year', { ascending: false });
+  // TODO: Fetch band members when band_members table is added to schema
+  // const members = await prisma.bandMember.findMany({
+  //   where: { band_id: id },
+  //   include: { artist: true },
+  //   orderBy: { join_year: 'desc' },
+  // });
+  const members = null;
 
   return (
     <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
@@ -69,10 +68,10 @@ export default async function BandDetailPage({ params }: BandDetailPageProps) {
         <div className="bg-gradient-to-br from-red-500/10 to-amber-500/10 dark:from-red-900/20 dark:to-amber-900/20 rounded-2xl p-8 md:p-12 mb-8">
           <div className="flex flex-col md:flex-row gap-8 items-start">
             {/* Band Logo */}
-            <div className="w-full md:w-64 h-64 bg-gradient-to-br from-red-500/20 to-amber-500/20 rounded-lg flex items-center justify-center flex-shrink-0">
-              {band.logo_url ? (
+            <div className="w-full md:w-64 h-64 bg-gradient-to-br from-red-500/20 to-amber-500/20 rounded-lg flex items-center justify-center flex-shrink-0 overflow-hidden">
+              {(band.image_url || band.logo_url) ? (
                 <img
-                  src={band.logo_url}
+                  src={band.image_url || band.logo_url}
                   alt={band.name}
                   className="w-full h-full object-cover rounded-lg"
                 />
@@ -96,6 +95,20 @@ export default async function BandDetailPage({ params }: BandDetailPageProps) {
                 {band.formed_year && (
                   <p className="text-lg text-gray-700 dark:text-gray-300">
                     📅 Formed in {band.formed_year}
+                  </p>
+                )}
+                {band.spotify_followers > 0 && (
+                  <p className="text-lg text-gray-700 dark:text-gray-300">
+                    👥 {band.spotify_followers >= 1000000
+                      ? `${(band.spotify_followers / 1000000).toFixed(1)}M`
+                      : band.spotify_followers >= 1000
+                      ? `${(band.spotify_followers / 1000).toFixed(0)}K`
+                      : band.spotify_followers} Followers
+                  </p>
+                )}
+                {band.spotify_popularity > 0 && (
+                  <p className="text-lg text-gray-700 dark:text-gray-300">
+                    ⭐ Popularity: {band.spotify_popularity}/100
                   </p>
                 )}
               </div>
@@ -143,38 +156,9 @@ export default async function BandDetailPage({ params }: BandDetailPageProps) {
         {albums && albums.length > 0 && (
           <div className="mb-12">
             <h2 className="text-3xl font-display font-bold mb-6 text-gray-900 dark:text-white">
-              💿 Discography
+              💿 Discography ({albums.length} albums)
             </h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-              {albums.map((album) => (
-                <div
-                  key={album.id}
-                  className="bg-white dark:bg-zinc-900 rounded-lg shadow-md overflow-hidden border border-gray-200 dark:border-zinc-800"
-                >
-                  <div className="aspect-square bg-gradient-to-br from-amber-500/20 to-purple-500/20 flex items-center justify-center">
-                    {album.cover_url ? (
-                      <img
-                        src={album.cover_url}
-                        alt={album.title}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      <span className="text-6xl">💿</span>
-                    )}
-                  </div>
-                  <div className="p-4">
-                    <h3 className="font-bold text-gray-900 dark:text-white mb-1">
-                      {album.title}
-                    </h3>
-                    {album.release_year && (
-                      <p className="text-sm text-gray-600 dark:text-gray-400">
-                        {album.release_year}
-                      </p>
-                    )}
-                  </div>
-                </div>
-              ))}
-            </div>
+            <AlbumGrid albums={albums} bandName={band.name} />
           </div>
         )}
 

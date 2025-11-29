@@ -1,213 +1,377 @@
 /**
- * Gallery Detail Page (Public)
- * 갤러리 상세 페이지
+ * Gallery Post Detail Page - 회원동영상 상세보기
  */
 
 'use client';
 
-import { useState, useEffect } from 'react';
-import { useParams, useRouter } from 'next/navigation';
-import { createClient } from '@/lib/supabase/client';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
-import { LikeButton } from '@/components/LikeButton';
-import { CommentsSection } from '@/components/CommentsSection';
+import { useState, useEffect, use } from 'react';
+import { useRouter } from 'next/navigation';
+import { getCurrentUser } from '@/lib/auth-client';
+import Link from 'next/link';
 import Image from 'next/image';
 
-interface Photo {
+interface GalleryPost {
   id: string;
   title: string;
-  description: string | null;
-  image_url: string;
-  original_filename: string | null;
-  file_size: number | null;
-  taken_at: string | null;
+  content: string | null;
+  author: string;
+  user_id: string | null;
+  video_type: string | null;
+  youtube_url: string | null;
+  video_url: string | null;
+  image_urls: string[];
   view_count: number;
+  like_count: number;
   created_at: string;
-  user_id: string;
 }
 
-export default function GalleryDetailPage() {
-  const params = useParams();
+interface Comment {
+  id: string;
+  gallery_id: string;
+  author: string;
+  user_id: string | null;
+  content: string;
+  created_at: string;
+  updated_at: string;
+}
+
+interface PageProps {
+  params: Promise<{ id: string }>;
+}
+
+export default function GalleryDetailPage({ params }: PageProps) {
+  const { id } = use(params);
   const router = useRouter();
-  const [photo, setPhoto] = useState<Photo | null>(null);
+  const [post, setPost] = useState<GalleryPost | null>(null);
+  const [user, setUser] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [currentUser, setCurrentUser] = useState<any>(null);
+  const [liked, setLiked] = useState(false);
+
+  // 댓글 states
+  const [comments, setComments] = useState<Comment[]>([]);
+  const [commentContent, setCommentContent] = useState('');
+  const [commentSubmitting, setCommentSubmitting] = useState(false);
 
   useEffect(() => {
-    const loadPhoto = async () => {
-      const supabase = createClient();
+    loadUser();
+    loadPost();
+    loadComments();
+  }, [id]);
 
-      // 현재 사용자 가져오기
-      const {
-        data: { user },
-      } = await supabase.auth.getUser();
-      setCurrentUser(user);
+  const loadUser = () => {
+    const currentUser = getCurrentUser();
+    console.log('🔐 Gallery Detail - Cookie user:', currentUser);
+    setUser(currentUser);
+  };
 
-      // 사진 가져오기
-      const { data, error } = await supabase
-        .from('gallery')
-        .select('*')
-        .eq('id', params.id)
-        .single();
+  const loadPost = async () => {
+    try {
+      setLoading(true);
+      const response = await fetch(`/api/gallery/${id}`);
+      const data = await response.json();
 
-      if (error) {
-        console.error('Error loading photo:', error);
+      if (!data.success) {
+        console.error('Error loading post:', data.error);
+        alert('게시글을 찾을 수 없습니다.');
         router.push('/gallery');
-      } else {
-        setPhoto(data);
-
-        // 조회수 증가
-        await supabase
-          .from('gallery')
-          .update({ view_count: (data.view_count || 0) + 1 })
-          .eq('id', params.id);
+        return;
       }
-      setLoading(false);
-    };
 
-    loadPhoto();
-  }, [params.id, router]);
+      setPost(data.post);
+    } catch (err) {
+      console.error('Error:', err);
+      alert('게시글을 불러오는데 실패했습니다.');
+      router.push('/gallery');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleLike = async () => {
+    if (!post) return;
+
+    try {
+      const newLikeCount = liked ? post.like_count - 1 : post.like_count + 1;
+
+      const response = await fetch(`/api/gallery/${post.id}/like`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ like_count: newLikeCount }),
+      });
+
+      const data = await response.json();
+      if (data.success) {
+        setPost({ ...post, like_count: newLikeCount });
+        setLiked(!liked);
+      }
+    } catch (err) {
+      console.error('Like error:', err);
+    }
+  };
 
   const handleDelete = async () => {
+    if (!post || !user) return;
+    if (post.user_id !== user.id) {
+      alert('본인의 게시글만 삭제할 수 있습니다.');
+      return;
+    }
+
     if (!confirm('정말 삭제하시겠습니까?')) return;
 
-    const supabase = createClient();
-    const { error } = await supabase.from('gallery').delete().eq('id', params.id);
+    try {
+      // 파일 삭제
+      if (post.video_url) {
+        await fetch(`/api/upload?url=${encodeURIComponent(post.video_url)}`, { method: 'DELETE' });
+      }
+      for (const imageUrl of post.image_urls) {
+        await fetch(`/api/upload?url=${encodeURIComponent(imageUrl)}`, { method: 'DELETE' });
+      }
 
-    if (error) {
-      alert('삭제 실패: ' + error.message);
-    } else {
+      // DB에서 삭제 - Use API route
+      const response = await fetch(`/api/gallery?id=${encodeURIComponent(post.id)}`, {
+        method: 'DELETE'
+      });
+
+      const data = await response.json();
+      if (!data.success) throw new Error(data.error);
+
+      alert('삭제되었습니다.');
       router.push('/gallery');
+    } catch (err: any) {
+      console.error('Delete error:', err);
+      alert(err.message || '삭제에 실패했습니다.');
+    }
+  };
+
+  const extractYouTubeVideoId = (url: string) => {
+    const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[7].length === 11) ? match[7] : null;
+  };
+
+  const loadComments = async () => {
+    try {
+      const response = await fetch(`/api/gallery/${id}/comments`);
+      const data = await response.json();
+
+      if (data.success) {
+        setComments(data.comments || []);
+      }
+    } catch (err) {
+      console.error('Error loading comments:', err);
+    }
+  };
+
+  const handleCommentSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (!user) {
+      alert('로그인이 필요합니다.');
+      return;
+    }
+
+    if (!commentContent.trim()) {
+      alert('댓글 내용을 입력해주세요.');
+      return;
+    }
+
+    try {
+      setCommentSubmitting(true);
+
+      const response = await fetch(`/api/gallery/${id}/comments`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          content: commentContent.trim(),
+          author: user.user_metadata?.username || user.email?.split('@')[0] || 'Anonymous',
+          user_id: user.id,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || '댓글 작성에 실패했습니다.');
+      }
+
+      setCommentContent('');
+      await loadComments();
+    } catch (err: any) {
+      console.error('Comment error:', err);
+      alert(err.message || '댓글 작성에 실패했습니다.');
+    } finally {
+      setCommentSubmitting(false);
+    }
+  };
+
+  const handleCommentDelete = async (commentId: string) => {
+    if (!confirm('댓글을 삭제하시겠습니까?')) return;
+
+    try {
+      const response = await fetch(`/api/gallery/${id}/comments?commentId=${commentId}`, {
+        method: 'DELETE',
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || '댓글 삭제에 실패했습니다.');
+      }
+
+      await loadComments();
+    } catch (err: any) {
+      console.error('Delete comment error:', err);
+      alert(err.message || '댓글 삭제에 실패했습니다.');
     }
   };
 
   if (loading) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center py-12 text-gray-600 dark:text-white">
-          로딩 중...
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-red-500 border-t-transparent"></div>
+          <p className="mt-4 text-gray-600 dark:text-gray-400">로딩 중...</p>
         </div>
       </div>
     );
   }
 
-  if (!photo) {
+  if (!post) {
     return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center py-12">
-          <p className="text-gray-600 dark:text-white">사진을 찾을 수 없습니다</p>
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">게시글을 찾을 수 없습니다</h2>
+          <Link href="/gallery"><button className="px-6 py-3 bg-red-500 hover:bg-red-600 text-white rounded-lg">목록으로</button></Link>
         </div>
       </div>
     );
   }
-
-  const isAuthor = currentUser?.id === photo.user_id;
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      {/* Back Button */}
-      <div className="mb-6">
-        <Button variant="secondary" onClick={() => router.back()}>
-          ← 목록으로
-        </Button>
-      </div>
+    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-4xl mx-auto">
+        <Link href="/gallery" className="text-red-600 hover:text-red-500 mb-6 inline-block">← 목록으로</Link>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        {/* Image */}
-        <div className="lg:col-span-2">
-          <Card padding="none" className="overflow-hidden">
-            <div className="relative w-full" style={{ aspectRatio: '16/9' }}>
-              <Image
-                src={photo.image_url}
-                alt={photo.title}
-                fill
-                className="object-contain bg-gray-900"
-                quality={100}
-              />
+        <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-lg p-6 mb-6 border border-gray-200 dark:border-zinc-800">
+          <h1 className="text-3xl font-bold text-gray-900 dark:text-white mb-4">{post.title}</h1>
+          <div className="flex items-center justify-between text-sm text-gray-600 dark:text-gray-400">
+            <div className="flex items-center gap-4">
+              <span className="font-medium">{post.author}</span>
+              <span>{new Date(post.created_at).toLocaleDateString('ko-KR')}</span>
             </div>
-          </Card>
+            <div className="flex items-center gap-4">
+              <span>👀 {post.view_count}</span>
+              <button onClick={handleLike} className={`flex items-center gap-1 ${liked ? 'text-red-500' : ''}`}>❤️ {post.like_count}</button>
+            </div>
+          </div>
+
+          {user && user.id === post.user_id && (
+            <div className="mt-4 pt-4 border-t border-gray-200 dark:border-zinc-800 flex gap-2">
+              <button onClick={handleDelete} className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg transition-colors">삭제</button>
+            </div>
+          )}
         </div>
 
-        {/* Info */}
-        <div>
-          <Card padding="lg">
-            {/* Title */}
-            <h1 className="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white mb-4">
-              {photo.title}
-            </h1>
-
-            {/* Description */}
-            {photo.description && (
-              <p className="text-gray-700 dark:text-gray-300 mb-6">
-                {photo.description}
-              </p>
-            )}
-
-            {/* Meta Info */}
-            <div className="space-y-2 text-sm text-gray-600 dark:text-white mb-6 pb-6 border-b border-gray-200 dark:border-gray-700">
-              {photo.taken_at && (
-                <p>
-                  📅 촬영일:{' '}
-                  {new Date(photo.taken_at).toLocaleDateString('ko-KR')}
-                </p>
-              )}
-              <p>
-                📁 파일명: {photo.original_filename || '알 수 없음'}
-              </p>
-              {photo.file_size && (
-                <p>
-                  💾 크기: {(photo.file_size / 1024 / 1024).toFixed(2)}MB
-                </p>
-              )}
-              <p>👁️ 조회: {photo.view_count}</p>
-              <p>
-                🕐 업로드:{' '}
-                {new Date(photo.created_at).toLocaleDateString('ko-KR')}
-              </p>
+        {post.video_type === 'youtube' && post.youtube_url && (
+          <div className="bg-black rounded-xl overflow-hidden shadow-lg mb-6">
+            <div className="aspect-video">
+              <iframe src={`https://www.youtube.com/embed/${extractYouTubeVideoId(post.youtube_url)}`} title={post.title} allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen className="w-full h-full" />
             </div>
+          </div>
+        )}
 
-            {/* Like Button */}
-            <div className="mb-4">
-              <LikeButton targetType="gallery" targetId={parseInt(photo.id)} />
+        {post.video_type === 'upload' && post.video_url && (
+          <div className="bg-black rounded-xl overflow-hidden shadow-lg mb-6">
+            <video src={post.video_url} controls className="w-full">동영상을 재생할 수 없습니다.</video>
+          </div>
+        )}
+
+        {post.image_urls && post.image_urls.length > 0 && (
+          <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-lg p-6 mb-6 border border-gray-200 dark:border-zinc-800">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">이미지</h2>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {post.image_urls.map((url, index) => (
+                <div key={index} className="relative w-full h-64 rounded-lg overflow-hidden">
+                  <Image src={url} alt={`Image ${index + 1}`} fill className="object-contain bg-gray-100 dark:bg-zinc-800" />
+                </div>
+              ))}
             </div>
+          </div>
+        )}
 
-            {/* Download Button */}
-            <a
-              href={photo.image_url}
-              target="_blank"
-              rel="noopener noreferrer"
-              download
-              className="block w-full mb-4"
-            >
-              <Button variant="primary" className="w-full">
-                원본 다운로드
-              </Button>
-            </a>
+        {post.content && (
+          <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-lg p-6 mb-6 border border-gray-200 dark:border-zinc-800">
+            <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">내용</h2>
+            <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{post.content}</p>
+          </div>
+        )}
 
-            {/* Action Buttons (Author Only) */}
-            {isAuthor && (
-              <div className="flex gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <Button
-                  variant="primary"
-                  onClick={() => router.push(`/admin/gallery?edit=${photo.id}`)}
-                  className="flex-1"
+        {/* 댓글 섹션 */}
+        <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-lg p-6 border border-gray-200 dark:border-zinc-800">
+          <h2 className="text-xl font-bold text-gray-900 dark:text-white mb-4">
+            댓글 <span className="text-red-500">({comments.length})</span>
+          </h2>
+
+          {/* 댓글 작성 폼 */}
+          {user ? (
+            <form onSubmit={handleCommentSubmit} className="mb-6">
+              <textarea
+                value={commentContent}
+                onChange={(e) => setCommentContent(e.target.value)}
+                placeholder="댓글을 입력하세요..."
+                className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent resize-none"
+                rows={3}
+                disabled={commentSubmitting}
+              />
+              <div className="flex justify-end mt-2">
+                <button
+                  type="submit"
+                  disabled={commentSubmitting || !commentContent.trim()}
+                  className="px-6 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  수정
-                </Button>
-                <Button
-                  variant="secondary"
-                  onClick={handleDelete}
-                  className="flex-1"
-                >
-                  삭제
-                </Button>
+                  {commentSubmitting ? '작성 중...' : '댓글 작성'}
+                </button>
               </div>
-            )}
+            </form>
+          ) : (
+            <div className="mb-6 p-4 bg-gray-100 dark:bg-zinc-800 rounded-lg text-center">
+              <p className="text-gray-600 dark:text-gray-400">댓글을 작성하려면 로그인이 필요합니다.</p>
+              <Link href="/auth/login">
+                <button className="mt-2 px-4 py-2 bg-red-500 hover:bg-red-600 text-white rounded-lg transition-colors">로그인</button>
+              </Link>
+            </div>
+          )}
 
-            {/* Comments Section */}
-            <CommentsSection targetType="gallery" targetId={parseInt(photo.id)} />
-          </Card>
+          {/* 댓글 목록 */}
+          <div className="space-y-4">
+            {comments.length === 0 ? (
+              <p className="text-center text-gray-500 dark:text-gray-400 py-8">첫 댓글을 작성해보세요!</p>
+            ) : (
+              comments.map((comment) => (
+                <div key={comment.id} className="p-4 bg-gray-50 dark:bg-zinc-800 rounded-lg">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <span className="font-medium text-gray-900 dark:text-white">{comment.author}</span>
+                      <span className="ml-2 text-sm text-gray-500 dark:text-gray-400">
+                        {new Date(comment.created_at).toLocaleString('ko-KR')}
+                      </span>
+                    </div>
+                    {user && user.id === comment.user_id && (
+                      <button
+                        onClick={() => handleCommentDelete(comment.id)}
+                        className="text-red-500 hover:text-red-600 text-sm"
+                      >
+                        삭제
+                      </button>
+                    )}
+                  </div>
+                  <p className="text-gray-700 dark:text-gray-300 whitespace-pre-wrap">{comment.content}</p>
+                </div>
+              ))
+            )}
+          </div>
         </div>
       </div>
     </div>

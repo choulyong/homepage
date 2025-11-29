@@ -83,6 +83,29 @@ services:
     depends_on:
       - loki
 
+  # PostgreSQL - Local database (replaces Supabase)
+  postgres:
+    image: postgres:15-alpine
+    container_name: metaldragon-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: metaldragon
+      POSTGRES_PASSWORD: metaldragon_password
+      POSTGRES_DB: metaldragon
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+      - ./database/init.sql:/docker-entrypoint-initdb.d/init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U metaldragon"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - monitoring
+
   # Redis - Upstash Redis replacement for local development
   redis:
     image: redis:7.2-alpine
@@ -103,6 +126,8 @@ volumes:
   grafana-data:
     driver: local
   redis-data:
+    driver: local
+  postgres-data:
     driver: local
 
 networks:

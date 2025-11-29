@@ -44,3 +44,42 @@ next-env.d.ts
 /public/uploads/*
 !/public/uploads/.gitkeep
 !/public/uploads/*/.gitkeep
+
+/src/generated/prisma
+
+# database exports and backups
+/database/export
+/database/*.sql
+/database/*.json
+
+# temp files
+*.csv
+*.json
+!package.json
+!package-lock.json
+!tsconfig.json
+!*.config.json
+crawl_progress.json
+nul
+logs/
+data/
+
+# temp scripts
+temp-*.js
+check-*.js
+debug-*.js
+find-*.js
+
+# youtube crawler results
+youtube_results_*.csv
+youtube_results_*.json
+youtube_results_*.txt
+youtube_search_results.txt
+legend-100-youtube-crawler-input.txt
+albums_without_youtube.*
+
+# powershell scripts
+*.ps1
+
+# python crawler
+*.py

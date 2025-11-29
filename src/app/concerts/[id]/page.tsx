@@ -1,179 +1,136 @@
-/**
- * Concert Detail Page - METALDRAGON Rock Community
- * YouTube video playback for concerts
- */
-
 import Link from 'next/link';
-import Image from 'next/image';
 import { notFound } from 'next/navigation';
-import { createClient } from '@/lib/supabase/server';
+import prisma from '@/lib/prisma';
 
-interface ConcertDetailPageProps {
+interface Props {
   params: Promise<{ id: string }>;
 }
 
-// Extract YouTube video ID from URL
-function getYouTubeVideoId(url: string): string | null {
-  if (!url) return null;
-
-  const patterns = [
-    /(?:youtube\.com\/watch\?v=|youtu\.be\/)([^&\n?#]+)/,
-    /youtube\.com\/embed\/([^&\n?#]+)/,
-  ];
-
-  for (const pattern of patterns) {
-    const match = url.match(pattern);
-    if (match && match[1]) {
-      return match[1];
-    }
-  }
-  return null;
-}
-
-export default async function ConcertDetailPage({ params }: ConcertDetailPageProps) {
+export default async function ConcertDetail({ params }: Props) {
   const { id } = await params;
-  const supabase = await createClient();
-
-  const { data: concert } = await supabase
-    .from('concerts')
-    .select('*, band:bands(*)')
-    .eq('id', id)
-    .single();
+  const concert = await prisma.concert.findUnique({
+    where: { id },
+    include: { band: true },
+  });
 
   if (!concert) notFound();
 
-  // YouTube video ID extraction
-  const youtubeVideoId = concert.youtube_url ? getYouTubeVideoId(concert.youtube_url) : null;
+  const getVideoId = (url: string | null) => {
+    if (!url) return null;
+    const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:embed\/|v\/|watch\?v=))([^#&?]*)/);
+    return match?.[1];
+  };
 
-  const { data: reviews } = await supabase
-    .from('concert_reviews')
-    .select('*')
-    .eq('concert_id', id)
-    .order('created_at', { ascending: false });
+  const videoId = getVideoId(concert.youtube_url);
+  const setlist = concert.setlist as { songs?: string[] } | null;
 
   return (
     <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
-      <div className="max-w-6xl mx-auto">
-        <Link href="/concerts" className="inline-flex items-center text-gray-600 dark:text-gray-400 hover:text-purple-500 mb-8">
-          ← Back to Concerts
+      <div className="max-w-7xl mx-auto">
+        <Link href="/concerts" className="inline-flex items-center text-gray-600 dark:text-gray-400 hover:text-amber-500 mb-8">
+          Back to Concerts
         </Link>
 
-        {/* Concert Header */}
-        <div className="bg-gradient-to-br from-purple-500/10 to-pink-500/10 rounded-2xl p-8 mb-8">
-          <div className="text-6xl mb-6 text-center">🎤</div>
-          <h1 className="text-4xl font-display font-bold mb-4 text-center">
+        <div className="bg-gradient-to-br from-amber-500/10 to-purple-500/10 rounded-2xl p-8 mb-8 border border-amber-500/20">
+          <h1 className="text-4xl font-bold mb-4">
             <span className="gradient-text">{concert.title}</span>
           </h1>
-          <Link href={`/bands/${concert.band?.id}`} className="text-2xl text-center block text-red-600 dark:text-red-400 hover:text-red-500 mb-6">
-            {concert.band?.name}
-          </Link>
 
-          {/* Concert Details */}
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8">
-            <div className="space-y-4">
+          <div className="flex items-center gap-3 mb-6">
+            {concert.band?.logo_url && (
+              <img src={concert.band.logo_url} alt={concert.band.name} className="w-12 h-12 rounded-full object-cover" />
+            )}
+            <Link href={`/bands/${concert.band_id}`} className="text-2xl font-bold text-red-600 dark:text-red-400">
+              {concert.band?.name}
+            </Link>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-gray-700 dark:text-gray-300">
+            <div className="flex items-start gap-2">
+              <span>📍</span>
               <div>
-                <h3 className="font-bold text-gray-700 dark:text-gray-300 mb-1">Venue</h3>
-                <p className="text-xl">{concert.venue}</p>
-              </div>
-              <div>
-                <h3 className="font-bold text-gray-700 dark:text-gray-300 mb-1">Location</h3>
-                <p className="text-xl">{concert.city}, {concert.country}</p>
+                <p className="font-semibold">{concert.venue}</p>
+                <p className="text-sm">{concert.location}</p>
+                {concert.city && <p className="text-sm">{concert.city}, {concert.country}</p>}
               </div>
             </div>
-            <div className="space-y-4">
+            <div className="flex items-start gap-2">
+              <span>📅</span>
               <div>
-                <h3 className="font-bold text-gray-700 dark:text-gray-300 mb-1">Date</h3>
-                <p className="text-xl">{new Date(concert.event_date).toLocaleDateString('ko-KR', {
-                  year: 'numeric',
-                  month: 'long',
-                  day: 'numeric',
-                  weekday: 'long'
-                })}</p>
+                <p className="font-semibold">{new Date(concert.date).toLocaleDateString('ko-KR')}</p>
+                <p className="text-sm">{concert.past_event ? 'Past Concert' : 'Upcoming'}</p>
               </div>
-              {concert.ticket_url && (
-                <a
-                  href={concert.ticket_url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-block px-6 py-3 bg-gradient-to-r from-purple-500 to-pink-500 text-white font-bold rounded-lg hover:from-purple-600 hover:to-pink-600 transition-all"
-                >
-                  🎫 Get Tickets
-                </a>
-              )}
             </div>
           </div>
 
           {concert.description && (
             <div className="mt-6 p-4 bg-white/50 dark:bg-zinc-900/50 rounded-lg">
-              <p className="text-gray-700 dark:text-gray-300">{concert.description}</p>
+              <p>{concert.description}</p>
             </div>
           )}
         </div>
 
-        {/* YouTube Video Player */}
-        {youtubeVideoId && (
-          <div className="mb-8 bg-gradient-to-br from-red-500/10 to-purple-500/10 rounded-2xl p-6">
-            <h2 className="text-3xl font-bold mb-4 flex items-center gap-2">
-              <span>▶</span>
-              <span>Concert Video</span>
-            </h2>
-            <div className="relative w-full" style={{ paddingBottom: '56.25%' }}>
-              <iframe
-                className="absolute top-0 left-0 w-full h-full rounded-xl"
-                src={`https://www.youtube.com/embed/${youtubeVideoId}`}
-                title={concert.title}
-                allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                allowFullScreen
-              />
-            </div>
-            {concert.youtube_playlist_url && (
-              <a
-                href={concert.youtube_playlist_url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-block mt-4 px-6 py-3 bg-red-600 hover:bg-red-700 text-white font-bold rounded-lg transition-colors"
-              >
-                📼 Full Concert Playlist
-              </a>
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+          <div className="lg:col-span-2">
+            {videoId ? (
+              <div className="space-y-4">
+                <div className="bg-gray-900 rounded-2xl overflow-hidden">
+                  <div className="relative" style={{ paddingTop: '56.25%' }}>
+                    <iframe
+                      className="absolute top-0 left-0 w-full h-full"
+                      src={`https://www.youtube.com/embed/${videoId}`}
+                      title={concert.title}
+                      allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                      allowFullScreen
+                    />
+                  </div>
+                </div>
+                <a
+                  href={concert.youtube_url || '#'}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block w-full bg-gradient-to-r from-red-600 to-red-700 hover:from-red-700 hover:to-red-800 text-white text-center py-3 px-6 rounded-xl font-bold transition-all duration-300 shadow-lg hover:shadow-xl"
+                >
+                  ▶ Watch on YouTube
+                </a>
+              </div>
+            ) : (
+              <div className="bg-gray-900 rounded-2xl p-12 text-center">
+                <p className="text-6xl mb-4">🎤</p>
+                <p className="text-xl text-gray-400">Video coming soon</p>
+              </div>
             )}
           </div>
-        )}
 
-        {/* Poster Image */}
-        {concert.poster_url && !youtubeVideoId && (
-          <div className="mb-8">
-            <div className="relative w-full aspect-video rounded-2xl overflow-hidden">
-              <Image
-                src={concert.poster_url}
-                alt={concert.title}
-                fill
-                className="object-cover"
-              />
+          <div className="lg:col-span-1">
+            <div className="bg-gradient-to-br from-purple-500/10 to-blue-500/10 rounded-2xl p-6 border border-purple-500/20 sticky top-4">
+              <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
+                <span>🎵</span>
+                <span className="gradient-text">Setlist</span>
+              </h2>
+
+              {setlist?.songs && setlist.songs.length > 0 ? (
+                <div className="space-y-3">
+                  {setlist.songs.map((song, i) => (
+                    <div key={i} className="flex items-start gap-3 p-3 bg-white/50 dark:bg-zinc-900/50 rounded-lg">
+                      <span className="w-8 h-8 bg-gradient-to-br from-amber-500 to-purple-600 text-white rounded-full flex items-center justify-center text-sm font-bold">
+                        {i + 1}
+                      </span>
+                      <span className="flex-1 font-medium">{song}</span>
+                    </div>
+                  ))}
+                  <div className="mt-6 pt-6 border-t border-purple-500/20 text-center text-sm">
+                    Total: <span className="font-bold text-purple-600">{setlist.songs.length}</span> songs
+                  </div>
+                </div>
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <p className="text-4xl mb-2">🎸</p>
+                  <p>No setlist available</p>
+                </div>
+              )}
             </div>
           </div>
-        )}
-
-        <div className="bg-white dark:bg-zinc-900 rounded-lg p-6 shadow-md">
-          <h2 className="text-2xl font-bold mb-4">Concert Reviews ({reviews?.length || 0})</h2>
-          {reviews && reviews.length > 0 ? (
-            <div className="space-y-4">
-              {reviews.map((review) => (
-                <div key={review.id} className="border-b border-gray-200 dark:border-zinc-800 pb-4 last:border-0">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="text-amber-500">
-                      {'⭐'.repeat(review.rating)}
-                    </div>
-                    <span className="text-sm text-gray-500">
-                      {new Date(review.created_at).toLocaleDateString('ko-KR')}
-                    </span>
-                  </div>
-                  <p className="text-gray-700 dark:text-gray-300">{review.content}</p>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-500">아직 리뷰가 없습니다. 콘서트 후 리뷰를 남겨주세요!</p>
-          )}
         </div>
       </div>
     </div>

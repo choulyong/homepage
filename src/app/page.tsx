@@ -6,8 +6,25 @@
 import Link from 'next/link';
 import { Button } from '@/components/ui/Button';
 import RockFeatureCard from '@/components/RockFeatureCard';
+import prisma from '@/lib/prisma';
+
+// 10분마다 페이지 재생성 (ISR)
+export const revalidate = 600;
 
 export default async function Home() {
+  // Fetch real statistics from database
+  const [bandsCount, albumsCount, concertsCount, galleryCount, ashdishCount] = await Promise.all([
+    prisma.band.count(),
+    prisma.album.count(),
+    prisma.concert.count(),
+    prisma.gallery.count(),
+    prisma.ashDish.count(),
+  ]);
+
+  // 실제 활동 회원 수 추정 (게시글 수 기반)
+  // 평균적으로 한 사람이 3개의 게시글을 작성한다고 가정
+  const totalPosts = galleryCount + ashdishCount;
+  const usersCount = Math.max(1, Math.floor(totalPosts / 3));
   const features = [
     {
       title: 'Bands Database',
@@ -35,7 +52,7 @@ export default async function Home() {
     },
     {
       title: 'Rock News',
-      description: '최신 Rock 음악 뉴스와 트렌드를 실시간으로',
+      description: '록 뉴스, 오디오 장비, 기타/앰프 리뷰, 콘서트 소식',
       icon: '📰',
       link: '/news',
     },
@@ -104,25 +121,25 @@ export default async function Home() {
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8 text-center">
             <div>
               <div className="text-4xl font-bold bg-gradient-to-r from-red-500 to-amber-500 bg-clip-text text-transparent mb-2">
-                1000+
+                {bandsCount.toLocaleString()}
               </div>
               <div className="text-zinc-400">Rock Bands</div>
             </div>
             <div>
               <div className="text-4xl font-bold bg-gradient-to-r from-amber-500 to-purple-500 bg-clip-text text-transparent mb-2">
-                5000+
+                {albumsCount.toLocaleString()}
               </div>
               <div className="text-zinc-400">Albums</div>
             </div>
             <div>
               <div className="text-4xl font-bold bg-gradient-to-r from-purple-500 to-pink-500 bg-clip-text text-transparent mb-2">
-                500+
+                {concertsCount.toLocaleString()}
               </div>
               <div className="text-zinc-400">Concerts</div>
             </div>
             <div>
               <div className="text-4xl font-bold bg-gradient-to-r from-pink-500 to-red-500 bg-clip-text text-transparent mb-2">
-                10K+
+                {usersCount.toLocaleString()}
               </div>
               <div className="text-zinc-400">Community Members</div>
             </div>

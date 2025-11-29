@@ -1,559 +1,245 @@
 /**
- * Gallery List Page (Public)
- * 갤러리 목록 페이지 (일상 사진)
+ * Gallery Page - 회원동영상
+ * 회원들의 음악 창작물 공유 공간
  */
 
 'use client';
 
 import { useState, useEffect } from 'react';
-import { createClient } from '@/lib/supabase/client';
-import { Card } from '@/components/ui/Card';
-import { Button } from '@/components/ui/Button';
+import { getCurrentUser } from '@/lib/auth-client';
 import Link from 'next/link';
 import Image from 'next/image';
-import { useAdmin } from '@/hooks/useAdmin';
-import { ImageUpload } from '@/components/ui/ImageUpload';
-import { cn } from '@/lib/utils';
 
-interface Photo {
+interface GalleryPost {
   id: string;
   title: string;
-  description: string | null;
-  image_url: string;
-  original_filename: string | null;
-  taken_at: string | null;
+  content: string | null;
+  author: string;
+  user_id: string | null;
+  video_type: string | null;
+  youtube_url: string | null;
+  video_url: string | null;
+  image_urls: string[];
   view_count: number;
+  like_count: number;
   created_at: string;
 }
 
 export default function GalleryPage() {
-  const { isAdmin, loading: adminLoading } = useAdmin();
-  const [photos, setPhotos] = useState<Photo[]>([]);
-  const [filteredPhotos, setFilteredPhotos] = useState<Photo[]>([]);
+  const [posts, setPosts] = useState<GalleryPost[]>([]);
   const [loading, setLoading] = useState(true);
-  const [showForm, setShowForm] = useState(false);
-  const [editingId, setEditingId] = useState<string | null>(null);
-
-  // 필터 상태
+  const [user, setUser] = useState<any>(null);
   const [searchQuery, setSearchQuery] = useState('');
-  const [sortBy, setSortBy] = useState<'date' | 'title' | 'views'>('date');
-  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc');
-
-  // Form states
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [imageUrl, setImageUrl] = useState('');
-  const [takenAt, setTakenAt] = useState('');
-  const [saving, setSaving] = useState(false);
-  const [uploadingFiles, setUploadingFiles] = useState<File[]>([]);
-  const [uploadProgress, setUploadProgress] = useState<{ [key: string]: number }>({});
 
   useEffect(() => {
-    loadPhotos();
+    loadPosts();
+    loadUser();
+
+    // 로그인 이벤트 리스너 추가
+    const handleLoginEvent = () => {
+      console.log('🔔 Login event received in Gallery - reloading user');
+      loadUser();
+    };
+
+    window.addEventListener('userLoggedIn', handleLoginEvent);
+
+    return () => {
+      window.removeEventListener('userLoggedIn', handleLoginEvent);
+    };
   }, []);
 
-  // 필터링 및 정렬
-  useEffect(() => {
-    let result = [...photos];
-
-    // 검색 필터
-    if (searchQuery.trim()) {
-      result = result.filter(photo =>
-        photo.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        (photo.description && photo.description.toLowerCase().includes(searchQuery.toLowerCase()))
-      );
-    }
-
-    // 정렬
-    result.sort((a, b) => {
-      let comparison = 0;
-
-      if (sortBy === 'date') {
-        const dateA = new Date(a.taken_at || a.created_at).getTime();
-        const dateB = new Date(b.taken_at || b.created_at).getTime();
-        comparison = dateB - dateA;
-      } else if (sortBy === 'title') {
-        comparison = a.title.localeCompare(b.title);
-      } else if (sortBy === 'views') {
-        comparison = b.view_count - a.view_count;
-      }
-
-      return sortOrder === 'asc' ? -comparison : comparison;
-    });
-
-    setFilteredPhotos(result);
-  }, [photos, searchQuery, sortBy, sortOrder]);
-
-  const loadPhotos = async () => {
-    const supabase = createClient();
-
-    const { data, error } = await supabase
-      .from('gallery')
-      .select('*')
-      .order('taken_at', { ascending: false, nullsFirst: false })
-      .order('created_at', { ascending: false });
-
-    if (error) {
-      console.error('Error loading photos:', error);
-    } else {
-      setPhotos(data || []);
-    }
-    setLoading(false);
+  const loadUser = () => {
+    const currentUser = getCurrentUser();
+    console.log('🔐 Gallery - localStorage user:', currentUser);
+    setUser(currentUser);
   };
 
-  const handleEdit = (photo: Photo) => {
-    setEditingId(photo.id);
-    setTitle(photo.title);
-    setDescription(photo.description || '');
-    setImageUrl(photo.image_url);
-    setTakenAt(photo.taken_at || '');
-    setShowForm(true);
-  };
-
-  const handleDelete = async (id: string) => {
-    if (!confirm('정말 삭제하시겠습니까?')) return;
-
-    const supabase = createClient();
-    const { error } = await supabase.from('gallery').delete().eq('id', id);
-
-    if (error) {
-      console.error('Error deleting photo:', error);
-      alert('삭제에 실패했습니다.');
-    } else {
-      await loadPhotos();
-      alert('삭제되었습니다.');
-    }
-  };
-
-  const resetForm = () => {
-    setTitle('');
-    setDescription('');
-    setImageUrl('');
-    setTakenAt('');
-    setEditingId(null);
-    setShowForm(false);
-  };
-
-  const handleFileSelect = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const files = e.target.files;
-    if (!files || files.length === 0) return;
-
-    const fileArray = Array.from(files);
-
+  const loadPosts = async () => {
     try {
-      setUploadingFiles(fileArray);
+      setLoading(true);
+      const response = await fetch('/api/gallery');
+      const data = await response.json();
 
-      // 각 파일 업로드
-      const supabase = createClient();
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        alert('로그인이 필요합니다.');
-        return;
-      }
-
-      let successCount = 0;
-      let failCount = 0;
-
-      for (const file of fileArray) {
-        try {
-          // 진행상황 업데이트
-          setUploadProgress(prev => ({ ...prev, [file.name]: 0 }));
-
-          // 파일 업로드
-          const formData = new FormData();
-          formData.append('file', file);
-          formData.append('bucket', 'gallery');
-
-          const response = await fetch('/api/upload', {
-            method: 'POST',
-            body: formData,
-          });
-
-          if (!response.ok) {
-            throw new Error('업로드 실패');
-          }
-
-          const data = await response.json();
-
-          // DB에 저장
-          const { error } = await supabase.from('gallery').insert({
-            user_id: user.id,
-            title: file.name.replace(/\.[^/.]+$/, ''), // 확장자 제거
-            description: null,
-            image_url: data.url,
-            taken_at: null,
-          });
-
-          if (error) {
-            console.error('Error saving photo:', error);
-            throw error;
-          }
-
-          // 진행상황 완료
-          setUploadProgress(prev => ({ ...prev, [file.name]: 100 }));
-          successCount++;
-        } catch (error) {
-          console.error('Upload error:', error);
-          setUploadProgress(prev => ({ ...prev, [file.name]: -1 })); // 실패 표시
-          failCount++;
-        }
-      }
-
-      // 업로드 완료 후 리스트 새로고침
-      await loadPhotos();
-
-      // 상태 초기화
-      setUploadingFiles([]);
-      setUploadProgress({});
-
-      // input 초기화
-      e.target.value = '';
-
-      // 결과 메시지
-      if (failCount === 0) {
-        alert(`${successCount}장의 사진이 업로드되었습니다!`);
+      if (data.success) {
+        setPosts(data.posts || []);
       } else {
-        alert(`${successCount}장 성공, ${failCount}장 실패`);
+        console.error('Error loading posts:', data.error);
       }
-    } catch (error) {
-      console.error('File select error:', error);
-      setUploadingFiles([]);
-      setUploadProgress({});
-      e.target.value = '';
-      alert('업로드 중 오류가 발생했습니다.');
+    } catch (err) {
+      console.error('Error:', err);
+    } finally {
+      setLoading(false);
     }
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!title.trim() || !imageUrl) return;
+  const filteredPosts = searchQuery
+    ? posts.filter(post =>
+        post.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        (post.content && post.content.toLowerCase().includes(searchQuery.toLowerCase())) ||
+        post.author.toLowerCase().includes(searchQuery.toLowerCase())
+      )
+    : posts;
 
-    setSaving(true);
-    const supabase = createClient();
-
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
-
-    if (editingId) {
-      // 수정
-      const { error } = await supabase
-        .from('gallery')
-        .update({
-          title: title.trim(),
-          description: description.trim() || null,
-          image_url: imageUrl,
-          taken_at: takenAt || null,
-        })
-        .eq('id', editingId);
-
-      if (error) {
-        console.error('Error updating photo:', error);
-        alert('수정에 실패했습니다.');
-      } else {
-        await loadPhotos();
-        resetForm();
-        alert('수정되었습니다!');
-      }
-    } else {
-      // 새로 작성
-      const { error } = await supabase.from('gallery').insert({
-        user_id: user.id,
-        title: title.trim(),
-        description: description.trim() || null,
-        image_url: imageUrl,
-        taken_at: takenAt || null,
-      });
-
-      if (error) {
-        console.error('Error creating photo:', error);
-        alert('사진 업로드에 실패했습니다.');
-      } else {
-        await loadPhotos();
-        resetForm();
-        alert('사진이 업로드되었습니다!');
-      }
-    }
-
-    setSaving(false);
+  const extractYouTubeVideoId = (url: string) => {
+    const regExp = /^.*((youtu.be\/)|(v\/)|(\/u\/\w\/)|(embed\/)|(watch\?))\??v?=?([^#&?]*).*/;
+    const match = url.match(regExp);
+    return (match && match[7].length === 11) ? match[7] : null;
   };
-
-  if (loading || adminLoading) {
-    return (
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-        <div className="text-center py-12 text-gray-600 dark:text-white">
-          로딩 중...
-        </div>
-      </div>
-    );
-  }
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
-      {/* Header */}
-      <div className="mb-8 flex flex-col gap-4">
-        <div className="flex justify-between items-center">
-          <div>
-            <h1 className="text-4xl md:text-5xl font-display font-bold gradient-text mb-2">
-              갤러리
-            </h1>
-            <p className="text-lg text-gray-600 dark:text-white">
-              일상의 순간을 원본 화질로 공유하세요
-            </p>
+    <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
+      <div className="max-w-7xl mx-auto">
+        {/* Header */}
+        <div className="mb-12 text-center">
+          <h1 className="text-4xl md:text-5xl font-display font-bold mb-4">
+            <span className="gradient-text">🎬 회원동영상</span>
+          </h1>
+          <p className="text-lg text-gray-600 dark:text-gray-300">
+            회원들의 음악 창작물을 공유해보세요
+          </p>
+        </div>
+
+        {/* 검색 및 글쓰기 버튼 */}
+        <div className="mb-8 flex flex-col sm:flex-row gap-4 items-center justify-between">
+          {/* 검색 */}
+          <div className="w-full sm:w-96">
+            <input
+              type="text"
+              placeholder="제목, 내용, 작성자 검색..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full px-4 py-3 rounded-lg border border-gray-300 dark:border-zinc-700 bg-white dark:bg-zinc-900 text-gray-900 dark:text-white focus:ring-2 focus:ring-red-500 focus:border-transparent"
+            />
           </div>
-          {isAdmin && (
-            <div className="flex gap-2">
-              <input
-                type="file"
-                multiple
-                accept="image/*"
-                onChange={handleFileSelect}
-                className="hidden"
-                id="multipleFileInput"
-              />
-              <label htmlFor="multipleFileInput" className="inline-block">
-                <div className="px-6 py-3 bg-white/10 dark:bg-white/5 backdrop-blur-md border border-white/20 rounded-lg font-medium text-gray-900 dark:text-white hover:bg-white/20 dark:hover:bg-white/10 cursor-pointer transition-all duration-200 whitespace-nowrap">
-                  🖼️ 여러 장 한번에
-                </div>
-              </label>
-              <Button
-                onClick={() => {
-                  resetForm();
-                  setShowForm(!showForm);
-                }}
-                variant="primary"
-                size="lg"
-                className="whitespace-nowrap"
-              >
-                📷 사진 올리기
-              </Button>
-            </div>
+
+          {/* 글쓰기 버튼 */}
+          {user ? (
+            <Link href="/gallery/new">
+              <button className="w-full sm:w-auto px-6 py-3 bg-gradient-to-r from-red-500 to-amber-500 hover:from-red-600 hover:to-amber-600 text-white rounded-lg shadow-lg transition-all font-medium whitespace-nowrap">
+                + 글쓰기
+              </button>
+            </Link>
+          ) : (
+            <Link href="/auth/login?redirect=/gallery/new">
+              <button className="w-full sm:w-auto px-6 py-3 bg-gray-400 text-white rounded-lg shadow-lg font-medium whitespace-nowrap">
+                로그인 후 작성 가능
+              </button>
+            </Link>
           )}
         </div>
 
-        {/* 필터 및 정렬 */}
-        <Card variant="elevated" padding="md">
-          <div className="flex flex-col md:flex-row gap-4">
-            {/* 검색 */}
-            <div className="flex-1">
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder="🔍 제목 또는 설명으로 검색..."
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-              />
-            </div>
-
-            {/* 정렬 기준 */}
-            <div className="flex gap-2">
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-              >
-                <option value="date">날짜순</option>
-                <option value="title">제목순</option>
-                <option value="views">조회수순</option>
-              </select>
-
-              {/* 정렬 방향 */}
-              <button
-                onClick={() => setSortOrder(prev => prev === 'asc' ? 'desc' : 'asc')}
-                className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                title={sortOrder === 'asc' ? '오름차순' : '내림차순'}
-              >
-                {sortOrder === 'asc' ? '↑' : '↓'}
-              </button>
-            </div>
+        {/* 게시글 목록 */}
+        {loading ? (
+          <div className="text-center py-20">
+            <div className="inline-block animate-spin rounded-full h-12 w-12 border-4 border-red-500 border-t-transparent"></div>
+            <p className="mt-4 text-gray-600 dark:text-gray-400">로딩 중...</p>
           </div>
-
-          {/* 결과 카운트 */}
-          <div className="mt-3 text-sm text-gray-600 dark:text-gray-400">
-            총 {filteredPhotos.length}장의 사진
-            {searchQuery && ` (검색: "${searchQuery}")`}
-          </div>
-        </Card>
-      </div>
-
-      {/* 업로드 진행 상황 */}
-      {uploadingFiles.length > 0 && (
-        <Card variant="featured" padding="lg" className="mb-8">
-          <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-4">
-            업로드 진행 중... ({Object.keys(uploadProgress).filter(k => uploadProgress[k] === 100).length} / {uploadingFiles.length})
-          </h3>
-          <div className="space-y-2">
-            {uploadingFiles.map((file, index) => (
-              <div key={index} className="flex items-center gap-3">
-                <span className="text-sm text-gray-700 dark:text-gray-300 flex-1 truncate">
-                  {file.name}
-                </span>
-                <div className="w-32 h-2 bg-gray-200 dark:bg-gray-700 rounded-full overflow-hidden">
-                  <div
-                    className={cn(
-                      'h-full transition-all duration-300',
-                      uploadProgress[file.name] === 100
-                        ? 'bg-green-500'
-                        : uploadProgress[file.name] === -1
-                        ? 'bg-red-500'
-                        : 'bg-teal-500'
+        ) : filteredPosts.length > 0 ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            {filteredPosts.map((post) => (
+              <Link
+                key={post.id}
+                href={`/gallery/${post.id}`}
+                className="group"
+              >
+                <div className="bg-white dark:bg-zinc-900 rounded-xl shadow-md hover:shadow-xl transition-all border border-gray-200 dark:border-zinc-800 overflow-hidden h-full flex flex-col">
+                  {/* 썸네일 영역 */}
+                  <div className="relative w-full h-48 bg-gray-100 dark:bg-zinc-800">
+                    {post.video_type === 'youtube' && post.youtube_url ? (
+                      // YouTube 썸네일
+                      <div className="relative w-full h-full">
+                        <Image
+                          src={`https://img.youtube.com/vi/${extractYouTubeVideoId(post.youtube_url)}/mqdefault.jpg`}
+                          alt={post.title}
+                          fill
+                          className="object-cover"
+                          unoptimized
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/50 transition-colors">
+                          <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center">
+                            <svg className="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M8 5v14l11-7z" />
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+                    ) : post.video_type === 'upload' && post.video_url ? (
+                      // 업로드된 동영상 썸네일
+                      <div className="relative w-full h-full bg-black">
+                        <video
+                          src={post.video_url}
+                          className="w-full h-full object-cover"
+                          preload="metadata"
+                        />
+                        <div className="absolute inset-0 flex items-center justify-center bg-black/30 group-hover:bg-black/50 transition-colors">
+                          <div className="w-16 h-16 bg-red-600 rounded-full flex items-center justify-center">
+                            <svg className="w-8 h-8 text-white ml-1" fill="currentColor" viewBox="0 0 24 24">
+                              <path d="M8 5v14l11-7z" />
+                            </svg>
+                          </div>
+                        </div>
+                      </div>
+                    ) : post.image_urls && post.image_urls.length > 0 ? (
+                      // 이미지
+                      <Image
+                        src={post.image_urls[0]}
+                        alt={post.title}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-300"
+                        unoptimized
+                      />
+                    ) : (
+                      // 기본 이미지
+                      <div className="w-full h-full flex items-center justify-center text-6xl">
+                        🎵
+                      </div>
                     )}
-                    style={{ width: `${Math.max(0, uploadProgress[file.name] || 0)}%` }}
-                  />
-                </div>
-                <span className="text-xs text-gray-500 dark:text-gray-400 w-12 text-right">
-                  {uploadProgress[file.name] === -1 ? '실패' : `${uploadProgress[file.name] || 0}%`}
-                </span>
-              </div>
-            ))}
-          </div>
-        </Card>
-      )}
+                  </div>
 
-      {/* Write/Edit Form */}
-      {showForm && isAdmin && (
-        <Card variant="featured" padding="lg" className="mb-8">
-          <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-6">
-            {editingId ? '사진 수정' : '새 사진 업로드'}
-          </h2>
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                제목 *
-              </label>
-              <input
-                type="text"
-                value={title}
-                onChange={(e) => setTitle(e.target.value)}
-                required
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-                placeholder="제목을 입력하세요"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                설명
-              </label>
-              <textarea
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                rows={3}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-                placeholder="사진에 대한 설명을 입력하세요"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                촬영 날짜
-              </label>
-              <input
-                type="date"
-                value={takenAt}
-                onChange={(e) => setTakenAt(e.target.value)}
-                className="w-full px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:outline-none focus:ring-2 focus:ring-teal-500"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold text-gray-900 dark:text-white mb-2">
-                사진 * (원본 화질 유지)
-              </label>
-              <ImageUpload
-                onUploadComplete={setImageUrl}
-                currentImageUrl={imageUrl}
-                bucket="gallery"
-              />
-            </div>
-
-            <div className="flex gap-4">
-              <Button type="submit" variant="primary" disabled={saving} className="flex-1">
-                {saving ? (editingId ? '수정 중...' : '업로드 중...') : (editingId ? '수정' : '사진 업로드')}
-              </Button>
-              <Button
-                type="button"
-                variant="outline"
-                onClick={resetForm}
-                className="flex-1"
-              >
-                취소
-              </Button>
-            </div>
-          </form>
-        </Card>
-      )}
-
-      {/* Photos Grid */}
-      {filteredPhotos.length === 0 ? (
-        <div className="text-center py-12">
-          <p className="text-gray-600 dark:text-white mb-4">
-            {searchQuery ? '검색 결과가 없습니다' : '아직 사진이 없습니다'}
-          </p>
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {filteredPhotos.map((photo) => (
-            <div key={photo.id} className="relative">
-              <Link href={`/gallery/${photo.id}`}>
-                <Card
-                  variant="featured"
-                  padding="none"
-                  className="overflow-hidden cursor-pointer transition-all duration-200 hover:-translate-y-1 hover:shadow-xl group"
-                >
-                  <div className="relative aspect-square">
-                    <Image
-                      src={photo.image_url}
-                      alt={photo.title}
-                      fill
-                      className="object-cover transition-transform duration-300 group-hover:scale-105"
-                    />
-                    <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                      <div className="absolute bottom-0 left-0 right-0 p-4">
-                        <h3 className="text-white font-bold text-lg mb-1">
-                          {photo.title}
-                        </h3>
-                        {photo.taken_at && (
-                          <p className="text-white/90 text-sm">
-                            {new Date(photo.taken_at).toLocaleDateString('ko-KR')}
-                          </p>
-                        )}
+                  {/* 게시글 정보 */}
+                  <div className="p-4 flex-1 flex flex-col">
+                    <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2 line-clamp-2 group-hover:text-red-600 dark:group-hover:text-red-400 transition-colors">
+                      {post.title}
+                    </h3>
+                    {post.content && (
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mb-3 line-clamp-2">
+                        {post.content}
+                      </p>
+                    )}
+                    <div className="mt-auto flex items-center justify-between text-xs text-gray-500 dark:text-gray-500">
+                      <span>{post.author}</span>
+                      <div className="flex items-center gap-3">
+                        <span>👀 {post.view_count}</span>
+                        <span>❤️ {post.like_count}</span>
                       </div>
                     </div>
+                    <div className="text-xs text-gray-400 mt-1">
+                      {new Date(post.created_at).toLocaleDateString('ko-KR')}
+                    </div>
                   </div>
-                </Card>
-              </Link>
-
-              {/* Admin Controls */}
-              {isAdmin && (
-                <div className="absolute top-2 right-2 flex gap-2 z-50">
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleEdit(photo);
-                    }}
-                    className="p-2 bg-blue-600 hover:bg-blue-700 text-white rounded-lg shadow-lg transition-colors pointer-events-auto"
-                    title="수정"
-                  >
-                    ✏️
-                  </button>
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      handleDelete(photo.id);
-                    }}
-                    className="p-2 bg-red-600 hover:bg-red-700 text-white rounded-lg shadow-lg transition-colors pointer-events-auto"
-                    title="삭제"
-                  >
-                    🗑️
-                  </button>
                 </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+              </Link>
+            ))}
+          </div>
+        ) : (
+          <div className="text-center py-20">
+            <div className="text-6xl mb-6">🎬</div>
+            <h3 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+              아직 게시글이 없습니다
+            </h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-8">
+              첫 번째 창작물을 공유해보세요!
+            </p>
+            {user && (
+              <Link href="/gallery/new">
+                <button className="px-6 py-3 bg-gradient-to-r from-red-500 to-amber-500 hover:from-red-600 hover:to-amber-600 text-white rounded-lg shadow-lg transition-all font-medium">
+                  + 글쓰기
+                </button>
+              </Link>
+            )}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

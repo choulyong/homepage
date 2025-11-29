@@ -1,18 +1,55 @@
 /**
  * Albums Page - METALDRAGON Rock Community
+ * With sorting and country filtering
  */
 
-import Link from 'next/link';
-import { createClient } from '@/lib/supabase/server';
+import prisma from '@/lib/prisma';
+import AlbumsClient from './AlbumsClient';
+
+// ISR: 페이지를 60초마다 재생성
+export const revalidate = 60;
 
 export default async function AlbumsPage() {
-  const supabase = await createClient();
+  // 전체 앨범 수 조회
+  const totalAlbums = await prisma.album.count();
 
-  const { data: albums } = await supabase
-    .from('albums')
-    .select('*, band:bands(*)')
-    .order('release_year', { ascending: false })
-    .limit(50);
+  // 첫 페이지만 로드 (500개)
+  const albums = await prisma.album.findMany({
+    take: 500,
+    include: {
+      band: {
+        select: {
+          id: true,
+          name: true,
+          country: true,
+          image_url: true,
+        },
+      },
+    },
+    orderBy: {
+      release_year: 'desc',
+    },
+  });
+
+  // Get unique countries (전체 데이터에서)
+  const allCountries = await prisma.band.findMany({
+    where: {
+      country: {
+        not: null,
+      },
+    },
+    select: {
+      country: true,
+    },
+    distinct: ['country'],
+  });
+
+  const countries = allCountries
+    .map(b => b.country)
+    .filter(Boolean)
+    .sort() as string[];
+
+  console.log(`📊 Total albums: ${totalAlbums}, Loaded: ${albums.length}`);
 
   return (
     <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
@@ -24,52 +61,13 @@ export default async function AlbumsPage() {
           <p className="text-lg text-gray-600 dark:text-gray-300 mb-6">
             명반들에 대한 리뷰를 읽고 당신만의 평가를 남기세요
           </p>
-
-          <Link
-            href="/albums/genres"
-            className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-500 to-red-500 text-white px-6 py-3 rounded-full font-semibold hover:shadow-lg hover:scale-105 transition-all duration-300"
-          >
-            🎸 Browse by Genre
-          </Link>
         </div>
 
-        {albums && albums.length > 0 ? (
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6">
-            {albums.map((album) => (
-              <Link
-                key={album.id}
-                href={`/albums/${album.id}`}
-                className="group"
-              >
-                <div className="aspect-square bg-gradient-to-br from-amber-500/20 to-purple-500/20 rounded-lg flex items-center justify-center mb-3 group-hover:scale-105 transition-transform">
-                  {album.cover_url ? (
-                    <img src={album.cover_url} alt={album.title} className="w-full h-full object-cover rounded-lg" />
-                  ) : (
-                    <span className="text-6xl">💿</span>
-                  )}
-                </div>
-                <h3 className="font-bold text-gray-900 dark:text-white text-sm mb-1 line-clamp-2">
-                  {album.title}
-                </h3>
-                <p className="text-xs text-gray-600 dark:text-gray-400">
-                  {album.band?.name || 'Unknown'}
-                </p>
-                {album.release_year && (
-                  <p className="text-xs text-gray-500 dark:text-gray-500">
-                    {album.release_year}
-                  </p>
-                )}
-              </Link>
-            ))}
-          </div>
-        ) : (
-          <div className="text-center py-20">
-            <div className="text-6xl mb-4">💿</div>
-            <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-4">
-              아직 등록된 앨범이 없습니다
-            </h2>
-          </div>
-        )}
+        <AlbumsClient
+          initialAlbums={albums || []}
+          countries={countries}
+          totalCount={totalAlbums}
+        />
       </div>
     </div>
   );

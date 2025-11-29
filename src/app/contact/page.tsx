@@ -2,7 +2,32 @@
  * Contact Page - METALDRAGON Rock Community
  */
 
-export default async function ContactPage() {
+'use client';
+
+const faqs = [
+  {
+    q: 'METALDRAGON은 어떤 서비스인가요?',
+    a: 'Rock 음악을 사랑하는 전 세계 팬들을 위한 커뮤니티 플랫폼입니다. 밴드 정보, 앨범 리뷰, 콘서트 일정, 뉴스 등 Rock 음악과 관련된 모든 것을 제공합니다.',
+  },
+  {
+    q: '회원 가입 없이도 이용할 수 있나요?',
+    a: '대부분의 콘텐츠는 로그인 없이 열람 가능합니다. 다만 리뷰 작성, 댓글, 커뮤니티 참여 등은 회원 가입이 필요합니다.',
+  },
+  {
+    q: '밴드나 앨범 정보를 추가할 수 있나요?',
+    a: '네! 커뮤니티 회원이라면 누구나 밴드, 앨범, 콘서트 정보를 추가하고 수정할 수 있습니다. 모든 정보는 커뮤니티 멤버들과 함께 만들어갑니다.',
+  },
+  {
+    q: '광고나 협업 문의는 어떻게 하나요?',
+    a: 'choulyong@gmail.com으로 이메일을 보내주시면 검토 후 답변드리겠습니다.',
+  },
+  {
+    q: '버그나 개선 사항을 제안하고 싶어요',
+    a: '커뮤니티 게시판의 "건의사항" 카테고리에 글을 남겨주시거나, GitHub Issues를 통해 제안해주세요.',
+  },
+];
+
+export default function ContactPage() {
   return (
     <div className="min-h-screen py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-5xl mx-auto">
@@ -28,10 +53,10 @@ export default async function ContactPage() {
               문의 사항을 이메일로 보내주세요
             </p>
             <a
-              href="mailto:contact@metaldragon.rocks"
+              href="mailto:choulyong@gmail.com"
               className="text-red-600 dark:text-red-400 hover:underline font-medium"
             >
-              contact@metaldragon.rocks
+              choulyong@gmail.com
             </a>
           </div>
 
@@ -86,28 +111,7 @@ export default async function ContactPage() {
             <span className="gradient-text">Frequently Asked Questions</span>
           </h2>
           <div className="space-y-6">
-            {[
-              {
-                q: 'METALDRAGON은 어떤 서비스인가요?',
-                a: 'Rock 음악을 사랑하는 전 세계 팬들을 위한 커뮤니티 플랫폼입니다. 밴드 정보, 앨범 리뷰, 콘서트 일정, 뉴스 등 Rock 음악과 관련된 모든 것을 제공합니다.',
-              },
-              {
-                q: '회원 가입 없이도 이용할 수 있나요?',
-                a: '대부분의 콘텐츠는 로그인 없이 열람 가능합니다. 다만 리뷰 작성, 댓글, 커뮤니티 참여 등은 회원 가입이 필요합니다.',
-              },
-              {
-                q: '밴드나 앨범 정보를 추가할 수 있나요?',
-                a: '네! 커뮤니티 회원이라면 누구나 밴드, 앨범, 콘서트 정보를 추가하고 수정할 수 있습니다. 모든 정보는 커뮤니티 멤버들과 함께 만들어갑니다.',
-              },
-              {
-                q: '광고나 협업 문의는 어떻게 하나요?',
-                a: 'contact@metaldragon.rocks로 이메일을 보내주시면 검토 후 답변드리겠습니다.',
-              },
-              {
-                q: '버그나 개선 사항을 제안하고 싶어요',
-                a: '커뮤니티 게시판의 "건의사항" 카테고리에 글을 남겨주시거나, GitHub Issues를 통해 제안해주세요.',
-              },
-            ].map((faq, idx) => (
+            {faqs.map((faq, idx) => (
               <div key={idx} className="border-b border-gray-200 dark:border-zinc-800 pb-6 last:border-0">
                 <h3 className="text-lg font-bold text-gray-900 dark:text-white mb-2">
                   Q. {faq.q}
